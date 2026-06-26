@@ -35,6 +35,7 @@ infrastructure (web / persistence)  →  application  →  domain  ←  (実装)
 
 レイヤを上に置くことで、コンテキスト跨ぎのユースケース配線・Spring DI がしやすい。
 
+- ドメインモデルは **Client の Mock API スキーマ**（`features/{context}/infrastructure/api/mock-*.ts` および `domain/*.ts`）を参照して設計する（[`docs/architecture.md` §7.0](docs/architecture.md#70-ドメインモデル作成方針client-mock-api-を正とする)）
 - フロントの Modular Monolith はバックエンドの規模に対し過大として不採用
 - レイヤ依存は将来 ArchUnit で機械的に強制する（feature 実装時に導入）
 

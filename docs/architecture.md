@@ -185,6 +185,38 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 
 ## 7. データモデル方針
 
+### 7.0 ドメインモデル作成方針（Client Mock API を正とする）
+
+**backend のドメインモデルは、Client 側 Mock API のスキーマを参照して設計する。** これにより REST レスポンスを Client が `mock` から実 fetch へ差し替えたとき、application / UI 層を無改修に保てる。
+
+#### 参照先（Client リポジトリ）
+
+| 優先度 | パス | 内容 |
+|---|---|---|
+| 1 | `src/features/{context}/infrastructure/api/mock-*.ts` | Mock fetcher の入出力・レスポンス形（API 契約の実体） |
+| 2 | `src/features/{context}/domain/*.ts` | Client 側ドメイン型（フィールド名・optional・ネスト構造） |
+| 3 | 本ドキュメント §8 | Mock に無い書き込み API 等の backend 独自契約 |
+
+Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Your-Pocket/KOBE-in-Your-Poket-Client)
+
+#### 手順
+
+1. 対象コンテキストの `mock-*.ts` と `domain/*.ts` を読み、**API が返す解決済みオブジェクト**の形を把握する
+2. `domain/{context}/model/` に、それと整合する Kotlin 型（集約・値オブジェクト）を定義する
+3. 永続化（DB テーブル）は API 形と一致させる必要はない（§7.1 の i18n 分割など）。**domain ↔ persistence の変換は infrastructure/persistence に閉じる**
+4. REST レスポンス DTO（`infrastructure/web`）は Mock の返却形に合わせ、domain から組み立てる
+
+#### 例: Tourism / Spot
+
+| Client（`domain/spot.ts` + `mock-spots.ts`） | backend |
+|---|---|
+| `Spot { id, name, genre, description, coordinates, businessHours, category, media, rating? }` | 一覧 API の返却単位。`rating` はレビュー未実装時 `null` |
+| `SpotGenre` リテラル列挙 | `domain/tourism/model` の enum 等で同値を定義 |
+| `MOCK_SPOT_BASES` + `MOCK_SPOT_LOCALIZATIONS` の分割 | DB は `spot` + `spot_localization` に分割（§7.1）。API は `lang` 解決後に Client の `Spot` 形で返す |
+| `fetchSpots(language): Promise<Spot[]>` | `GET /api/v1/tourism/spots?lang=` の 200 レスポンス |
+
+Mock が未整備のコンテキスト（evacuation / manner 等）は、Client に `domain` 型が追加された時点で同手順を適用する。Client 側に型も Mock も無い場合のみ、Specification / §8 の契約から backend が先行定義する。
+
 ### 7.1 多言語（i18n）
 
 モック（`mock-spots` + `mock-spot-localizations`）の「言語非依存ベース + 言語別ローカライズ」分割をテーブルにも踏襲する。`businessHours` はモックで言語側（"24時間"/"Open 24 hours"）なのでローカライズ側に置く。
@@ -255,5 +287,5 @@ body → { genre, coordinates:{latitude,longitude}, imageUrl,
 - Specification `01_overview.md` — プロダクト概要
 - Specification `03_architecture.md` — フロントのアーキテクチャ思想
 - Specification `07_bounded-contexts.md` — 境界づけられたコンテキスト
-- Client `src/features/tourism/` — モック API・ドメインモデルの参照実装
+- Client `src/features/tourism/` — モック API（`infrastructure/api/mock-spots.ts`）・ドメインモデル（`domain/spot.ts`）の参照実装。**backend domain 設計の正**
 - Client Issue #129 — レビュー投稿の受け入れ条件
