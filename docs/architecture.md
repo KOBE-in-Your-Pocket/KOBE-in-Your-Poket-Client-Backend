@@ -21,10 +21,11 @@
 
 ### 1.1 採用するアーキテクチャ
 
-**Onion Architecture（package-by-feature の単一モジュール）**
+**Onion Architecture（package-by-layer の単一モジュール）**
 
 - 同心円状にレイヤを重ね、依存方向を常に内側（ドメイン）へ向ける
-- パッケージはコンテキスト（feature）単位で切るが、**モジュール境界のハード強制はしない**
+- パッケージは **レイヤ（domain / application / infrastructure）を上に置き**、その下に bounded context を切る
+- コンテキストを跨ぐユースケース・Spring DI の配線がしやすい構成
 
 ```
         ┌─────────────────────────────────────┐
@@ -47,7 +48,7 @@
 |---|---|
 | 規模 | backend の責務は実質 CRUD + geo + i18n 解決。コンテキスト間のハード隔離（Spring Modulith・イベント駆動）はコストが価値を上回る |
 | チーム | 5〜10 名・同一メンバーがフロント/バックを跨ぐ。Onion の「ドメイン中心＋依存性逆転」だけで十分な統制が効く |
-| 拡張性 | package-by-feature を保てば、将来 feature が肥大した時に Spring Modulith を後付けできる余地は残る |
+| 拡張性 | レイヤ単位で横断的な application サービスを追加しやすい。コンテキスト追加は各レイヤ配下にサブパッケージを増やす |
 
 > Onion / Hexagonal / Clean は同系統（ドメイン中心・依存性逆転）。重かったのは Modular Monolith レイヤであり、そこだけ外した。
 
@@ -55,6 +56,7 @@
 
 | 案 | 棄却理由 |
 |---|---|
+| package-by-feature（`{context}/domain/...`） | コンテキスト跨ぎの application 配線・Spring DI が煩雑。ドメイン型の横断参照もレイヤ単位の方が見通しが良い |
 | Modular Monolith + Spring Modulith | 本 backend の規模に対して境界強制のオーバーヘッドが過大 |
 | レイヤドアーキテクチャ（Controller→Service→Repository 直線） | ドメインが DB スキーマに引きずられ、依存性逆転が効かない |
 | マイクロサービス | 1 デプロイ単位で十分。コンテキストは後から切り出せる |
@@ -82,38 +84,48 @@
 
 ## 3. ディレクトリ構造
 
-### 3.1 パッケージ構成（feature-first）
+### 3.1 パッケージ構成（layer-first）
 
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt
-├── common/
-│   └── web/                      # 横断的な Web 部品（用途を絞った名前。"shared" ではない）
-│       └── HealthController.kt    # GET /api/ping
-└── tourism/                      # コアドメイン（フル Onion）
-    ├── domain/
-    │   ├── model/                # Spot, SpotId, Genre, Coordinates ...
-    │   └── repository/           # SpotRepository (port)
-    ├── application/              # SpotService（registerSpot / listSpots）
-    └── infrastructure/
-        ├── persistence/          # SpotEntity, SpotRepositoryImpl (adapter)
-        └── web/                  # SpotController, DTO
+├── domain/                       # 純粋 Kotlin（FW 非依存）
+│   ├── tourism/
+│   │   ├── model/                # Spot, SpotId, Genre, Coordinates ...
+│   │   └── repository/           # SpotRepository (port)
+│   ├── evacuation/
+│   ├── manner/
+│   ├── user/
+│   └── contentsubmission/
+├── application/                    # ユースケース（domain のみ依存）
+│   ├── tourism/                  # SpotService（registerSpot / listSpots）
+│   ├── evacuation/
+│   └── ...                       # コンテキスト跨ぎの Service は application/ 直下も可
+└── infrastructure/
+    ├── persistence/              # JPA エンティティ・Repository 実装
+    │   ├── tourism/
+    │   └── ...
+    └── web/                      # REST Controller・DTO
+        ├── common/               # GET /api/ping 等の横断 Web 部品
+        └── tourism/
 ```
 
-以降 `evacuation/` `manner/` `user/` `contentsubmission/` `qronboarding/` を同形で追加していく。
+`evacuation/` `manner/` `user/` `contentsubmission/` も同形のサブパッケージを各レイヤ配下に置く。
 
 ### 3.2 判断基準
 
 | 迷ったら | 置き場所 |
 |---|---|
-| 1 つのコンテキストに閉じる | `{context}/` |
-| 純粋なドメイン規則・型 | `{context}/domain/` |
-| FW/DB/HTTP に触れる | `{context}/infrastructure/` |
-| アプリ全体で横断する Web 部品 | `common/web/`（出てきた時点で、用途を絞って切り出す） |
+| 1 つのコンテキストに閉じる型・port | `domain/{context}/` |
+| ユースケース（単一コンテキスト） | `application/{context}/` |
+| 複数コンテキストを組み合わせるユースケース | `application/` 直下（例: `application/sync/`） |
+| JPA・DB adapter | `infrastructure/persistence/{context}/` |
+| REST・DTO | `infrastructure/web/{context}/` |
+| アプリ全体で横断する Web 部品 | `infrastructure/web/common/` |
 
 ### 3.3 `shared/` を作らない
 
-フロントの `shared/` は UI primitives・i18next ラッパ等「UI 層の横断物」の置き場で、backend に等価物が無い。横断的に必要なもの（例：グローバル例外ハンドラ `@RestControllerAdvice`）が**実際に複数 feature で必要になった時点で**、`common/web` のように**用途を絞った名前**で切り出す。最初から横断バケツは作らない（YAGNI）。
+フロントの `shared/` は UI primitives・i18next ラッパ等「UI 層の横断物」の置き場で、backend に等価物が無い。横断的に必要なもの（例：グローバル例外ハンドラ `@RestControllerAdvice`）が**実際に複数 feature で必要になった時点で**、`infrastructure/web/common` のように**用途を絞った名前**で切り出す。最初から横断バケツは作らない（YAGNI）。
 
 ---
 
@@ -128,7 +140,6 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 | Manner | コア | **フル Onion**（スポット連動マナーは spotId 参照のみ） |
 | User | 支援 | 軽量（application 省略可） |
 | ContentSubmission | 支援 | 軽量（書き込み・公開状態） |
-| QrOnboarding | 支援 | 超軽量（トークン解決のみ） |
 | Localization | 汎用 | 各 feature 内で言語解決（独立層にしない） |
 | GeoLocation | 汎用 | 各 feature の persistence + PostGIS（§7.2） |
 
@@ -165,9 +176,9 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 ## 6. 境界・依存の自動強制
 
 - **ArchUnit (JUnit5)** で以下を CI 必須化する：
-  1. `domain` は `application` / `infrastructure` / Spring / JPA に依存しない
-  2. `web` は `persistence` を直接参照しない（application 経由）
-  3. レイヤの依存方向（web/persistence → application → domain）を守る
+  1. `..domain..` は `..application..` / `..infrastructure..` / Spring / JPA に依存しない
+  2. `..infrastructure.web..` は `..infrastructure.persistence..` を直接参照しない（application 経由）
+  3. レイヤの依存方向（infrastructure → application → domain）を守る
 - 段階導入：プロトタイプ期は `warn`、本実装以降は失敗扱い（フロントの boundaries 運用と同調）
 
 ---
