@@ -1,0 +1,11 @@
+.git
+.gitignore
+.idea
+*.iml
+build/
+.gradle/
+HELP.md
+README.md
+claudedocs/
+.env
+.env.*

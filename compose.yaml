@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kobe}
+      POSTGRES_USER: ${POSTGRES_USER:-kobe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kobe}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kobe} -d ${POSTGRES_DB:-kobe}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 本番相当: マルチステージ Dockerfile でビルドした jar を実行 (make up)
+  app:
+    build:
+      context: .
+    profiles: [prod]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-kobe}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-kobe}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-kobe}
+    ports:
+      - "9090:9090"
+
+  # 開発: ソースから bootRun で起動 (make dev)。
+  # test / lint / build もこのサービス定義を再利用する (Makefile の GRADLE)。
+  dev:
+    image: eclipse-temurin:17-jdk
+    working_dir: /workspace
+    command: ["./gradlew", "bootRun", "--no-daemon"]
+    profiles: [dev]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOME: /workspace
+      GRADLE_USER_HOME: /workspace/.gradle
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-kobe}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-kobe}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-kobe}
+    volumes:
+      - .:/workspace
+    ports:
+      - "9090:9090"
+
+volumes:
+  db-data:

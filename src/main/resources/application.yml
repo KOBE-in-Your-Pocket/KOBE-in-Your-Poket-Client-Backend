@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: kobe-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kobe}
+    username: ${SPRING_DATASOURCE_USERNAME:kobe}
+    password: ${SPRING_DATASOURCE_PASSWORD:kobe}
+  flyway:
+    # スキーマは Flyway が管理 (db/migration の V__*.sql を起動時に適用)
+    enabled: true
+  jpa:
+    hibernate:
+      # スキーマは Flyway が所有。Hibernate は検証のみ行う
+      ddl-auto: ${SPRING_JPA_DDL_AUTO:validate}
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+
+server:
+  # Metro/Expo (8081 系) との衝突回避のためデフォルトを 9090 にずらしている
+  port: ${SERVER_PORT:9090}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
