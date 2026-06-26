@@ -26,12 +26,14 @@
 
 ## アーキテクチャ
 
-**Onion Architecture（package-by-feature の単一モジュール）** を採用。
+**Onion Architecture（package-by-layer の単一モジュール）** を採用。
 依存方向は常に内側（ドメイン）へ向け、`domain` は純粋 Kotlin に保つ。
 
 ```
 infrastructure (web / persistence)  →  application  →  domain  ←  (実装) persistence
 ```
+
+レイヤを上に置くことで、コンテキスト跨ぎのユースケース配線・Spring DI がしやすい。
 
 - フロントの Modular Monolith はバックエンドの規模に対し過大として不採用
 - レイヤ依存は将来 ArchUnit で機械的に強制する（feature 実装時に導入）
@@ -62,12 +64,11 @@ infrastructure (web / persistence)  →  application  →  domain  ←  (実装)
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt   # エントリポイント
-├── common/web/                 # 横断的な Web コンポーネント (GET /api/ping 等)
-└── tourism/                    # コアドメイン (フル Onion)
-    ├── domain/                 #   model / repository (純粋 Kotlin)
-    ├── application/            #   ユースケース
-    └── infrastructure/         #   persistence (JPA) / web (REST)
-# evacuation / manner / user / contentsubmission / qronboarding は雛形のみ
+├── domain/                     # 純粋 Kotlin（{tourism,evacuation,...}/model, repository）
+├── application/                # ユースケース（{context}/ または横断サービス）
+└── infrastructure/
+    ├── persistence/            # JPA（{context}/）
+    └── web/                    # REST（common/ + {context}/）
 
 src/main/resources/
 ├── application.yml             # 設定 (環境変数で上書き可)
