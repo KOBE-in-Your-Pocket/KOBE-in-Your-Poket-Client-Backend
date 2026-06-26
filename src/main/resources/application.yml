@@ -5,10 +5,13 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kobe}
     username: ${SPRING_DATASOURCE_USERNAME:kobe}
     password: ${SPRING_DATASOURCE_PASSWORD:kobe}
+  flyway:
+    # スキーマは Flyway が管理 (db/migration の V__*.sql を起動時に適用)
+    enabled: true
   jpa:
     hibernate:
-      # 開発中は update。スキーマ管理を導入したら none に切り替える
-      ddl-auto: ${SPRING_JPA_DDL_AUTO:update}
+      # スキーマは Flyway が所有。Hibernate は検証のみ行う
+      ddl-auto: ${SPRING_JPA_DDL_AUTO:validate}
     open-in-view: false
     properties:
       hibernate:
@@ -16,7 +19,8 @@ spring:
     show-sql: ${SPRING_JPA_SHOW_SQL:false}
 
 server:
-  port: ${SERVER_PORT:8080}
+  # Metro/Expo (8081 系) との衝突回避のためデフォルトを 9090 にずらしている
+  port: ${SERVER_PORT:9090}
 
 management:
   endpoints:

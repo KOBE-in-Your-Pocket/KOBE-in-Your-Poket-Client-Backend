@@ -15,6 +15,8 @@ KOBE in Your Pocket のバックエンド側リポジトリです。
 | Gradle | 9.6.0 (wrapper) |
 | Java (toolchain) | 17 |
 | PostgreSQL | 17 |
+| Flyway | (Spring Boot 管理) |
+| ktlint (gradle) | 14.2.0 |
 
 > Kotlin は最新安定版 2.4.0 ではなく、Spring Boot 4.1.0 が公式に検証・管理する 2.3.21 を採用しています（Spring/JPA コンパイラプラグインの互換性確保のため）。
 
@@ -23,39 +25,44 @@ KOBE in Your Pocket のバックエンド側リポジトリです。
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt   # エントリポイント
-└── common/web/                 # 横断的な Web コンポーネント
-    └── HealthController.kt      # GET /api/ping
+├── common/web/                 # 横断的な Web コンポーネント (GET /api/ping 等)
+└── tourism/                    # コアドメイン (フル Onion)
+    ├── domain/                 #   model / repository (純粋 Kotlin)
+    ├── application/            #   ユースケース
+    └── infrastructure/         #   persistence (JPA) / web (REST)
+# evacuation / manner / user / contentsubmission / qronboarding は雛形のみ
 ```
+
+> 設計の詳細は [`docs/architecture.md`](docs/architecture.md) を参照。
 
 ## 開発手順
 
-### 1. DB だけ起動してローカルでアプリを実行
+ローカルに JDK / Gradle は不要。**Docker さえあれば**すべて回る (`make help` で一覧)。
 
 ```bash
-docker compose up -d db          # PostgreSQL を起動
-./gradlew bootRun                # アプリをローカル実行 (localhost:8080)
+make dev      # 開発: DB + アプリ(ソースから bootRun) を起動
+make up       # 本番相当: DB + アプリ(jar) をバックグラウンド起動
+make test     # テスト (Docker 上の Gradle / H2)
+make lint     # ktlint チェック
+make format   # ktlint 自動整形
+make down     # 停止 (make clean で DB データも削除)
 ```
 
-### 2. すべて Docker で起動
+> アプリは **9090** 番ポートで起動する (Metro/Expo の 8081 系と衝突しないようずらしている)。
+
+### 動作確認
 
 ```bash
-docker compose up --build        # DB + アプリをまとめて起動
-```
-
-### 3. 動作確認
-
-```bash
-curl http://localhost:8080/api/ping
+curl http://localhost:9090/api/ping
 # {"status":"ok","service":"kobe-backend","timestamp":"..."}
-
-curl http://localhost:8080/actuator/health
+curl http://localhost:9090/actuator/health
 ```
 
-### 4. ビルド / テスト
+### DB マイグレーション (Flyway)
 
-```bash
-./gradlew build                  # テストは H2 (インメモリ) で実行されるため DB 不要
-```
+スキーマは Flyway が管理する。`src/main/resources/db/migration/` に `V<番号>__<説明>.sql`
+を置くと、`make up` / `make dev` の起動時に自動適用される。Hibernate は `ddl-auto=validate`
+でエンティティとスキーマの整合のみ検証する (テストは H2 + `create-drop`、Flyway 無効)。
 
 ## 設定
 
@@ -66,5 +73,5 @@ curl http://localhost:8080/actuator/health
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/kobe` | DB 接続 URL |
 | `SPRING_DATASOURCE_USERNAME` | `kobe` | DB ユーザー |
 | `SPRING_DATASOURCE_PASSWORD` | `kobe` | DB パスワード |
-| `SPRING_JPA_DDL_AUTO` | `update` | Hibernate のスキーマ自動生成 |
-| `SERVER_PORT` | `8080` | アプリのポート |
+| `SPRING_JPA_DDL_AUTO` | `validate` | Hibernate のスキーマ検証 (スキーマは Flyway が所有) |
+| `SERVER_PORT` | `9090` | アプリのポート (Metro/Expo 8081 系との衝突回避) |
