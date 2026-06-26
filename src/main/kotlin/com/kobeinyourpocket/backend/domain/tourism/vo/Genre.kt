@@ -1,9 +1,10 @@
-package com.kobeinyourpocket.backend.domain.tourism.model
+package com.kobeinyourpocket.backend.domain.tourism.vo
 
 /**
- * 観光スポットのジャンル区分。
+ * ジャンル区分の Value Object（列挙）。
  *
  * Client `SpotGenre`（`domain/spot.ts`）と同値を API 契約として共有する。
+ * [Companion.fromApiValue] が文字列 → enum への変換入口。
  */
 enum class Genre(
     val apiValue: String,

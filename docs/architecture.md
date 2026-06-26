@@ -91,7 +91,8 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt
 ├── domain/                       # 純粋 Kotlin（FW 非依存）
 │   ├── tourism/
-│   │   ├── model/                # Spot, SpotId, Genre, Coordinates ...
+│   │   ├── vo/                   # Value Object（Coordinates, SpotId, Genre ...）
+│   │   ├── aggregate/            # 集約ルート（Spot 等。vo をコンポジションで保持）
 │   │   └── repository/           # SpotRepository (port)
 │   ├── evacuation/
 │   ├── manner/
@@ -117,6 +118,8 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 | 迷ったら | 置き場所 |
 |---|---|
 | 1 つのコンテキストに閉じる型・port | `domain/{context}/` |
+| Value Object（値オブジェクト） | `domain/{context}/vo/` |
+| 集約ルート（Entity） | `domain/{context}/aggregate/` |
 | ユースケース（単一コンテキスト） | `application/{context}/` |
 | 複数コンテキストを組み合わせるユースケース | `application/` 直下（例: `application/sync/`） |
 | JPA・DB adapter | `infrastructure/persistence/{context}/` |
@@ -202,7 +205,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 #### 手順
 
 1. 対象コンテキストの `mock-*.ts` と `domain/*.ts` を読み、**API が返す解決済みオブジェクト**の形を把握する
-2. `domain/{context}/model/` に、それと整合する Kotlin 型（集約・値オブジェクト）を定義する
+2. `domain/{context}/vo/` に Value Object、`domain/{context}/aggregate/` に集約ルートを定義する（Client Mock API と整合）
 3. 永続化（DB テーブル）は API 形と一致させる必要はない（§7.1 の i18n 分割など）。**domain ↔ persistence の変換は infrastructure/persistence に閉じる**
 4. REST レスポンス DTO（`infrastructure/web`）は Mock の返却形に合わせ、domain から組み立てる
 
@@ -211,7 +214,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 | Client（`domain/spot.ts` + `mock-spots.ts`） | backend |
 |---|---|
 | `Spot { id, name, genre, description, coordinates, businessHours, category, media, rating? }` | 一覧 API の返却単位。`rating` はレビュー未実装時 `null` |
-| `SpotGenre` リテラル列挙 | `domain/tourism/model` の enum 等で同値を定義 |
+| `SpotGenre` リテラル列挙 | `domain/tourism/vo` の enum 等で同値を定義 |
 | `MOCK_SPOT_BASES` + `MOCK_SPOT_LOCALIZATIONS` の分割 | DB は `spot` + `spot_localization` に分割（§7.1）。API は `lang` 解決後に Client の `Spot` 形で返す |
 | `fetchSpots(language): Promise<Spot[]>` | `GET /api/v1/tourism/spots?lang=` の 200 レスポンス |
 

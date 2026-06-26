@@ -1,9 +1,10 @@
-package com.kobeinyourpocket.backend.domain.tourism.model
+package com.kobeinyourpocket.backend.domain.tourism.vo
 
 /**
- * 観光スポットの位置（緯度・経度）。
+ * 緯度・経度の Value Object。
  *
- * Client `SpotCoordinates` に対応する。
+ * Client `SpotCoordinates` に対応する。`aggregate.Spot` がコンポジションで保持する。
+ * [Companion.of] が生成入口（範囲チェックは `init` で実施）。
  */
 data class Coordinates(
     val latitude: Double,

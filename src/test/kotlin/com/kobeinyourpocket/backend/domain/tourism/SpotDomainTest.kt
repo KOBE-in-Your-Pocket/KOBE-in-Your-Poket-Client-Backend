@@ -1,5 +1,11 @@
-package com.kobeinyourpocket.backend.domain.tourism.model
+package com.kobeinyourpocket.backend.domain.tourism
 
+import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
+import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.vo.SpotRating
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

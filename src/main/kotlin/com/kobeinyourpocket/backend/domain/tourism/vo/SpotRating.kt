@@ -1,9 +1,10 @@
-package com.kobeinyourpocket.backend.domain.tourism.model
+package com.kobeinyourpocket.backend.domain.tourism.vo
 
 /**
- * 観光スポットの評価（5 段階）。
+ * 5 段階評価の Value Object。
  *
- * feature ① では未集計のため通常 `null`。Client `SpotRating` に対応する。
+ * feature ① では未集計のため `aggregate.Spot` 上では通常 `null`。
+ * Client `SpotRating` に対応する。
  */
 data class SpotRating(
     val value: Double,

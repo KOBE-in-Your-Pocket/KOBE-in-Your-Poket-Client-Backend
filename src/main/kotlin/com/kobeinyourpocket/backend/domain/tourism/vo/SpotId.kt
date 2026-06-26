@@ -1,7 +1,9 @@
-package com.kobeinyourpocket.backend.domain.tourism.model
+package com.kobeinyourpocket.backend.domain.tourism.vo
 
 /**
- * 観光スポットの識別子（slug 等）。
+ * スポット識別子の Value Object（slug 等）。
+ *
+ * 集約 `aggregate.Spot` の同一性（identity）を表す。[Companion.of] が生成入口。
  */
 @JvmInline
 value class SpotId private constructor(
