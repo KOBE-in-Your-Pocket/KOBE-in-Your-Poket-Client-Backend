@@ -20,3 +20,16 @@ venv/
 # Build output
 dist/
 build/
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin / IDE
+*.iml
+.idea/
+.kotlin/
+out/
+
+# OS / editor
+*.swp

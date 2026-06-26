@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kobe}
+      POSTGRES_USER: ${POSTGRES_USER:-kobe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kobe}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kobe} -d ${POSTGRES_DB:-kobe}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-kobe}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-kobe}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-kobe}
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:
