@@ -1,24 +1,31 @@
 package com.kobeinyourpocket.backend.domain.tourism.vo
 
 /**
- * ジャンル区分の Value Object（列挙）。
+ * ジャンル区分の Value Object。
  *
- * Client `SpotGenre`（`domain/spot.ts`）と同値を API 契約として共有する。
- * [Companion.fromApiValue] が文字列 → enum への変換入口。
+ * ジャンルは運営（管理者）側で追加・拡張されうるため、固定列挙ではなく
+ * 文字列をラップする汎用モデルとして定義する。
+ * Client `SpotGenre`（`domain/spot.ts`）の既定値は [Companion] に定数として提供し、
+ * 任意の値は [Companion.of] を入口に生成する。
  */
-enum class Genre(
-    val apiValue: String,
+@JvmInline
+value class Genre private constructor(
+    val value: String,
 ) {
-    LANDMARK("landmark"),
-    NATURE("nature"),
-    HISTORY("history"),
-    GOURMET("gourmet"),
-    ONSEN("onsen"),
-    ;
+    init {
+        require(value.isNotBlank()) { "Genre must not be blank" }
+    }
+
+    override fun toString(): String = value
 
     companion object {
-        fun fromApiValue(value: String): Genre =
-            entries.find { it.apiValue == value }
-                ?: throw IllegalArgumentException("Unknown genre: $value")
+        // Client `SpotGenre` 既知ジャンル（運営側で追加されうる）
+        val LANDMARK = Genre("landmark")
+        val NATURE = Genre("nature")
+        val HISTORY = Genre("history")
+        val GOURMET = Genre("gourmet")
+        val ONSEN = Genre("onsen")
+
+        fun of(value: String): Genre = Genre(value.trim())
     }
 }
