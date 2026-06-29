@@ -3,7 +3,10 @@ package com.kobeinyourpocket.backend.domain.tourism
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
 import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
 import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.vo.Language
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
+import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotRating
 import kotlin.test.Test
@@ -110,6 +113,107 @@ class SpotRatingTest {
     fun `0から5の範囲外は拒否する`() {
         assertFailsWith<IllegalArgumentException> {
             SpotRating(5.1)
+        }
+    }
+}
+
+class LanguageTest {
+    @Test
+    fun `対応コードから解決できる`() {
+        assertEquals(Language.JA, Language.of("ja"))
+        assertEquals(Language.EN, Language.of("en"))
+        assertEquals(Language.KO, Language.of("ko"))
+        assertEquals(Language.ZH, Language.of("zh"))
+    }
+
+    @Test
+    fun `前後空白と大文字を正規化する`() {
+        assertEquals(Language.EN, Language.of("  EN  "))
+    }
+
+    @Test
+    fun `未対応コードは null を返す`() {
+        assertNull(Language.of("fr"))
+        assertNull(Language.of(""))
+    }
+
+    @Test
+    fun `既定言語は ja`() {
+        assertEquals(Language.JA, Language.DEFAULT)
+    }
+}
+
+class SpotLocalizationTest {
+    @Test
+    fun `言語別フィールドを保持する`() {
+        val localization =
+            SpotLocalization(
+                name = "神戸ポートタワー",
+                categoryLabel = "ランドマーク",
+                description = "神戸のシンボル。",
+                businessHours = "9:00-23:00",
+            )
+
+        assertEquals("神戸ポートタワー", localization.name)
+        assertEquals("ランドマーク", localization.categoryLabel)
+    }
+
+    @Test
+    fun `name が空なら拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            SpotLocalization(name = "  ", categoryLabel = "ランドマーク", description = "x", businessHours = "")
+        }
+    }
+
+    @Test
+    fun `categoryLabel が空なら拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            SpotLocalization(name = "神戸ポートタワー", categoryLabel = "  ", description = "x", businessHours = "")
+        }
+    }
+}
+
+class SpotLocalizationsTest {
+    private val ja =
+        SpotLocalization(
+            name = "神戸ポートタワー",
+            categoryLabel = "ランドマーク",
+            description = "神戸のシンボル。",
+            businessHours = "9:00-23:00",
+        )
+    private val en =
+        SpotLocalization(
+            name = "Kobe Port Tower",
+            categoryLabel = "Landmark",
+            description = "The symbol of Kobe.",
+            businessHours = "9:00-23:00",
+        )
+
+    @Test
+    fun `要求言語のローカライズを返す`() {
+        val localizations = SpotLocalizations.of(mapOf(Language.JA to ja, Language.EN to en))
+
+        assertEquals(en, localizations.resolve(Language.EN))
+    }
+
+    @Test
+    fun `要求言語が無ければ ja へフォールバックする`() {
+        val localizations = SpotLocalizations.of(mapOf(Language.JA to ja, Language.EN to en))
+
+        assertEquals(ja, localizations.resolve(Language.KO))
+    }
+
+    @Test
+    fun `収録言語の集合を返す`() {
+        val localizations = SpotLocalizations.of(mapOf(Language.JA to ja, Language.EN to en))
+
+        assertEquals(setOf(Language.JA, Language.EN), localizations.languages)
+    }
+
+    @Test
+    fun `ja を含まない場合は拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            SpotLocalizations.of(mapOf(Language.EN to en))
         }
     }
 }
