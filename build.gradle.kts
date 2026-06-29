@@ -28,8 +28,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
 
-    // DB スキーマ管理 (バージョンは Spring Boot BOM 管理)
-    implementation("org.flywaydb:flyway-core")
+    // DB スキーマ管理 (Spring Boot 4 は starter が必要)
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
     runtimeOnly("org.postgresql:postgresql")

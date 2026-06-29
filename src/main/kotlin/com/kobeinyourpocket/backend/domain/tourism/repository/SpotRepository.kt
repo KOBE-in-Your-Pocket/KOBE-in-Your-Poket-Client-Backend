@@ -2,11 +2,7 @@ package com.kobeinyourpocket.backend.domain.tourism.repository
 
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
 
-/**
- * SpotId は呼び出し側で採番済みであること。実装は infrastructure.persistence の adapter（#19）。
- */
+/** write 専用 port（command）。read は [com.kobeinyourpocket.backend.application.tourism.query.SpotQuery]。 */
 interface SpotRepository {
-    fun findAll(): List<SpotWithLocalizations>
-
     fun save(spot: SpotWithLocalizations): SpotWithLocalizations
 }
