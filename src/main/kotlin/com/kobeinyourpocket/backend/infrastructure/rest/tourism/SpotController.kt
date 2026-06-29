@@ -6,6 +6,7 @@ import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
 import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
 import com.kobeinyourpocket.backend.domain.tourism.vo.Language
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -37,7 +38,7 @@ class SpotController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun registerSpot(
-        @RequestBody request: RegisterSpotRequest,
+        @Valid @RequestBody request: RegisterSpotRequest,
     ): SpotResponse {
         val saved =
             registerSpotService.registerSpot(
