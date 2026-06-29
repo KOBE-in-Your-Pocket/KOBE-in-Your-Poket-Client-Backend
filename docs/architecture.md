@@ -21,11 +21,12 @@
 
 ### 1.1 採用するアーキテクチャ
 
-**Onion Architecture（package-by-layer の単一モジュール）**
+**Onion Architecture（feature-first + CQRS-lite）**
 
 - 同心円状にレイヤを重ね、依存方向を常に内側（ドメイン）へ向ける
-- パッケージは **レイヤ（domain / application / infrastructure）を上に置き**、その下に bounded context を切る
-- コンテキストを跨ぐユースケース・Spring DI の配線がしやすい構成
+- **実装済みコンテキスト（tourism）は feature-first** — `tourism/{domain,application,infrastructure}` に1機能を集約
+- **read / write を分離（CQRS-lite）** — command は domain 集約経由、query は読みモデル + 専用 port で SQL 直行
+- 未実装コンテキスト（evacuation 等）は layer-first の雛形を維持（実装時に tourism と同形へ移行）
 
 ```
         ┌─────────────────────────────────────┐
@@ -68,15 +69,17 @@
 
 | 層 | 責務 | 依存してよい先 |
 |---|---|---|
-| **domain** | ドメインモデル・不変条件・Repository interface（port）。純粋 Kotlin | 何にも依存しない（Spring も JPA も知らない） |
-| **application** | ユースケース（ドメイン要素を組み合わせた手続き） | domain のみ |
-| **infrastructure/persistence** | JPA エンティティ・Repository 実装（outbound adapter） | domain のみ |
-| **infrastructure/web** | REST Controller・DTO（inbound adapter） | application, domain |
+| **domain** | ドメインモデル・不変条件・write Repository port。純粋 Kotlin | 何にも依存しない（Spring も JPA も知らない） |
+| **application/command** | 書き込みユースケース（集約の組み立て・保存） | domain のみ |
+| **application/query** | 読み取りユースケース + 読みモデル + read port 定義 | domain（Language 等の VO のみ） |
+| **infrastructure/persistence** | JPA エンティティ・write Repository 実装 | domain のみ |
+| **infrastructure/query** | read port 実装（SQL projection） | application/query の port |
+| **infrastructure/rest** | REST Controller・DTO（inbound adapter） | application, domain |
 
 ### 鉄則
 
 - **domain は外側を一切 import しない**（依存性逆転：infrastructure が domain の port を実装する）
-- **web は persistence を直接呼ばない**。必ず application を経由
+- **rest は persistence / query を直接呼ばない**。必ず application を経由
 - application が単純転送だけなら省略可（軽量モード。支援サブドメイン向け）
 - この依存方向は **ArchUnit** で機械的に強制する（§6）
 
@@ -84,51 +87,51 @@
 
 ## 3. ディレクトリ構造
 
-### 3.1 パッケージ構成（layer-first）
+### 3.1 パッケージ構成（tourism = feature-first + CQRS-lite）
 
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt
-├── domain/                       # 純粋 Kotlin（FW 非依存）
-│   ├── tourism/
-│   │   ├── vo/                   # Value Object（Coordinates, SpotId, Genre ...）
-│   │   ├── aggregate/            # 集約ルート（Spot 等。vo をコンポジションで保持）
-│   │   └── repository/           # SpotRepository (port)
-│   ├── evacuation/
-│   ├── manner/
-│   ├── user/
-│   └── contentsubmission/
-├── application/                    # ユースケース（domain のみ依存）
-│   ├── tourism/                  # SpotService（registerSpot / listSpots）
-│   ├── evacuation/
-│   └── ...                       # コンテキスト跨ぎの Service は application/ 直下も可
+├── tourism/                          # 観光コンテキスト（feature-first）
+│   ├── domain/
+│   │   ├── vo/                       # Value Object
+│   │   ├── aggregate/                # 集約ルート（write 側）
+│   │   └── repository/               # SpotRepository（write port）
+│   ├── application/
+│   │   ├── command/                  # RegisterSpotService
+│   │   └── query/                    # ListSpotsService, SpotView, SpotQuery port
+│   └── infrastructure/
+│       ├── persistence/              # JPA write adapter
+│       ├── query/                    # SpotQueryJpa（read adapter）
+│       └── rest/                     # SpotController, SpotResponse
+├── domain/                           # 未実装コンテキスト（layer-first 雛形）
+│   ├── evacuation/ ...
+│   └── manner/ ...
+├── application/ ...
 └── infrastructure/
-    ├── persistence/              # JPA エンティティ・Repository 実装
-    │   ├── tourism/
-    │   └── ...
-    └── web/                      # REST Controller・DTO
-        ├── common/               # GET /api/ping 等の横断 Web 部品
-        └── tourism/
+    └── rest/common/                  # GET /api/ping 等の横断 REST 部品
 ```
 
-`evacuation/` `manner/` `user/` `contentsubmission/` も同形のサブパッケージを各レイヤ配下に置く。
+`evacuation/` `manner/` 等は実装着手時に `tourism/` と同形の feature-first へ移行する。
 
 ### 3.2 判断基準
 
 | 迷ったら | 置き場所 |
 |---|---|
-| 1 つのコンテキストに閉じる型・port | `domain/{context}/` |
-| Value Object（値オブジェクト） | `domain/{context}/vo/` |
-| 集約ルート（Entity） | `domain/{context}/aggregate/` |
-| ユースケース（単一コンテキスト） | `application/{context}/` |
-| 複数コンテキストを組み合わせるユースケース | `application/` 直下（例: `application/sync/`） |
-| JPA・DB adapter | `infrastructure/persistence/{context}/` |
-| REST・DTO | `infrastructure/web/{context}/` |
-| アプリ全体で横断する Web 部品 | `infrastructure/web/common/` |
+| tourism の Value Object | `tourism/domain/vo/` |
+| tourism の集約ルート（write） | `tourism/domain/aggregate/` |
+| tourism の write port | `tourism/domain/repository/` |
+| 書き込みユースケース | `tourism/application/command/` |
+| 読み取りユースケース・読みモデル・read port | `tourism/application/query/` |
+| JPA write adapter | `tourism/infrastructure/persistence/` |
+| SQL read adapter | `tourism/infrastructure/query/` |
+| REST Controller・DTO | `tourism/infrastructure/rest/` |
+| アプリ横断 REST | `infrastructure/rest/common/` |
+| 未実装コンテキスト | 従来どおり `domain/{context}/` 等（実装時に feature-first へ） |
 
 ### 3.3 `shared/` を作らない
 
-フロントの `shared/` は UI primitives・i18next ラッパ等「UI 層の横断物」の置き場で、backend に等価物が無い。横断的に必要なもの（例：グローバル例外ハンドラ `@RestControllerAdvice`）が**実際に複数 feature で必要になった時点で**、`infrastructure/web/common` のように**用途を絞った名前**で切り出す。最初から横断バケツは作らない（YAGNI）。
+フロントの `shared/` は UI primitives・i18next ラッパ等「UI 層の横断物」の置き場で、backend に等価物が無い。横断的に必要なもの（例：グローバル例外ハンドラ `@RestControllerAdvice`）が**実際に複数 feature で必要になった時点で**、`infrastructure/rest/common` のように**用途を絞った名前**で切り出す。最初から横断バケツは作らない（YAGNI）。
 
 ---
 
@@ -180,7 +183,7 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 
 - **ArchUnit (JUnit5)** で以下を CI 必須化する：
   1. `..domain..` は `..application..` / `..infrastructure..` / Spring / JPA に依存しない
-  2. `..infrastructure.web..` は `..infrastructure.persistence..` を直接参照しない（application 経由）
+  2. `..infrastructure.rest..` は `..infrastructure.persistence..` / `..infrastructure.query..` を直接参照しない（application 経由）
   3. レイヤの依存方向（infrastructure → application → domain）を守る
 - 段階導入：プロトタイプ期は `warn`、本実装以降は失敗扱い（フロントの boundaries 運用と同調）
 
@@ -205,7 +208,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 #### 手順
 
 1. 対象コンテキストの `mock-*.ts` と `domain/*.ts` を読み、**API が返す解決済みオブジェクト**の形を把握する
-2. `domain/{context}/vo/` に Value Object、`domain/{context}/aggregate/` に集約ルートを定義する（Client Mock API と整合）
+2. `tourism/domain/vo/` + `tourism/domain/aggregate/` に write 側モデル、`tourism/application/query/` に [SpotView] 読みモデルを定義する
 3. 永続化（DB テーブル）は API 形と一致させる必要はない（§7.1 の i18n 分割など）。**domain ↔ persistence の変換は infrastructure/persistence に閉じる**
 4. REST レスポンス DTO（`infrastructure/web`）は Mock の返却形に合わせ、domain から組み立てる
 
