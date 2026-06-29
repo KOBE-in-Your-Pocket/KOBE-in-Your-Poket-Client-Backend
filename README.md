@@ -26,14 +26,14 @@
 
 ## アーキテクチャ
 
-**Onion Architecture（tourism = feature-first + CQRS-lite）** を採用。
+**Onion Architecture（layer-first + CQRS-lite）** を採用。
 
 ```
-features/tourism/infrastructure/rest  →  features/tourism/application/{command,query}  →  features/tourism/domain
-                                                ↓ read
-                                         features/tourism/infrastructure/query
-                                                ↓ write
-                                         features/tourism/infrastructure/persistence
+infrastructure/rest/tourism  →  application/tourism/{command,query}  →  domain/tourism
+                                        ↓ read
+                                 infrastructure/query/tourism
+                                        ↓ write
+                                 infrastructure/persistence/tourism
 ```
 
 - ドメインモデルは **Client の Mock API スキーマ**（`features/{context}/infrastructure/api/mock-*.ts` および `domain/*.ts`）を参照して設計する（[`docs/architecture.md` §7.0](docs/architecture.md#70-ドメインモデル作成方針client-mock-api-を正とする)）
@@ -66,15 +66,16 @@ features/tourism/infrastructure/rest  →  features/tourism/application/{command
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt   # エントリポイント
-├── features/
-│   └── tourism/                # 観光（feature-first + CQRS-lite）
-│       ├── domain/{vo,aggregate,repository}/
-│       ├── application/{command,query}/
-│       └── infrastructure/{persistence,query,rest}/
-├── domain/                     # 未実装コンテキスト（layer-first 雛形）
-├── application/
+├── domain/                     # コンテキスト別ドメイン（tourism, evacuation, …）
+│   └── tourism/{vo,aggregate,repository}/
+├── application/                # ユースケース（CQRS: command / query）
+│   └── tourism/{command,query}/
 └── infrastructure/
-    └── rest/common/            # 横断 REST（/api/ping 等）
+    ├── persistence/tourism/
+    ├── query/tourism/
+    └── rest/
+        ├── common/             # 横断 REST（/api/ping 等）
+        └── tourism/
 
 src/main/resources/
 ├── application.yml             # 設定 (環境変数で上書き可)

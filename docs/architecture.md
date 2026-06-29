@@ -21,12 +21,11 @@
 
 ### 1.1 採用するアーキテクチャ
 
-**Onion Architecture（feature-first + CQRS-lite）**
+**Onion Architecture（layer-first + CQRS-lite）**
 
 - 同心円状にレイヤを重ね、依存方向を常に内側（ドメイン）へ向ける
-- **実装済みコンテキスト（tourism）は feature-first** — `features/tourism/{domain,application,infrastructure}` に1機能を集約（Client の `features/tourism/` と対応）
+- **layer-first** — 各レイヤ配下にコンテキスト名（`tourism/` `evacuation/` …）のサブパッケージを置く
 - **read / write を分離（CQRS-lite）** — command は domain 集約経由、query は読みモデル + 専用 port で SQL 直行
-- 未実装コンテキスト（evacuation 等）は layer-first の雛形を維持（実装時に tourism と同形へ移行）
 
 ```
         ┌─────────────────────────────────────┐
@@ -87,48 +86,46 @@
 
 ## 3. ディレクトリ構造
 
-### 3.1 パッケージ構成（tourism = feature-first + CQRS-lite）
+### 3.1 パッケージ構成（layer-first + CQRS-lite）
 
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt
-├── features/                         # 実装済みコンテキスト（feature-first）
-│   └── tourism/                      # 観光（Client features/tourism/ と対応）
-│       ├── domain/
-│       │   ├── vo/                   # Value Object
-│       │   ├── aggregate/            # 集約ルート（write 側）
-│       │   └── repository/           # SpotRepository（write port）
-│       ├── application/
-│       │   ├── command/              # RegisterSpotService
-│       │   └── query/                # ListSpotsService, SpotView, SpotQuery port
-│       └── infrastructure/
-│           ├── persistence/          # JPA write adapter
-│           ├── query/                # SpotQueryJpa（read adapter）
-│           └── rest/                 # SpotController, SpotResponse
-├── domain/                           # 未実装コンテキスト（layer-first 雛形）
+├── domain/                           # コンテキスト別ドメイン
+│   ├── tourism/
+│   │   ├── vo/                       # Value Object
+│   │   ├── aggregate/                # 集約ルート（write 側）
+│   │   └── repository/               # SpotRepository（write port）
 │   ├── evacuation/ ...
 │   └── manner/ ...
-├── application/ ...
+├── application/                      # ユースケース（CQRS: command / query）
+│   └── tourism/
+│       ├── command/                  # RegisterSpotService
+│       └── query/                    # ListSpotsService, SpotView, SpotQuery port
 └── infrastructure/
-    └── rest/common/                  # GET /api/ping 等の横断 REST 部品
+    ├── persistence/tourism/          # JPA write adapter
+    ├── query/tourism/                # SpotQueryJpa（read adapter）
+    └── rest/
+        ├── common/                   # GET /api/ping 等の横断 REST 部品
+        └── tourism/                  # SpotController, SpotResponse
 ```
 
-`evacuation/` `manner/` 等は実装着手時に `features/{context}/` と同形の feature-first へ移行する。
+未実装コンテキスト（evacuation 等）も同じ layer-first + `{command,query}` 分割で実装する。
 
 ### 3.2 判断基準
 
 | 迷ったら | 置き場所 |
 |---|---|
-| tourism の Value Object | `features/tourism/domain/vo/` |
-| tourism の集約ルート（write） | `features/tourism/domain/aggregate/` |
-| tourism の write port | `features/tourism/domain/repository/` |
-| 書き込みユースケース | `features/tourism/application/command/` |
-| 読み取りユースケース・読みモデル・read port | `features/tourism/application/query/` |
-| JPA write adapter | `features/tourism/infrastructure/persistence/` |
-| SQL read adapter | `features/tourism/infrastructure/query/` |
-| REST Controller・DTO | `features/tourism/infrastructure/rest/` |
+| tourism の Value Object | `domain/tourism/vo/` |
+| tourism の集約ルート（write） | `domain/tourism/aggregate/` |
+| tourism の write port | `domain/tourism/repository/` |
+| 書き込みユースケース | `application/tourism/command/` |
+| 読み取りユースケース・読みモデル・read port | `application/tourism/query/` |
+| JPA write adapter | `infrastructure/persistence/tourism/` |
+| SQL read adapter | `infrastructure/query/tourism/` |
+| REST Controller・DTO | `infrastructure/rest/tourism/` |
 | アプリ横断 REST | `infrastructure/rest/common/` |
-| 未実装コンテキスト | 従来どおり `domain/{context}/` 等（実装時に feature-first へ） |
+| 未実装コンテキスト | 同様に `domain/{context}/` `application/{context}/` `infrastructure/.../{context}/` |
 
 ### 3.3 `shared/` を作らない
 
@@ -209,7 +206,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 #### 手順
 
 1. 対象コンテキストの `mock-*.ts` と `domain/*.ts` を読み、**API が返す解決済みオブジェクト**の形を把握する
-2. `features/tourism/domain/vo/` + `features/tourism/domain/aggregate/` に write 側モデル、`features/tourism/application/query/` に [SpotView] 読みモデルを定義する
+2. `domain/tourism/vo/` + `domain/tourism/aggregate/` に write 側モデル、`application/tourism/query/` に [SpotView] 読みモデルを定義する
 3. 永続化（DB テーブル）は API 形と一致させる必要はない（§7.1 の i18n 分割など）。**domain ↔ persistence の変換は infrastructure/persistence に閉じる**
 4. REST レスポンス DTO（`infrastructure/rest`）は Mock の返却形に合わせ、domain から組み立てる
 
@@ -218,7 +215,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 | Client（`domain/spot.ts` + `mock-spots.ts`） | backend |
 |---|---|
 | `Spot { id, name, genre, description, coordinates, businessHours, category, media, rating? }` | 一覧 API の返却単位。`rating` はレビュー未実装時 `null` |
-| `SpotGenre` リテラル列挙 | `features/tourism/domain/vo` の enum 等で同値を定義 |
+| `SpotGenre` リテラル列挙 | `domain/tourism/vo` の enum 等で同値を定義 |
 | `MOCK_SPOT_BASES` + `MOCK_SPOT_LOCALIZATIONS` の分割 | DB は `spot` + `spot_localization` に分割（§7.1）。API は `lang` 解決後に Client の `Spot` 形で返す |
 | `fetchSpots(language): Promise<Spot[]>` | `GET /api/v1/tourism/spots?lang=` の 200 レスポンス |
 
