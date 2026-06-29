@@ -116,8 +116,8 @@ curl http://localhost:9090/actuator/health
 | メソッド | パス | 概要 | 状態 |
 | --- | --- | --- | --- |
 | GET | `/api/ping` | ヘルスチェック | ✅ |
-| GET | `/api/v1/tourism/spots?lang=ja` | 観光名所一覧（解決済み多言語） | 実装中 |
-| POST | `/api/v1/tourism/spots` | 観光名所（ピン）の登録 | 実装中 |
+| GET | `/api/v1/tourism/spots?lang=ja` | 観光名所一覧（解決済み多言語） | ✅ |
+| POST | `/api/v1/tourism/spots` | 観光名所（ピン）の登録 | ✅ |
 
 レスポンス形はクライアントのモック（`fetchSpots`）に整合させる。詳細は `docs/architecture.md` の API 契約を参照。
 

@@ -2,9 +2,11 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
+import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.vo.Language
 
 /**
- * `GET /api/v1/tourism/spots` のレスポンス要素（モックの `fetchSpots` 返却形に準拠 / §8）。
+ * `GET /api/v1/tourism/spots` および `POST /api/v1/tourism/spots` のレスポンス（モックの `Spot` 形 / §8）。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class SpotResponse(
@@ -48,5 +50,29 @@ data class SpotResponse(
                 media = MediaResponse(imageUrl = view.imageUrl),
                 rating = view.rating?.let { RatingResponse(value = it) },
             )
+
+        /** POST 201 用。要求言語未指定時は ja（[Language.DEFAULT]）で解決した Spot 形を返す。 */
+        fun fromRegistered(
+            saved: SpotWithLocalizations,
+            language: Language = Language.DEFAULT,
+        ): SpotResponse {
+            val localization = saved.localizations.resolve(language)
+            val spot = saved.spot
+            return SpotResponse(
+                id = spot.id.value,
+                name = localization.name,
+                genre = spot.genre.value,
+                description = localization.description,
+                coordinates =
+                    CoordinatesResponse(
+                        latitude = spot.coordinates.latitude,
+                        longitude = spot.coordinates.longitude,
+                    ),
+                businessHours = localization.businessHours,
+                category = CategoryResponse(label = localization.categoryLabel),
+                media = MediaResponse(imageUrl = spot.media.imageUrl),
+                rating = spot.rating?.value?.let { RatingResponse(value = it) },
+            )
+        }
     }
 }
