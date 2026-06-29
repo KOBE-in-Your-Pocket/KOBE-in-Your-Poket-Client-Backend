@@ -1,11 +1,19 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
+import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
 import com.kobeinyourpocket.backend.domain.tourism.vo.Language
+import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 /**
@@ -15,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/tourism/spots")
 class SpotController(
     private val listSpotsService: ListSpotsService,
+    private val registerSpotService: RegisterSpotService,
 ) {
     @GetMapping
     fun listSpots(
@@ -23,6 +32,21 @@ class SpotController(
     ): List<SpotResponse> {
         val language = resolveLanguage(lang, acceptLanguage)
         return listSpotsService.listSpots(language).map(SpotResponse::from)
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    fun registerSpot(
+        @RequestBody request: RegisterSpotRequest,
+    ): SpotResponse {
+        val saved =
+            registerSpotService.registerSpot(
+                genre = Genre.of(request.genre),
+                coordinates = Coordinates.of(request.coordinates.latitude, request.coordinates.longitude),
+                media = SpotMedia(imageUrl = request.imageUrl),
+                localizations = request.toLocalizations(),
+            )
+        return SpotResponse.fromRegistered(saved)
     }
 
     private fun resolveLanguage(
