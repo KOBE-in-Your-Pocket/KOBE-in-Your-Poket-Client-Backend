@@ -26,14 +26,15 @@
 
 ## アーキテクチャ
 
-**Onion Architecture（package-by-layer の単一モジュール）** を採用。
-依存方向は常に内側（ドメイン）へ向け、`domain` は純粋 Kotlin に保つ。
+**Onion Architecture（layer-first + CQRS-lite）** を採用。
 
 ```
-infrastructure (web / persistence)  →  application  →  domain  ←  (実装) persistence
+infrastructure/rest/tourism  →  application/tourism/{command,query}  →  domain/tourism
+                                        ↓ read
+                                 infrastructure/query/tourism
+                                        ↓ write
+                                 infrastructure/persistence/tourism
 ```
-
-レイヤを上に置くことで、コンテキスト跨ぎのユースケース配線・Spring DI がしやすい。
 
 - ドメインモデルは **Client の Mock API スキーマ**（`features/{context}/infrastructure/api/mock-*.ts` および `domain/*.ts`）を参照して設計する（[`docs/architecture.md` §7.0](docs/architecture.md#70-ドメインモデル作成方針client-mock-api-を正とする)）
 - フロントの Modular Monolith はバックエンドの規模に対し過大として不採用
@@ -65,11 +66,16 @@ infrastructure (web / persistence)  →  application  →  domain  ←  (実装)
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt   # エントリポイント
-├── domain/                     # 純粋 Kotlin（{context}/vo, aggregate, repository）
-├── application/                # ユースケース（{context}/ または横断サービス）
+├── domain/                     # コンテキスト別ドメイン（tourism, evacuation, …）
+│   └── tourism/{vo,aggregate,repository}/
+├── application/                # ユースケース（CQRS: command / query）
+│   └── tourism/{command,query}/
 └── infrastructure/
-    ├── persistence/            # JPA（{context}/）
-    └── web/                    # REST（common/ + {context}/）
+    ├── persistence/tourism/
+    ├── query/tourism/
+    └── rest/
+        ├── common/             # 横断 REST（/api/ping 等）
+        └── tourism/
 
 src/main/resources/
 ├── application.yml             # 設定 (環境変数で上書き可)

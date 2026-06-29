@@ -1,4 +1,4 @@
-package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
+package com.kobeinyourpocket.backend.infrastructure.query.tourism
 
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
@@ -10,7 +10,7 @@ import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotRating
+import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.SpotRepositoryImpl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
@@ -18,18 +18,17 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Import(SpotRepositoryImpl::class)
-class SpotRepositoryImplTest {
+@Import(SpotRepositoryImpl::class, SpotQueryJpa::class)
+class SpotQueryJpaTest {
     @Autowired
-    private lateinit var repository: SpotRepository
+    private lateinit var spotRepository: SpotRepository
 
     @Autowired
-    private lateinit var spotJpa: SpotJpaRepository
+    private lateinit var spotQuery: SpotQueryJpa
 
     private val portTower =
         SpotWithLocalizations(
@@ -39,7 +38,6 @@ class SpotRepositoryImplTest {
                     genre = Genre.LANDMARK,
                     coordinates = Coordinates.of(34.6826, 135.1863),
                     media = SpotMedia("https://example.com/kobe-port-tower.webp"),
-                    rating = SpotRating(4.5),
                 ),
             localizations =
                 SpotLocalizations.of(
@@ -51,19 +49,21 @@ class SpotRepositoryImplTest {
         )
 
     @Test
-    fun `save で spot と localization が永続化される`() {
-        repository.save(portTower)
+    fun `要求言語で解決した SpotView を返す`() {
+        spotRepository.save(portTower)
 
-        val entity = spotJpa.findById("kobe-port-tower").orElseThrow()
-        assertEquals("landmark", entity.genre)
-        assertEquals(4.5, entity.ratingValue)
+        val result = spotQuery.findAllResolved(Language.EN).single()
+
+        assertEquals("Kobe Port Tower", result.name)
+        assertEquals("landmark", result.genre)
     }
 
     @Test
-    fun `rating なしも永続化できる`() {
-        repository.save(portTower.copy(spot = portTower.spot.copy(id = SpotId.of("no-rating"), rating = null)))
+    fun `要求言語が無ければ ja へフォールバックする`() {
+        spotRepository.save(portTower)
 
-        val entity = spotJpa.findById("no-rating").orElseThrow()
-        assertNull(entity.ratingValue)
+        val result = spotQuery.findAllResolved(Language.KO).single()
+
+        assertEquals("神戸ポートタワー", result.name)
     }
 }

@@ -1,4 +1,4 @@
-package com.kobeinyourpocket.backend.infrastructure.web.common
+package com.kobeinyourpocket.backend.infrastructure.rest.common
 
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
