@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.domain.tourism
 
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.Review
 import com.kobeinyourpocket.backend.domain.tourism.vo.Language
+import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewAuthor
 import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
@@ -65,9 +66,48 @@ class ReviewRatingTest {
     }
 }
 
+class ReviewAuthorTest {
+    @Test
+    fun `name と iconUrl を指定して生成できる`() {
+        val author = ReviewAuthor(name = "Alice", iconUrl = "https://example.com/alice.png")
+
+        assertEquals("Alice", author.name)
+        assertEquals("https://example.com/alice.png", author.iconUrl)
+    }
+
+    @Test
+    fun `iconUrl は省略できる`() {
+        val author = ReviewAuthor(name = "Alice")
+
+        assertEquals(null, author.iconUrl)
+    }
+
+    @Test
+    fun `name が空白のみなら拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            ReviewAuthor(name = "   ")
+        }
+    }
+
+    @Test
+    fun `name が上限 100 文字を超えたら拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            ReviewAuthor(name = "a".repeat(ReviewAuthor.MAX_NAME_LENGTH + 1))
+        }
+    }
+
+    @Test
+    fun `name が上限ちょうどなら許可する`() {
+        val author = ReviewAuthor(name = "a".repeat(ReviewAuthor.MAX_NAME_LENGTH))
+
+        assertEquals(ReviewAuthor.MAX_NAME_LENGTH, author.name.length)
+    }
+}
+
 class ReviewTest {
     private val spotId = SpotId.of("kobe-port-tower")
     private val rating = ReviewRating.of(5)
+    private val author = ReviewAuthor(name = "Alice", iconUrl = "https://example.com/alice.png")
     private val now = Instant.parse("2025-11-03T10:24:00Z")
 
     @Test
@@ -77,7 +117,7 @@ class ReviewTest {
                 spotId = spotId,
                 rating = rating,
                 comment = "Great spot!",
-                authorName = "Alice",
+                author = author,
                 language = Language.EN,
                 createdAt = now,
             )
@@ -85,7 +125,7 @@ class ReviewTest {
         assertEquals(spotId, review.spotId)
         assertEquals(rating, review.rating)
         assertEquals("Great spot!", review.comment)
-        assertEquals("Alice", review.authorName)
+        assertEquals(author, review.author)
         assertEquals(now, review.createdAt)
         assertEquals(Language.EN, review.language)
     }
@@ -93,9 +133,9 @@ class ReviewTest {
     @Test
     fun `create は呼び出しごとに一意な ID を採番する`() {
         val r1 =
-            Review.create(spotId = spotId, rating = rating, comment = "A", authorName = "A", language = Language.JA)
+            Review.create(spotId = spotId, rating = rating, comment = "A", author = ReviewAuthor(name = "A"), language = Language.JA)
         val r2 =
-            Review.create(spotId = spotId, rating = rating, comment = "B", authorName = "B", language = Language.JA)
+            Review.create(spotId = spotId, rating = rating, comment = "B", author = ReviewAuthor(name = "B"), language = Language.JA)
 
         assertNotEquals(r1.id, r2.id)
     }
@@ -103,14 +143,7 @@ class ReviewTest {
     @Test
     fun `comment が空白のみなら拒否する`() {
         assertFailsWith<IllegalArgumentException> {
-            Review.create(spotId = spotId, rating = rating, comment = "   ", authorName = "Alice", language = Language.JA)
-        }
-    }
-
-    @Test
-    fun `authorName が空白のみなら拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
-            Review.create(spotId = spotId, rating = rating, comment = "Good", authorName = "   ", language = Language.JA)
+            Review.create(spotId = spotId, rating = rating, comment = "   ", author = author, language = Language.JA)
         }
     }
 
@@ -119,16 +152,7 @@ class ReviewTest {
         val tooLong = "a".repeat(Review.MAX_COMMENT_LENGTH + 1)
 
         assertFailsWith<IllegalArgumentException> {
-            Review.create(spotId = spotId, rating = rating, comment = tooLong, authorName = "Alice", language = Language.JA)
-        }
-    }
-
-    @Test
-    fun `authorName が上限 100 文字を超えたら拒否する`() {
-        val tooLong = "a".repeat(Review.MAX_AUTHOR_NAME_LENGTH + 1)
-
-        assertFailsWith<IllegalArgumentException> {
-            Review.create(spotId = spotId, rating = rating, comment = "Good", authorName = tooLong, language = Language.JA)
+            Review.create(spotId = spotId, rating = rating, comment = tooLong, author = author, language = Language.JA)
         }
     }
 
@@ -140,7 +164,7 @@ class ReviewTest {
                 spotId = spotId,
                 rating = rating,
                 comment = boundary,
-                authorName = "Alice",
+                author = author,
                 language = Language.JA,
             )
 
