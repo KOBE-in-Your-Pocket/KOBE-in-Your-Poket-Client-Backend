@@ -12,10 +12,14 @@ import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
+import org.hamcrest.Matchers.containsString
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
@@ -27,6 +31,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import kotlin.test.Test
 
 @WebMvcTest(SpotController::class)
+@Import(GlobalExceptionHandler::class)
 class SpotControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -172,5 +177,81 @@ class SpotControllerTest {
             SpotMedia("https://example.com/kobe-port-tower.webp"),
             localizations,
         )
+    }
+
+    @Test
+    fun `POST genre が空なら 400 と統一エラー JSON を返す`() {
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "genre": "",
+                          "coordinates": { "latitude": 34.6826, "longitude": 135.1863 },
+                          "imageUrl": "https://example.com/x.webp",
+                          "localizations": {
+                            "ja": {
+                              "name": "テスト",
+                              "categoryLabel": "カテゴリ",
+                              "description": "説明",
+                              "businessHours": "9:00-17:00"
+                            }
+                          }
+                        }
+                        """.trimIndent(),
+                    ),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Validation failed"))
+            .andExpect(jsonPath("$.violations[0].field").value("genre"))
+
+        verifyNoInteractions(registerSpotService)
+    }
+
+    @Test
+    fun `POST JSON が壊れていれば 400 を返す`() {
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{ invalid json"),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").exists())
+
+        verifyNoInteractions(registerSpotService)
+    }
+
+    @Test
+    fun `POST に ja が無ければ 400 とドメインエラーメッセージを返す`() {
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "genre": "landmark",
+                          "coordinates": { "latitude": 34.6826, "longitude": 135.1863 },
+                          "imageUrl": "https://example.com/x.webp",
+                          "localizations": {
+                            "en": {
+                              "name": "Tower",
+                              "categoryLabel": "Landmark",
+                              "description": "Desc",
+                              "businessHours": "9:00-17:00"
+                            }
+                          }
+                        }
+                        """.trimIndent(),
+                    ),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value(containsString("default language")))
+
+        verifyNoInteractions(registerSpotService)
     }
 }
