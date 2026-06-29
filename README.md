@@ -29,11 +29,11 @@
 **Onion Architecture（tourism = feature-first + CQRS-lite）** を採用。
 
 ```
-tourism/infrastructure/rest  →  tourism/application/{command,query}  →  tourism/domain
-                                      ↓ read
-                               tourism/infrastructure/query
-                                      ↓ write
-                               tourism/infrastructure/persistence
+features/tourism/infrastructure/rest  →  features/tourism/application/{command,query}  →  features/tourism/domain
+                                                ↓ read
+                                         features/tourism/infrastructure/query
+                                                ↓ write
+                                         features/tourism/infrastructure/persistence
 ```
 
 - ドメインモデルは **Client の Mock API スキーマ**（`features/{context}/infrastructure/api/mock-*.ts` および `domain/*.ts`）を参照して設計する（[`docs/architecture.md` §7.0](docs/architecture.md#70-ドメインモデル作成方針client-mock-api-を正とする)）
@@ -66,10 +66,11 @@ tourism/infrastructure/rest  →  tourism/application/{command,query}  →  tour
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt   # エントリポイント
-├── tourism/                    # 観光（feature-first + CQRS-lite）
-│   ├── domain/{vo,aggregate,repository}/
-│   ├── application/{command,query}/
-│   └── infrastructure/{persistence,query,rest}/
+├── features/
+│   └── tourism/                # 観光（feature-first + CQRS-lite）
+│       ├── domain/{vo,aggregate,repository}/
+│       ├── application/{command,query}/
+│       └── infrastructure/{persistence,query,rest}/
 ├── domain/                     # 未実装コンテキスト（layer-first 雛形）
 ├── application/
 └── infrastructure/
