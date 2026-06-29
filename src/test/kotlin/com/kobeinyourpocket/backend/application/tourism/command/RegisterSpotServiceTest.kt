@@ -5,25 +5,19 @@ import com.kobeinyourpocket.backend.domain.tourism.repository.SpotRepository
 import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
 import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
 import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class RegisterSpotServiceTest {
-    private class FakeSpotRepository : SpotRepository {
-        val store = linkedMapOf<SpotId, SpotWithLocalizations>()
-
-        override fun save(spot: SpotWithLocalizations): SpotWithLocalizations {
-            store[spot.spot.id] = spot
-            return spot
-        }
-    }
-
     private val localizations =
         SpotLocalizations.of(
             mapOf(
@@ -34,7 +28,9 @@ class RegisterSpotServiceTest {
 
     @Test
     fun `registerSpot は採番して保存し rating は null`() {
-        val repository = FakeSpotRepository()
+        val repository = mockk<SpotRepository>()
+        val saved = slot<SpotWithLocalizations>()
+        every { repository.save(capture(saved)) } answers { saved.captured }
 
         val created =
             RegisterSpotService(repository).registerSpot(
@@ -49,6 +45,7 @@ class RegisterSpotServiceTest {
                 .isNotBlank(),
         )
         assertNull(created.spot.rating)
-        assertEquals(created, repository.store[created.spot.id])
+        assertEquals(localizations, created.localizations)
+        verify(exactly = 1) { repository.save(saved.captured) }
     }
 }
