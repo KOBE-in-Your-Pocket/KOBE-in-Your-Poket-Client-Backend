@@ -65,7 +65,7 @@ infrastructure (web / persistence)  →  application  →  domain  ←  (実装)
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt   # エントリポイント
-├── domain/                     # 純粋 Kotlin（{tourism,evacuation,...}/model, repository）
+├── domain/                     # 純粋 Kotlin（{context}/vo, aggregate, repository）
 ├── application/                # ユースケース（{context}/ または横断サービス）
 └── infrastructure/
     ├── persistence/            # JPA（{context}/）
