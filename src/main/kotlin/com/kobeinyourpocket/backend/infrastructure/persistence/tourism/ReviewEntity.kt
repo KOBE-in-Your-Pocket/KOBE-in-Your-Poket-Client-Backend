@@ -35,17 +35,18 @@ class ReviewEntity(
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant,
 ) {
-    fun toDomain(): Review =
-        Review(
+    fun toDomain(): Review {
+        val lang = Language.of(language) ?: error("Unknown language code in review: '$language'")
+        return Review(
             id = ReviewId.of(id),
             spotId = SpotId.of(spotId),
             rating = ReviewRating.of(rating),
             comment = comment,
             author = ReviewAuthor(name = authorName, iconUrl = authorIconUrl),
             createdAt = createdAt,
-            language = Language.of(language)
-                ?: error("Unknown language code in review: '$language'"),
+            language = lang,
         )
+    }
 
     companion object {
         fun fromDomain(review: Review): ReviewEntity =
