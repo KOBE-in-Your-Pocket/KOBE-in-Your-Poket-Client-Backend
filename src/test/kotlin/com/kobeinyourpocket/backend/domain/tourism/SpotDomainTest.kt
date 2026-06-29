@@ -56,15 +56,20 @@ class SpotIdTest {
 
 class GenreTest {
     @Test
-    fun `Client と同じ apiValue を持つ`() {
-        assertEquals("landmark", Genre.LANDMARK.apiValue)
-        assertEquals(Genre.ONSEN, Genre.fromApiValue("onsen"))
+    fun `Client と同じ既定値を持つ`() {
+        assertEquals("landmark", Genre.LANDMARK.value)
+        assertEquals(Genre.ONSEN, Genre.of("onsen"))
     }
 
     @Test
-    fun `未知の genre は拒否する`() {
+    fun `運営側で追加された任意のジャンルを生成できる`() {
+        assertEquals("matsuri", Genre.of("matsuri").value)
+    }
+
+    @Test
+    fun `空文字は拒否する`() {
         assertFailsWith<IllegalArgumentException> {
-            Genre.fromApiValue("unknown")
+            Genre.of("   ")
         }
     }
 }
