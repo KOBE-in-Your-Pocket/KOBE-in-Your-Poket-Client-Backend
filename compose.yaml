@@ -30,8 +30,8 @@ services:
     ports:
       - "9090:9090"
 
-  # 開発: ソースから bootRun で起動 (make dev)。
-  # test / lint / build もこのサービス定義を再利用する (Makefile の GRADLE)。
+  # 開発: ソースから bootRun で起動 (make dev)。実 DB(Postgres) に接続するため
+  # SPRING_DATASOURCE_* を注入する。
   dev:
     image: eclipse-temurin:17-jdk
     working_dir: /workspace
@@ -50,6 +50,20 @@ services:
       - .:/workspace
     ports:
       - "9090:9090"
+
+  # test / lint / build 用 (Makefile の GRADLE)。DB 不要 (テストは H2)。
+  # dev と分離し SPRING_DATASOURCE_* を持たせない: 注入すると env 優先で
+  # application-test.yml の H2 設定を上書きし、H2 ドライバに Postgres URL が
+  # 渡って起動失敗するため。
+  tools:
+    image: eclipse-temurin:17-jdk
+    working_dir: /workspace
+    profiles: [tools]
+    environment:
+      HOME: /workspace
+      GRADLE_USER_HOME: /workspace/.gradle
+    volumes:
+      - .:/workspace
 
 volumes:
   db-data:

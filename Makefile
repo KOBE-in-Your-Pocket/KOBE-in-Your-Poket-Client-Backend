@@ -4,9 +4,10 @@
 # ============================================================
 COMPOSE := docker compose
 
-# Gradle を dev サービスのイメージ上で実行する (DB 不要なタスク用)。
+# Gradle を tools サービスのイメージ上で実行する (DB 不要なタスク用)。
 # build/ や .gradle/ はマウントしたソース配下に書かれる。
-GRADLE := $(COMPOSE) --profile dev run --rm --no-deps dev ./gradlew --no-daemon
+# dev ではなく tools を使う: dev の SPRING_DATASOURCE_* がテスト(H2)を壊すため。
+GRADLE := $(COMPOSE) --profile tools run --rm --no-deps tools ./gradlew --no-daemon
 
 .DEFAULT_GOAL := help
 
