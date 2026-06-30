@@ -4,7 +4,6 @@ import com.kobeinyourpocket.backend.application.tourism.command.PostReviewServic
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
 import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
 import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewAuthor
 import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
@@ -52,7 +51,7 @@ class ReviewController(
                 spotId = SpotId.of(spotId),
                 rating = ReviewRating.of(request.rating),
                 comment = request.comment,
-                author = ReviewAuthor(name = request.author.name, iconUrl = request.author.iconUrl),
+                authorName = request.author.name,
                 language = Language.of(request.language) ?: Language.DEFAULT,
             )
         return ReviewResponse.from(review)

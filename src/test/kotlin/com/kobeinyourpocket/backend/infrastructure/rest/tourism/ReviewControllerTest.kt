@@ -6,7 +6,6 @@ import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.Review
 import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewAuthor
 import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
@@ -105,7 +104,7 @@ class ReviewControllerTest {
                 spotId = spotId,
                 rating = ReviewRating.of(4),
                 comment = "素晴らしい",
-                author = ReviewAuthor(name = "Alice", iconUrl = "https://example.com/alice.png"),
+                authorName = "Alice",
                 language = Language.JA,
             ),
         ).willReturn(savedReview)
