@@ -17,6 +17,5 @@ class ReviewRepositoryImpl(
         return review
     }
 
-    override fun findById(id: ReviewId): Review? =
-        reviewJpa.findById(id.value).map { it.toDomain() }.orElse(null)
+    override fun findById(id: ReviewId): Review? = reviewJpa.findById(id.value).map { it.toDomain() }.orElse(null)
 }

@@ -21,6 +21,8 @@ class ReviewRepositoryPortTest {
             return review
         }
 
+        override fun findById(id: ReviewId): Review? = store[id]
+
         fun get(id: ReviewId): Review? = store[id]
     }
 
