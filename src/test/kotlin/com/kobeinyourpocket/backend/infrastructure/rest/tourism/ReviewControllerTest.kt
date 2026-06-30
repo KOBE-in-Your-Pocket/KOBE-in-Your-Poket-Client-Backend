@@ -184,7 +184,7 @@ class ReviewControllerTest {
 
         mockMvc
             .perform(
-                put("/api/v1/tourism/spots/kobe-port-tower/reviews/${reviewId}")
+                put("/api/v1/tourism/spots/kobe-port-tower/reviews/$reviewId")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{ "rating": 5, "comment": "最高でした" }"""),
             ).andExpect(status().isOk)

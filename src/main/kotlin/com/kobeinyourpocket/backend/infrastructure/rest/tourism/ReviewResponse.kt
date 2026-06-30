@@ -16,7 +16,9 @@ data class ReviewResponse(
     val postedAt: Instant,
     val language: String,
 ) {
-    data class RatingResponse(val value: Int)
+    data class RatingResponse(
+        val value: Int,
+    )
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     data class AuthorResponse(
