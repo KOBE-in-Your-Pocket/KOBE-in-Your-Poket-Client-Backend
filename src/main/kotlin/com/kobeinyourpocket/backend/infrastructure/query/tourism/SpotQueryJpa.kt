@@ -29,7 +29,7 @@ class SpotQueryJpa(
                         COALESCE(l_req.business_hours, l_ja.business_hours) AS business_hours,
                         COALESCE(l_req.category_label, l_ja.category_label) AS category_label,
                         s.image_url,
-                        s.rating_value
+                        (SELECT AVG(r.rating) FROM review r WHERE r.spot_id = s.id) AS rating_value
                     FROM spot s
                     LEFT JOIN spot_localization l_req
                         ON s.id = l_req.spot_id AND l_req.language = :language
