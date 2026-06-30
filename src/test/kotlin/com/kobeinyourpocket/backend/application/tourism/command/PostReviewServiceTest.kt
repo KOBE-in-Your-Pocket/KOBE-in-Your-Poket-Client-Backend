@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.application.tourism.command
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.Review
 import com.kobeinyourpocket.backend.domain.tourism.repository.ReviewRepository
 import com.kobeinyourpocket.backend.domain.tourism.vo.Language
+import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewAuthor
 import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
 import io.mockk.every
@@ -29,7 +30,7 @@ class PostReviewServiceTest {
                 spotId = spotId,
                 rating = ReviewRating.of(4),
                 comment = "素晴らしい景色",
-                authorName = "Alice",
+                author = ReviewAuthor(name = "Alice"),
                 language = Language.JA,
             )
 
@@ -50,9 +51,9 @@ class PostReviewServiceTest {
         every { repository.save(capture(second)) } answers { second.captured }
 
         val r1 =
-            service.postReview(spotId, ReviewRating.of(5), "Good", "Bob", Language.EN)
+            service.postReview(spotId, ReviewRating.of(5), "Good", ReviewAuthor(name = "Bob"), Language.EN)
         val r2 =
-            service.postReview(spotId, ReviewRating.of(3), "Okay", "Carol", Language.EN)
+            service.postReview(spotId, ReviewRating.of(3), "Okay", ReviewAuthor(name = "Carol"), Language.EN)
 
         assert(r1.id != r2.id) { "採番した ID は毎回異なるはず" }
     }
