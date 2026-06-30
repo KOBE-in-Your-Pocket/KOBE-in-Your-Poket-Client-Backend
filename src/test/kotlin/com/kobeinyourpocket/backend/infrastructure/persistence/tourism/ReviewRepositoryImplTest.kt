@@ -21,7 +21,6 @@ import org.springframework.test.context.ActiveProfiles
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -101,6 +100,6 @@ class ReviewRepositoryImplTest {
         repository.save(review)
 
         val entity = reviewJpa.findById(review.id.value).orElseThrow()
-        assertNull(entity.authorIconUrl)
+        assertEquals("", entity.authorIconUrl)
     }
 }
