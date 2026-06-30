@@ -12,8 +12,8 @@ CREATE TABLE review (
     comment         TEXT         NOT NULL,
     -- ReviewAuthor.name（最大 100 文字）
     author_name     VARCHAR(100) NOT NULL,
-    -- ReviewAuthor.iconUrl（PublicUser 確定後に必須化を検討）
-    author_icon_url TEXT,
+    -- ReviewAuthor.iconUrl（未設定時は空文字。PublicUser 確定後に実 URL へ更新する）
+    author_icon_url TEXT         NOT NULL DEFAULT '',
     -- Language コード（ja / en / ko / zh）
     language        VARCHAR(8)   NOT NULL,
     -- domain 側で採番した投稿日時をそのまま保存

@@ -28,8 +28,8 @@ class ReviewEntity(
     var comment: String,
     @Column(name = "author_name", nullable = false)
     var authorName: String,
-    @Column(name = "author_icon_url")
-    var authorIconUrl: String? = null,
+    @Column(name = "author_icon_url", nullable = false)
+    var authorIconUrl: String = "",
     @Column(name = "language", nullable = false)
     var language: String,
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -42,7 +42,7 @@ class ReviewEntity(
             spotId = SpotId.of(spotId),
             rating = ReviewRating.of(rating),
             comment = comment,
-            author = ReviewAuthor(name = authorName, iconUrl = authorIconUrl),
+            author = ReviewAuthor(name = authorName, iconUrl = authorIconUrl.ifEmpty { null }),
             createdAt = createdAt,
             language = lang,
         )
@@ -56,7 +56,7 @@ class ReviewEntity(
                 rating = review.rating.value,
                 comment = review.comment,
                 authorName = review.author.name,
-                authorIconUrl = review.author.iconUrl,
+                authorIconUrl = review.author.iconUrl.orEmpty(),
                 language = review.language.code,
                 createdAt = review.createdAt,
             )
