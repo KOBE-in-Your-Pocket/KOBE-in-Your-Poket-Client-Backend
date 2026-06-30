@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service
 class ListReviewsService(
     private val reviewQuery: ReviewQuery,
 ) {
-    fun listReviews(spotId: SpotId, language: Language): List<ReviewView> =
-        reviewQuery.findBySpot(spotId, language)
+    fun listReviews(
+        spotId: SpotId,
+        language: Language,
+    ): List<ReviewView> = reviewQuery.findBySpot(spotId, language)
 }

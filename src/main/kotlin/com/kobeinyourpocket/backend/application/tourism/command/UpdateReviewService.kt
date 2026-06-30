@@ -16,8 +16,8 @@ class UpdateReviewService(
         rating: ReviewRating,
         comment: String,
     ): Review {
-        val existing = reviewRepository.findById(reviewId)
-            ?: error("Review not found: $reviewId")
+        val existing =
+            reviewRepository.findById(reviewId) ?: error("Review not found: $reviewId")
         return reviewRepository.save(existing.copy(rating = rating, comment = comment))
     }
 }
