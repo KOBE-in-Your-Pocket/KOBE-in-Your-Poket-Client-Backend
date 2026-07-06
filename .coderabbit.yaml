@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit 設定: https://docs.coderabbit.ai/reference/configuration
+# GitHub App インストール: https://github.com/apps/coderabbitai
+
+language: ja-JP
+
+tone_instructions: >
+  Kotlin / Spring Boot のシニアレビュアーとして、簡潔で建設的な日本語フィードバックを提供する。
+  設計・ロジック・仕様妥当性・データ整合性に集中し、ktlint/format など CI 済みの指摘は避ける。
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - develop
+      - main
+  path_filters:
+    - "!**/*.lock"
+    - "!**/build/**"
+    - "!**/.gradle/**"
+    - "!gradlew"
+    - "!gradlew.bat"
+    - "!gradle/wrapper/**"
+  path_instructions:
+    - path: "**"
+      instructions: |
+        AGENTS.md・README.md・docs/architecture.md の基準に従うこと。
+        神戸市特化の外国人観光客向けアプリ「KOBE in Your Pocket」のバックエンド REST API（Kotlin / Spring Boot）。
+        観光・マナー啓発・防災（避難）情報を多言語で Expo クライアントへ供給する。
+        Onion Architecture（layer-first + CQRS-lite）採用。依存方向: infrastructure/rest → application → domain ← infrastructure/{persistence,query}。
+        ktlint・型チェック・テストは CI で担保済み — これらの指摘は不要。
+        ドメインモデルは Client の Mock API スキーマを正として設計する（docs/architecture.md §7.0）。
+        PR は develop 向け。コミット形式は `prefix: summary #issue`。
+    - path: "src/main/kotlin/**/infrastructure/rest/**"
+      instructions: |
+        REST 層（Controller / DTO）。HTTP 境界の薄いアダプタに留めること。
+        ビジネスロジックは application 層へ委譲。入力検証・エラーレスポンス・多言語（Accept-Language 等）を確認。
+        レスポンス DTO は Client の API スキーマと整合させる。
+    - path: "src/main/kotlin/**/application/**"
+      instructions: |
+        ユースケース層。command（書き込み）と query（読み取り）を分離する CQRS-lite。
+        command は domain 経由で永続化、query は infrastructure/query から直接読む。
+        トランザクション境界・冪等性・ドメイン不変条件の保護を確認。
+    - path: "src/main/kotlin/**/domain/**"
+      instructions: |
+        ドメイン層。フレームワーク非依存（Spring/JPA への依存を持ち込まない）を保つ。
+        不変条件・値オブジェクト・集約境界を重視。Client の Mock API スキーマと乖離がないか確認。
+    - path: "src/main/kotlin/**/infrastructure/persistence/**"
+      instructions: |
+        書き込み側の永続化（JPA エンティティ・リポジトリ実装）。
+        ドメインモデルと永続化モデルのマッピング、N+1、遅延ロード、トランザクション整合性を確認。
+    - path: "src/main/kotlin/**/infrastructure/query/**"
+      instructions: |
+        読み取り側の Query 実装（CQRS-lite の read）。
+        必要なカラムのみ取得し、多言語ローカライズの結合を確認。ドメイン層を経由しないこと。
+    - path: "src/main/resources/db/migration/**"
+      instructions: |
+        Flyway マイグレーション。適用済みバージョンは変更禁止（新規 V{n}__ を追加）。
+        NOT NULL・外部キー・インデックス・多言語テーブルの整合性を確認。ロールバック不可を前提にレビュー。
+    - path: "src/test/kotlin/**"
+      instructions: |
+        JUnit5 で主要パスをカバー。
+        境界値・異常系（未検出・権限・空データ・多言語フォールバック）のエッジケースを考慮。
+        テスト名・アサーションが仕様意図を表現しているか確認。
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - AGENTS.md
+      - README.md
+      - docs/architecture.md
