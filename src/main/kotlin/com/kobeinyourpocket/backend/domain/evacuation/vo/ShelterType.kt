@@ -15,9 +15,6 @@ enum class ShelterType(
     ;
 
     companion object {
-        fun of(value: String): ShelterType? {
-            val normalized = value.trim().lowercase()
-            return entries.firstOrNull { it.wireValue == normalized }
-        }
+        fun of(value: String): ShelterType? = entries.resolveByWireValue(value) { it.wireValue }
     }
 }
