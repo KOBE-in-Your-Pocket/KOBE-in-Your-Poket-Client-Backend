@@ -20,6 +20,7 @@ class ListSpotsServiceTest {
             categoryLabel = "ランドマーク",
             imageUrl = "https://example.com/x.webp",
             rating = 4.5,
+            address = "神戸市中央区波止場町5-5",
         )
 
     private val enView = jaView.copy(name = "Kobe Port Tower", description = "The symbol of Kobe.", categoryLabel = "Landmark")

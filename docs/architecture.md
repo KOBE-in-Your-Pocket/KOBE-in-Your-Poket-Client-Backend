@@ -214,7 +214,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 
 | Client（`domain/spot.ts` + `mock-spots.ts`） | backend |
 |---|---|
-| `Spot { id, name, genre, description, coordinates, businessHours, category, media, rating? }` | 一覧 API の返却単位。`rating` はレビュー未実装時 `null` |
+| `Spot { id, name, genre, description, coordinates, address, businessHours, category, media, rating? }` | 一覧 API の返却単位。`rating` はレビュー未実装時 `null` |
 | `SpotGenre` リテラル列挙 | `domain/tourism/vo` の enum 等で同値を定義 |
 | `MOCK_SPOT_BASES` + `MOCK_SPOT_LOCALIZATIONS` の分割 | DB は `spot` + `spot_localization` に分割（§7.1）。API は `lang` 解決後に Client の `Spot` 形で返す |
 | `fetchSpots(language): Promise<Spot[]>` | `GET /api/v1/tourism/spots?lang=` の 200 レスポンス |
@@ -223,11 +223,11 @@ Mock が未整備のコンテキスト（evacuation / manner 等）は、Client 
 
 ### 7.1 多言語（i18n）
 
-モック（`mock-spots` + `mock-spot-localizations`）の「言語非依存ベース + 言語別ローカライズ」分割をテーブルにも踏襲する。`businessHours` はモックで言語側（"24時間"/"Open 24 hours"）なのでローカライズ側に置く。
+モック（`mock-spots` + `mock-spot-localizations`）の「言語非依存ベース + 言語別ローカライズ」分割をテーブルにも踏襲する。`businessHours` / `address` はモックで言語側（"24時間"/"Open 24 hours"、住所表記も言語で書式が異なる）なのでローカライズ側に置く。
 
 ```
 spot(id, genre, latitude, longitude, image_url, rating_value NULL, created_at, updated_at)
-spot_localization(spot_id, language, name, category_label, description, business_hours)
+spot_localization(spot_id, language, name, category_label, description, business_hours, address)
     PRIMARY KEY (spot_id, language)
 ```
 
@@ -253,14 +253,14 @@ API は `lang` を受けて**解決済みの localized Spot を返す**（要求
 # 一覧（モックの fetchSpots(language) に対応）
 GET /api/v1/tourism/spots?lang=ja
 200 → [{ id, name, genre, description,
-         coordinates:{latitude,longitude},
+         coordinates:{latitude,longitude}, address,
          businessHours, category:{label},
          media:{imageUrl}, rating?:{value} }]
 
 # ピン登録（feature ①。モックには無い backend 初の書き込み）
 POST /api/v1/tourism/spots
 body → { genre, coordinates:{latitude,longitude}, imageUrl,
-         localizations: { ja:{name,categoryLabel,description,businessHours}, en:{...}, ... } }
+         localizations: { ja:{name,categoryLabel,description,businessHours,address}, en:{...}, ... } }
 201 → 作成された Spot
 ```
 
