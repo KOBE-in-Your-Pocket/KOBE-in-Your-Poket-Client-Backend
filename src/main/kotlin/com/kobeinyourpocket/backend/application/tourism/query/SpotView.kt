@@ -16,4 +16,5 @@ data class SpotView(
     val categoryLabel: String,
     val imageUrl: String,
     val rating: Double?,
+    val address: String,
 )

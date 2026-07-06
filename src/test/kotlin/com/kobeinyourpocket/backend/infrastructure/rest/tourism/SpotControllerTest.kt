@@ -45,8 +45,22 @@ class SpotControllerTest {
     private val localizations =
         SpotLocalizations.of(
             mapOf(
-                Language.JA to SpotLocalization("神戸ポートタワー", "ランドマーク", "神戸のシンボル。", "9:00-23:00"),
-                Language.EN to SpotLocalization("Kobe Port Tower", "Landmark", "The symbol of Kobe.", "9:00-23:00"),
+                Language.JA to
+                    SpotLocalization(
+                        "神戸ポートタワー",
+                        "ランドマーク",
+                        "神戸のシンボル。",
+                        "9:00-23:00",
+                        "神戸市中央区波止場町5-5",
+                    ),
+                Language.EN to
+                    SpotLocalization(
+                        "Kobe Port Tower",
+                        "Landmark",
+                        "The symbol of Kobe.",
+                        "9:00-23:00",
+                        "5-5 Hatobacho, Chuo-ku, Kobe",
+                    ),
             ),
         )
 
@@ -74,13 +88,15 @@ class SpotControllerTest {
               "name": "神戸ポートタワー",
               "categoryLabel": "ランドマーク",
               "description": "神戸のシンボル。",
-              "businessHours": "9:00-23:00"
+              "businessHours": "9:00-23:00",
+              "address": "神戸市中央区波止場町5-5"
             },
             "en": {
               "name": "Kobe Port Tower",
               "categoryLabel": "Landmark",
               "description": "The symbol of Kobe.",
-              "businessHours": "9:00-23:00"
+              "businessHours": "9:00-23:00",
+              "address": "5-5 Hatobacho, Chuo-ku, Kobe"
             }
           }
         }
@@ -98,6 +114,7 @@ class SpotControllerTest {
             categoryLabel = "ランドマーク",
             imageUrl = "https://example.com/kobe-port-tower.webp",
             rating = 4.5,
+            address = "神戸市中央区波止場町5-5",
         )
 
     private val noRating = portTower.copy(id = "no-rating", rating = null)
@@ -113,6 +130,7 @@ class SpotControllerTest {
             .andExpect(jsonPath("$[0].id").value("kobe-port-tower"))
             .andExpect(jsonPath("$[0].name").value("神戸ポートタワー"))
             .andExpect(jsonPath("$[0].genre").value("landmark"))
+            .andExpect(jsonPath("$[0].address").value("神戸市中央区波止場町5-5"))
             .andExpect(jsonPath("$[0].rating.value").value(4.5))
             .andExpect(jsonPath("$[1].rating").doesNotExist())
     }
@@ -168,6 +186,7 @@ class SpotControllerTest {
             .andExpect(jsonPath("$.name").value("神戸ポートタワー"))
             .andExpect(jsonPath("$.genre").value("landmark"))
             .andExpect(jsonPath("$.coordinates.latitude").value(34.6826))
+            .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
             .andExpect(jsonPath("$.media.imageUrl").value("https://example.com/kobe-port-tower.webp"))
             .andExpect(jsonPath("$.rating").doesNotExist())
 
@@ -196,7 +215,8 @@ class SpotControllerTest {
                               "name": "テスト",
                               "categoryLabel": "カテゴリ",
                               "description": "説明",
-                              "businessHours": "9:00-17:00"
+                              "businessHours": "9:00-17:00",
+                              "address": "神戸市中央区1-1"
                             }
                           }
                         }
@@ -242,7 +262,8 @@ class SpotControllerTest {
                               "name": "Tower",
                               "categoryLabel": "Landmark",
                               "description": "Desc",
-                              "businessHours": "9:00-17:00"
+                              "businessHours": "9:00-17:00",
+                              "address": "1-1 Chuo-ku, Kobe"
                             }
                           }
                         }

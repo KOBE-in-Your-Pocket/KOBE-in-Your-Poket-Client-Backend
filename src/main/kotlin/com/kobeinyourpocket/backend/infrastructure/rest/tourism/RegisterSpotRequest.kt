@@ -36,6 +36,8 @@ data class RegisterSpotRequest(
         val description: String,
         @field:NotBlank
         val businessHours: String,
+        @field:NotBlank
+        val address: String,
     )
 
     fun toLocalizations(): SpotLocalizations {
@@ -49,6 +51,7 @@ data class RegisterSpotRequest(
                                 categoryLabel = body.categoryLabel,
                                 description = body.description,
                                 businessHours = body.businessHours,
+                                address = body.address,
                             )
                     }
                 }.toMap()

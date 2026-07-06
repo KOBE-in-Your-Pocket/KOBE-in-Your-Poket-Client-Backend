@@ -34,6 +34,8 @@ class SpotLocalizationEntity(
     var description: String,
     @Column(name = "business_hours", nullable = false)
     var businessHours: String,
+    @Column(name = "address", nullable = false)
+    var address: String,
 ) {
     companion object {
         fun fromDomain(
@@ -47,6 +49,7 @@ class SpotLocalizationEntity(
                 categoryLabel = localization.categoryLabel,
                 description = localization.description,
                 businessHours = localization.businessHours,
+                address = localization.address,
             )
     }
 }
@@ -64,6 +67,7 @@ fun List<SpotLocalizationEntity>.toDomainLocalizations(): SpotLocalizations =
                     categoryLabel = entity.categoryLabel,
                     description = entity.description,
                     businessHours = entity.businessHours,
+                    address = entity.address,
                 )
         },
     )
