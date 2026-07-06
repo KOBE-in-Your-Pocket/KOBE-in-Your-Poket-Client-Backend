@@ -41,7 +41,8 @@ class ReviewApiIntegrationTest {
               "name": "神戸ポートタワー",
               "categoryLabel": "ランドマーク",
               "description": "神戸のシンボル。",
-              "businessHours": "9:00-23:00"
+              "businessHours": "9:00-23:00",
+              "address": "神戸市中央区波止場町5-5"
             }
           }
         }
