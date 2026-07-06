@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.domain.evacuation
 import com.kobeinyourpocket.backend.domain.evacuation.aggregate.EvacuationShelter
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterCapacity
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterCoordinates
+import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterExternalUrl
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterFacilityCategory
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterId
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterMedia
@@ -162,7 +163,7 @@ class EvacuationShelterTest {
             )
 
         assertEquals(1200, shelter.capacity?.value)
-        assertEquals("https://example.com/evacuation-info", shelter.externalUrl)
+        assertEquals("https://example.com/evacuation-info", shelter.externalUrl?.value)
     }
 
     @Test
@@ -177,6 +178,58 @@ class EvacuationShelterTest {
                 accessible = true,
                 externalUrl = "   ",
             )
+        }
+    }
+}
+
+class ShelterExternalUrlTest {
+    @Test
+    fun `https URL を生成できる`() {
+        val url = ShelterExternalUrl.of("https://www.city.kobe.lg.jp/bosai/")
+
+        assertEquals("https://www.city.kobe.lg.jp/bosai/", url?.value)
+    }
+
+    @Test
+    fun `前後空白は trim される`() {
+        val url = ShelterExternalUrl.of("  https://example.com/evacuation-info  ")
+
+        assertEquals("https://example.com/evacuation-info", url?.value)
+    }
+
+    @Test
+    fun `null は null を返す`() {
+        assertNull(ShelterExternalUrl.of(null))
+    }
+
+    @Test
+    fun `空文字は拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            ShelterExternalUrl.of("   ")
+        }
+    }
+
+    @Test
+    fun `http 以外の scheme は拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            ShelterExternalUrl.of("javascript:alert(1)")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ShelterExternalUrl.of("ftp://example.com/")
+        }
+    }
+
+    @Test
+    fun `URI として不正な文字列は拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            ShelterExternalUrl.of("not-a-url")
+        }
+    }
+
+    @Test
+    fun `host が無い URL は拒否する`() {
+        assertFailsWith<IllegalArgumentException> {
+            ShelterExternalUrl.of("https://")
         }
     }
 }

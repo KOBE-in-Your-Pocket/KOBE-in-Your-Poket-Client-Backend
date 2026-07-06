@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.domain.evacuation.aggregate
 
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterCapacity
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterCoordinates
+import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterExternalUrl
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterFacilityCategory
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterId
 import com.kobeinyourpocket.backend.domain.evacuation.vo.ShelterMedia
@@ -27,14 +28,8 @@ data class EvacuationShelter(
     val media: ShelterMedia,
     val accessible: Boolean,
     val capacity: ShelterCapacity? = null,
-    val externalUrl: String? = null,
+    val externalUrl: ShelterExternalUrl? = null,
 ) {
-    init {
-        externalUrl?.let { url ->
-            require(url.isNotBlank()) { "externalUrl must not be blank when provided" }
-        }
-    }
-
     companion object {
         fun create(
             id: ShelterId,
@@ -54,7 +49,7 @@ data class EvacuationShelter(
                 media = media,
                 accessible = accessible,
                 capacity = capacity,
-                externalUrl = externalUrl,
+                externalUrl = ShelterExternalUrl.of(externalUrl),
             )
     }
 }
