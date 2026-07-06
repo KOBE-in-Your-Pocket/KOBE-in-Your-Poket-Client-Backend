@@ -152,6 +152,7 @@ class SpotLocalizationTest {
                 categoryLabel = "ランドマーク",
                 description = "神戸のシンボル。",
                 businessHours = "9:00-23:00",
+                address = "神戸市中央区波止場町5-5",
             )
 
         assertEquals("神戸ポートタワー", localization.name)
@@ -161,14 +162,20 @@ class SpotLocalizationTest {
     @Test
     fun `name が空なら拒否する`() {
         assertFailsWith<IllegalArgumentException> {
-            SpotLocalization(name = "  ", categoryLabel = "ランドマーク", description = "x", businessHours = "")
+            SpotLocalization(name = "  ", categoryLabel = "ランドマーク", description = "x", businessHours = "", address = "")
         }
     }
 
     @Test
     fun `categoryLabel が空なら拒否する`() {
         assertFailsWith<IllegalArgumentException> {
-            SpotLocalization(name = "神戸ポートタワー", categoryLabel = "  ", description = "x", businessHours = "")
+            SpotLocalization(
+                name = "神戸ポートタワー",
+                categoryLabel = "  ",
+                description = "x",
+                businessHours = "",
+                address = "",
+            )
         }
     }
 }
@@ -180,6 +187,7 @@ class SpotLocalizationsTest {
             categoryLabel = "ランドマーク",
             description = "神戸のシンボル。",
             businessHours = "9:00-23:00",
+            address = "神戸市中央区波止場町5-5",
         )
     private val en =
         SpotLocalization(
@@ -187,6 +195,7 @@ class SpotLocalizationsTest {
             categoryLabel = "Landmark",
             description = "The symbol of Kobe.",
             businessHours = "9:00-23:00",
+            address = "5-5 Hatobacho, Chuo-ku, Kobe",
         )
 
     @Test

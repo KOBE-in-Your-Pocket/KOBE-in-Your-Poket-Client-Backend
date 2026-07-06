@@ -53,7 +53,8 @@ class ReviewRepositoryImplTest {
                 localizations =
                     SpotLocalizations.of(
                         mapOf(
-                            Language.JA to SpotLocalization("神戸ポートタワー", "ランドマーク", "説明", "9:00-23:00"),
+                            Language.JA to
+                                SpotLocalization("神戸ポートタワー", "ランドマーク", "説明", "9:00-23:00", "神戸市中央区波止場町5-5"),
                         ),
                     ),
             ),

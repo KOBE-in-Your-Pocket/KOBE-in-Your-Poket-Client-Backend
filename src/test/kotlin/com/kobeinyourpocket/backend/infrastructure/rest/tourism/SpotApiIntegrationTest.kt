@@ -40,13 +40,15 @@ class SpotApiIntegrationTest {
               "name": "神戸ポートタワー",
               "categoryLabel": "ランドマーク",
               "description": "神戸のシンボル。",
-              "businessHours": "9:00-23:00"
+              "businessHours": "9:00-23:00",
+              "address": "神戸市中央区波止場町5-5"
             },
             "en": {
               "name": "Kobe Port Tower",
               "categoryLabel": "Landmark",
               "description": "The symbol of Kobe.",
-              "businessHours": "9:00-23:00"
+              "businessHours": "9:00-23:00",
+              "address": "5-5 Hatobacho, Chuo-ku, Kobe"
             }
           }
         }
@@ -71,6 +73,7 @@ class SpotApiIntegrationTest {
             .andExpect(jsonPath("$.description").value("神戸のシンボル。"))
             .andExpect(jsonPath("$.coordinates.latitude").value(34.6826))
             .andExpect(jsonPath("$.coordinates.longitude").value(135.1863))
+            .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
             .andExpect(jsonPath("$.businessHours").value("9:00-23:00"))
             .andExpect(jsonPath("$.category.label").value("ランドマーク"))
             .andExpect(jsonPath("$.media.imageUrl").value("https://example.com/kobe-port-tower.webp"))

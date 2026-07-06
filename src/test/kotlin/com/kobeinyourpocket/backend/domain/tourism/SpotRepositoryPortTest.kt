@@ -40,8 +40,16 @@ class SpotRepositoryPortTest {
                 localizations =
                     SpotLocalizations.of(
                         mapOf(
-                            Language.JA to SpotLocalization("神戸ポートタワー", "ランドマーク", "説明", "9:00"),
-                            Language.EN to SpotLocalization("Kobe Port Tower", "Landmark", "Desc", "9:00"),
+                            Language.JA to
+                                SpotLocalization("神戸ポートタワー", "ランドマーク", "説明", "9:00", "神戸市中央区波止場町5-5"),
+                            Language.EN to
+                                SpotLocalization(
+                                    "Kobe Port Tower",
+                                    "Landmark",
+                                    "Desc",
+                                    "9:00",
+                                    "5-5 Hatobacho, Chuo-ku, Kobe",
+                                ),
                         ),
                     ),
             )
