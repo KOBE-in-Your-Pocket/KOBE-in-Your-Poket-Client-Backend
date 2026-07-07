@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.spot.vo
 
 /**
- * スポット識別子の Value Object（slug 等）。
+ * [値オブジェクト] スポット識別子（slug 等）。
  *
  * 集約 `aggregate.Spot` の同一性（identity）を表す。[Companion.of] が生成入口。
  */

@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.spot.vo
 
 /**
- * ジャンル区分の Value Object。
+ * [値オブジェクト] ジャンル区分。
  *
  * ジャンルは運営（管理者）側で追加・拡張されうるため、固定列挙ではなく
  * 文字列をラップする汎用モデルとして定義する。

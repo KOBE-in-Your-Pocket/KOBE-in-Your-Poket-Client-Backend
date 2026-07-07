@@ -2,10 +2,10 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
-import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
-import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping

@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.spot.vo
 
 /**
- * 緯度・経度の Value Object。
+ * [値オブジェクト] 緯度・経度。
  *
  * Client `SpotCoordinates` に対応する。`aggregate.Spot` がコンポジションで保持する。
  * [Companion.of] が生成入口（範囲チェックは `init` で実施）。

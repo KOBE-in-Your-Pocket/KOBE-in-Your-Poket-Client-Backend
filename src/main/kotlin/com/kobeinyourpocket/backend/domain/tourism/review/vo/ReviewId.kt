@@ -1,9 +1,9 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.review.vo
 
 import java.util.UUID
 
 /**
- * レビュー識別子の Value Object（UUID）。
+ * [値オブジェクト] レビュー識別子（UUID）。
  *
  * [generate] がサーバー側採番の入口。既存 UUID からの復元は [of] を使う。
  */

@@ -3,7 +3,7 @@ package com.kobeinyourpocket.backend.application.tourism.query
 /**
  * 言語解決済みスポットの読みモデル（Client `domain/spot.ts` の解決済み `Spot` 形）。
  *
- * CQRS read 側専用。command 側の集約 [com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot] とは別経路。
+ * CQRS read 側専用。command 側の集約 [com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot] とは別経路。
  */
 data class SpotView(
     val id: String,

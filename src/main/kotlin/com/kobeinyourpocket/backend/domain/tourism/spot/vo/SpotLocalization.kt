@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.spot.vo
 
 /**
- * スポットの言語別ローカライズ内容の Value Object。
+ * [値オブジェクト] スポットの言語別ローカライズ内容。
  *
  * 単一言語ぶんの言語依存フィールドをまとめる。言語非依存ベースは `aggregate.Spot` 側に持ち、
  * 本オブジェクトは [SpotLocalizations] 経由で言語ごとに保持される（§7.1 の i18n 分割）。

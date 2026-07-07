@@ -1,7 +1,9 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.spot.vo
+
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
 
 /**
- * スポットの言語別ローカライズ集合の Value Object。
+ * [値オブジェクト] スポットの言語別ローカライズ集合。
  *
  * 言語 → [SpotLocalization] の対応を保持し、要求言語が無ければ [Language.DEFAULT]（ja）へ
  * フォールバックして解決する（モックの `resolveLocalization` 相当 / §7.1）。

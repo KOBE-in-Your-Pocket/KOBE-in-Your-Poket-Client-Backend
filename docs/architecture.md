@@ -25,6 +25,7 @@
 
 - 同心円状にレイヤを重ね、依存方向を常に内側（ドメイン）へ向ける
 - **layer-first** — 各レイヤ配下にコンテキスト名（`tourism/` `evacuation/` …）のサブパッケージを置く
+- **domain 内は集約ファースト** — コンテキスト配下を集約名（`spot/` `review/` …）で切り、その下に `model/`（エンティティ・集約ルート）/ `vo/`（値オブジェクト）/ `repository/`（write port）を置く。フォルダ階層が「BC > 集約 > 役割」を表す。集約に属さない BC 共通の型は概念名パッケージ（例 `localization/`）に置く
 - **read / write を分離（CQRS-lite）** — command は domain 集約経由、query は読みモデル + 専用 port で SQL 直行
 
 ```
@@ -91,11 +92,14 @@
 ```
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt
-├── domain/                           # コンテキスト別ドメイン
+├── domain/                           # コンテキスト別ドメイン（context 内は集約ファースト）
 │   ├── tourism/
-│   │   ├── vo/                       # Value Object
-│   │   ├── aggregate/                # 集約ルート（write 側）
-│   │   └── repository/               # SpotRepository（write port）
+│   │   ├── spot/                     # 集約
+│   │   │   ├── model/                # エンティティ・集約ルート（Spot, SpotWithLocalizations）
+│   │   │   ├── vo/                   # Value Object（SpotId, Coordinates, ...）
+│   │   │   └── repository/           # SpotRepository（write port）
+│   │   ├── review/                   # 集約（model / vo / repository）
+│   │   └── localization/             # 集約横断の i18n VO（Language）。汎用サブドメイン
 │   ├── evacuation/ ...
 │   └── manner/ ...
 ├── application/                      # ユースケース（CQRS: command / query）
@@ -110,15 +114,16 @@ src/main/kotlin/com/kobeinyourpocket/backend/
         └── tourism/                  # SpotController, SpotResponse
 ```
 
-未実装コンテキスト（evacuation 等）も同じ layer-first + `{command,query}` 分割で実装する。
+未実装コンテキスト（evacuation 等）も同じ規約（domain 内は集約ファースト、application は `{command,query}` 分割）で実装する。
 
 ### 3.2 判断基準
 
 | 迷ったら | 置き場所 |
 |---|---|
-| tourism の Value Object | `domain/tourism/vo/` |
-| tourism の集約ルート（write） | `domain/tourism/aggregate/` |
-| tourism の write port | `domain/tourism/repository/` |
+| tourism・spot 集約の Value Object | `domain/tourism/spot/vo/` |
+| tourism・spot 集約のエンティティ/ルート（write） | `domain/tourism/spot/model/` |
+| tourism・spot 集約の write port | `domain/tourism/spot/repository/` |
+| 集約横断の共通 VO（言語など） | `domain/tourism/localization/` 等の概念名パッケージ（§3.3 の理由でグローバル `shared/` は作らない） |
 | 書き込みユースケース | `application/tourism/command/` |
 | 読み取りユースケース・読みモデル・read port | `application/tourism/query/` |
 | JPA write adapter | `infrastructure/persistence/tourism/` |
@@ -206,7 +211,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 #### 手順
 
 1. 対象コンテキストの `mock-*.ts` と `domain/*.ts` を読み、**API が返す解決済みオブジェクト**の形を把握する
-2. `domain/tourism/vo/` + `domain/tourism/aggregate/` に write 側モデル、`application/tourism/query/` に [SpotView] 読みモデルを定義する
+2. `domain/tourism/spot/{model,vo}/` に write 側モデル、`application/tourism/query/` に [SpotView] 読みモデルを定義する
 3. 永続化（DB テーブル）は API 形と一致させる必要はない（§7.1 の i18n 分割など）。**domain ↔ persistence の変換は infrastructure/persistence に閉じる**
 4. REST レスポンス DTO（`infrastructure/rest`）は Mock の返却形に合わせ、domain から組み立てる
 
@@ -215,7 +220,7 @@ Client リポジトリ: [KOBE-in-Your-Poket-Client](https://github.com/KOBE-in-Y
 | Client（`domain/spot.ts` + `mock-spots.ts`） | backend |
 |---|---|
 | `Spot { id, name, genre, description, coordinates, address, businessHours, category, media, rating? }` | 一覧 API の返却単位。`rating` はレビュー未実装時 `null` |
-| `SpotGenre` リテラル列挙 | `domain/tourism/vo` の enum 等で同値を定義 |
+| `SpotGenre` リテラル列挙 | `domain/tourism/spot/vo` の enum 等で同値を定義 |
 | `MOCK_SPOT_BASES` + `MOCK_SPOT_LOCALIZATIONS` の分割 | DB は `spot` + `spot_localization` に分割（§7.1）。API は `lang` 解決後に Client の `Spot` 形で返す |
 | `fetchSpots(language): Promise<Spot[]>` | `GET /api/v1/tourism/spots?lang=` の 200 レスポンス |
 

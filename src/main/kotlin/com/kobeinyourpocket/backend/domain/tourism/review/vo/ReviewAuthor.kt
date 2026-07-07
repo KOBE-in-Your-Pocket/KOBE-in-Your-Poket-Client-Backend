@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.review.vo
 
 /**
- * レビュー投稿者を表す Value Object。
+ * [値オブジェクト] レビュー投稿者。
  *
  * クライアント側の `PublicUser`（name / iconUrl）に対応する。
  * PublicUser の仕様は確定前のため、フィールド追加・変更を前提とした薄い seam として定義する。

@@ -1,9 +1,9 @@
 package com.kobeinyourpocket.backend.application.tourism.command
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Review
-import com.kobeinyourpocket.backend.domain.tourism.repository.ReviewRepository
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewId
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
+import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
+import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import org.springframework.stereotype.Service
 
 /** レビュー更新ユースケース（write）。rating と comment のみ更新可能。 */
