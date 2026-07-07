@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.jayway.jsonpath.JsonPath
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -61,6 +62,11 @@ class SpotApiIntegrationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(registerBody),
             )
+
+    private fun registerPortTowerAndGetId(): String {
+        val result = registerPortTower().andExpect(status().isCreated).andReturn()
+        return JsonPath.read(result.response.contentAsString, "$.id")
+    }
 
     @Test
     fun `POST で登録し 201 とモック互換 Spot JSON を返す`() {
@@ -129,5 +135,40 @@ class SpotApiIntegrationTest {
             .perform(get("/api/v1/tourism/spots"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].name").value("神戸ポートタワー"))
+    }
+
+    @Test
+    fun `登録したスポットを GET id lang=ja で取得できる`() {
+        val spotId = registerPortTowerAndGetId()
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(spotId))
+            .andExpect(jsonPath("$.name").value("神戸ポートタワー"))
+            .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
+            .andExpect(jsonPath("$.rating").doesNotExist())
+    }
+
+    @Test
+    fun `GET id lang=en で英語ローカライズを返す`() {
+        val spotId = registerPortTowerAndGetId()
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId?lang=en"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.name").value("Kobe Port Tower"))
+            .andExpect(jsonPath("$.address").value("5-5 Hatobacho, Chuo-ku, Kobe"))
+    }
+
+    @Test
+    fun `GET id が未登録なら 404 と統一エラー JSON を返す`() {
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/unknown-spot?lang=ja"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
     }
 }

@@ -130,4 +130,31 @@ class SpotQueryJpaTest {
 
         assertEquals(3.0, result.rating)
     }
+
+    @Test
+    fun `id 指定で要求言語で解決した SpotView を返す`() {
+        spotRepository.save(portTower)
+
+        val result = spotQuery.findByIdResolved(SpotId.of("kobe-port-tower"), Language.EN)
+
+        assertEquals("Kobe Port Tower", result?.name)
+    }
+
+    @Test
+    fun `id 指定で要求言語が無ければ ja へフォールバックする`() {
+        spotRepository.save(portTower)
+
+        val result = spotQuery.findByIdResolved(SpotId.of("kobe-port-tower"), Language.KO)
+
+        assertEquals("神戸ポートタワー", result?.name)
+    }
+
+    @Test
+    fun `id が無ければ null を返す`() {
+        spotRepository.save(portTower)
+
+        val result = spotQuery.findByIdResolved(SpotId.of("unknown-spot"), Language.JA)
+
+        assertNull(result)
+    }
 }

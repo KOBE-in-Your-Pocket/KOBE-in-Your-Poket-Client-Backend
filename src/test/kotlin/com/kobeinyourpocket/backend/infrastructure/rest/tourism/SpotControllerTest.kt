@@ -1,7 +1,9 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
+import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
+import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
 import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
@@ -38,6 +40,9 @@ class SpotControllerTest {
 
     @MockitoBean
     private lateinit var listSpotsService: ListSpotsService
+
+    @MockitoBean
+    private lateinit var getSpotService: GetSpotService
 
     @MockitoBean
     private lateinit var registerSpotService: RegisterSpotService
@@ -162,6 +167,33 @@ class SpotControllerTest {
         mockMvc.perform(get("/api/v1/tourism/spots")).andExpect(status().isOk)
 
         verify(listSpotsService).listSpots(Language.JA)
+    }
+
+    @Test
+    fun `GET id で該当スポットを取得できる`() {
+        given(getSpotService.getSpot(SpotId.of("kobe-port-tower"), Language.JA)).willReturn(portTower)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/kobe-port-tower?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.id").value("kobe-port-tower"))
+            .andExpect(jsonPath("$.name").value("神戸ポートタワー"))
+            .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
+            .andExpect(jsonPath("$.rating.value").value(4.5))
+    }
+
+    @Test
+    fun `GET id が未収録なら 404 と統一エラー JSON を返す`() {
+        given(getSpotService.getSpot(SpotId.of("unknown-spot"), Language.JA))
+            .willThrow(SpotNotFoundException(SpotId.of("unknown-spot")))
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/unknown-spot?lang=ja"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
     }
 
     @Test
