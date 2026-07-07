@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.common
 
+import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -10,6 +11,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 /** バリデーション・不正リクエストの統一エラー応答（§3.3 / #24）。 */
 @RestControllerAdvice
 class GlobalExceptionHandler {
+    @ExceptionHandler(SpotNotFoundException::class)
+    fun handleSpotNotFound(ex: SpotNotFoundException): ResponseEntity<ApiErrorResponse> = notFound(message = ex.message ?: "Spot not found")
+
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ApiErrorResponse> =
         badRequest(
@@ -43,6 +47,17 @@ class GlobalExceptionHandler {
                     error = HttpStatus.BAD_REQUEST.reasonPhrase,
                     message = message,
                     violations = violations,
+                ),
+            )
+
+    private fun notFound(message: String): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(
+                ApiErrorResponse(
+                    status = HttpStatus.NOT_FOUND.value(),
+                    error = HttpStatus.NOT_FOUND.reasonPhrase,
+                    message = message,
                 ),
             )
 }
