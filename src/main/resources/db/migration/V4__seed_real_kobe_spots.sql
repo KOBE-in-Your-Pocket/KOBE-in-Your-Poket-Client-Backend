@@ -3,20 +3,60 @@
 -- mock-spots 廃止（KOBE-in-Your-Pocket/KOBE-in-Your-Poket-Client#305）に先立ち整備する。
 --
 -- image_url は要件定義 O-2（Client `buildSpotImageUrl` 引退）に合わせて完全 URL 形式で格納する。
--- ただし実画像（権利処理済み）の調達・アップロードは運営側の別タスクのため、本マイグレーションでは
+-- 以下 5 件（kobe-port-tower / kitano-ijinkan / nankinmachi / arima-onsen / mount-rokko）は
+-- Client `mock-spots.ts` の `S3_SPOT_IMAGE_FILES` で既に実画像がアップロード済みのため、
+-- Client `.env` の `EXPO_PUBLIC_S3_IMAGE_BASE_URL`（S3 バケット）を基点にした実 URL を格納する。
+-- 座標・4言語ローカライズも Client `mock-spots.ts` / `mock-spot-localizations.ts` の実データをそのまま踏襲する。
+-- それ以外のスポットは実画像（権利処理済み）が未調達のため、
 -- `https://images.kobe-pocket.example.com/spots/{id}/main.jpg` のプレースホルダー URL を暫定で格納する。
 -- 実 CDN/S3 URL が確定し次第、UPDATE で差し替える想定。
 --
 -- rating_value は feature ②（レビュー）由来の派生値のため、V1 の方針どおり NULL のまま登録する。
 
--- 北野異人館街
+-- 神戸ポートタワー（Client mock-spots 実データ + 実S3画像）
 INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
-    ('kitano-ijinkan', 'landmark', 34.6996, 135.1958, 'https://images.kobe-pocket.example.com/spots/kitano-ijinkan/main.jpg');
+    ('kobe-port-tower', 'landmark', 34.6826, 135.1863, 'https://kobe-in-your-pocket-images-dev-515966496540.s3.ap-northeast-1.amazonaws.com/spots/kobe-port-tower/main.webp');
 INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
-    ('kitano-ijinkan', 'ja', '北野異人館街', '定番スポット', '明治から大正期に建てられた異人館が立ち並ぶ異国情緒あふれる散策エリア。「うろこの家」など人気の館が点在する。', '館により異なる（目安 9:00〜18:00、無休）', '兵庫県神戸市中央区北野町3丁目'),
-    ('kitano-ijinkan', 'en', 'Kitano Ijinkan (Foreigners'' District)', 'Landmark', 'A charming hillside district lined with Meiji- and Taisho-era Western-style houses, including the popular House of Scales (Uroko-no-Ie).', 'Varies by house (approx. 9:00-18:00, open daily)', '3-chome, Kitano-cho, Chuo-ku, Kobe, Hyogo'),
-    ('kitano-ijinkan', 'zh', '北野异人馆街', '地标景点', '明治至大正时期建造的西式馆舍林立的异国风情街区，「鳞之家」等人气馆舍点缀其中。', '因馆而异（约9:00-18:00，全年无休）', '兵库县神户市中央区北野町3丁目'),
-    ('kitano-ijinkan', 'ko', '기타노 이진칸 거리', '랜드마크', '메이지·다이쇼 시대에 지어진 서양식 저택이 늘어선 이국적인 산책 명소로, ''비늘의 집'' 등 인기 저택이 자리한다.', '저택마다 다름 (대략 9:00~18:00, 연중무휴)', '효고현 고베시 주오구 기타노초 3초메');
+    ('kobe-port-tower', 'ja', '神戸ポートタワー', 'ウォーターフロント', '神戸港のシンボル。鼓を思わせる赤い鉄塔で、展望フロアから街と海を一望できる。', '9:00 – 21:00', '神戸市中央区波止場町5-5'),
+    ('kobe-port-tower', 'en', 'Kobe Port Tower', 'Waterfront', 'A symbol of Kobe Port. This red lattice tower resembles a drum and offers panoramic views of the city and sea from its observation deck.', '9:00 AM – 9:00 PM', '5-5 Hatobacho, Chuo Ward, Kobe'),
+    ('kobe-port-tower', 'zh', '神户港塔', '海滨', '神户港的象征。形如鼓的红色铁塔，从展望层可一览城市与大海。', '9:00 – 21:00', '神户市中央区波止场町5-5'),
+    ('kobe-port-tower', 'ko', '고베 포트 타워', '워터프런트', '고베 항의 상징. 북을 연상시키는 붉은 철탑으로, 전망층에서 도시와 바다를 한눈에 볼 수 있다.', '9:00 – 21:00', '고베시 주오구 하토바초 5-5');
+
+-- 北野異人館街（Client mock-spots 実データ + 実S3画像）
+INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
+    ('kitano-ijinkan', 'history', 34.6989, 135.1896, 'https://kobe-in-your-pocket-images-dev-515966496540.s3.ap-northeast-1.amazonaws.com/spots/kitano-ijinkan/main.webp');
+INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
+    ('kitano-ijinkan', 'ja', '北野異人館街', '歴史地区', '開港期に外国人が暮らした洋館が立ち並ぶ地区。風見鶏の館をはじめ異国情緒あふれる街並みが残る。', '9:00 – 18:00', '神戸市中央区北野町'),
+    ('kitano-ijinkan', 'en', 'Kitano Ijinkan District', 'Historic District', 'A neighborhood of Western-style mansions where foreign residents lived after the port opened. Exotic streetscapes remain, including the Weathercock House.', '9:00 AM – 6:00 PM', 'Kitanocho, Chuo Ward, Kobe'),
+    ('kitano-ijinkan', 'zh', '北野异人馆街', '历史街区', '开港时期外国人居住的洋馆林立。风见鸡馆等充满异国情调的街景至今保留。', '9:00 – 18:00', '神户市中央区北野町'),
+    ('kitano-ijinkan', 'ko', '기타노 이진칸 거리', '역사 지구', '개항기 외국인들이 살던 양관이 늘어선 지역. 풍향계관을 비롯해 이국적인 거리 풍경이 남아 있다.', '9:00 – 18:00', '고베시 주오구 기타노초');
+
+-- 南京町（Client mock-spots 実データ + 実S3画像）
+INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
+    ('nankinmachi', 'gourmet', 34.6889, 135.1877, 'https://kobe-in-your-pocket-images-dev-515966496540.s3.ap-northeast-1.amazonaws.com/spots/nankinmachi/main.webp');
+INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
+    ('nankinmachi', 'ja', '南京町', '中華街', '西日本有数の中華街。豚まんや点心など食べ歩きグルメでにぎわう。', '10:00 – 20:00', '神戸市中央区栄町通'),
+    ('nankinmachi', 'en', 'Nankinmachi', 'Chinatown', 'One of the largest Chinatowns in western Japan. Bustling with street food such as pork buns and dim sum.', '10:00 AM – 8:00 PM', 'Sakaemachidori, Chuo Ward, Kobe'),
+    ('nankinmachi', 'zh', '南京町', '中华街', '西日本屈指可数的中华街。肉包、点心等街头美食令这里热闹非凡。', '10:00 – 20:00', '神户市中央区荣町通'),
+    ('nankinmachi', 'ko', '난킨마치', '차이나타운', '서일본 최대급 차이나타운. 돈만과 딤섬 등 길거리 음식으로 붐비는 곳.', '10:00 – 20:00', '고베시 주오구 사카에마치도리');
+
+-- 有馬温泉（Client mock-spots 実データ + 実S3画像）
+INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
+    ('arima-onsen', 'onsen', 34.7956, 135.2468, 'https://kobe-in-your-pocket-images-dev-515966496540.s3.ap-northeast-1.amazonaws.com/spots/arima-onsen/main.webp');
+INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
+    ('arima-onsen', 'ja', '有馬温泉', '温泉', '日本三古湯のひとつ。鉄分を含む茶褐色の「金泉」と無色透明の「銀泉」で知られる。', '24時間', '神戸市北区有馬町'),
+    ('arima-onsen', 'en', 'Arima Onsen', 'Hot Spring', 'One of Japan’s three oldest hot springs. Famous for its iron-rich brown “Kinsen” and clear “Ginsen” waters.', 'Open 24 hours', 'Arimacho, Kita Ward, Kobe'),
+    ('arima-onsen', 'zh', '有马温泉', '温泉', '日本三大古汤之一。以含铁茶褐色的「金泉」与无色透明的「银泉」闻名。', '24小时', '神户市北区有马町'),
+    ('arima-onsen', 'ko', '아리마 온천', '온천', '일본 3대 고온천 중 하나. 철분이 함유된 갈색 「금천」과 무색투명한 「은천」으로 유명하다.', '24시간', '고베시 기타구 아리마초');
+
+-- 六甲山（Client mock-spots 実データ + 実S3画像）
+INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
+    ('mount-rokko', 'nature', 34.7488, 135.2231, 'https://kobe-in-your-pocket-images-dev-515966496540.s3.ap-northeast-1.amazonaws.com/spots/mount-rokko/main.webp');
+INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
+    ('mount-rokko', 'ja', '六甲山', '自然', '神戸の街を見下ろす山。ハイキングや植物園が楽しめ、山上から望む夜景は日本三大夜景に数えられる。', '9:00 – 17:00', '神戸市灘区六甲山町'),
+    ('mount-rokko', 'en', 'Mount Rokko', 'Nature', 'A mountain overlooking Kobe. Enjoy hiking and botanical gardens; the night view from the summit is counted among Japan’s three greatest nightscapes.', '9:00 AM – 5:00 PM', 'Rokkosancho, Nada Ward, Kobe'),
+    ('mount-rokko', 'zh', '六甲山', '自然', '俯瞰神户市区的山。可徒步与参观植物园，山顶夜景被誉为日本三大夜景之一。', '9:00 – 17:00', '神户市滩区六甲山町'),
+    ('mount-rokko', 'ko', '롯코산', '자연', '고베 시내를 내려다보는 산. 하이킹과 식물원을 즐길 수 있으며, 정상에서 바라보는 야경은 일본 3대 야경에 꼽힌다.', '9:00 – 17:00', '고베시 나다구 롯코산초');
 
 -- メリケンパーク
 INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
@@ -27,24 +67,6 @@ INSERT INTO spot_localization (spot_id, language, name, category_label, descript
     ('meriken-park', 'zh', '美利坚公园', '地标景点', '面向神户港的滨海公园，园内有BE KOBE纪念碑和神户海洋博物馆，展现港口城市神户的象征性景观。', '全天开放，免费入园', '兵库县神户市中央区波止场町2'),
     ('meriken-park', 'ko', '메리켄 파크', '랜드마크', '고베항에 면한 워터프런트 공원으로, BE KOBE 모뉴먼트와 고베 해양박물관이 있어 항구 도시 고베를 상징하는 경관을 볼 수 있다.', '24시간 개방, 입장 무료', '효고현 고베시 주오구 하토바초 2');
 
--- 神戸ポートタワー
-INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
-    ('kobe-port-tower', 'landmark', 34.6841, 135.1876, 'https://images.kobe-pocket.example.com/spots/kobe-port-tower/main.jpg');
-INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
-    ('kobe-port-tower', 'ja', '神戸ポートタワー', '定番スポット', '鼓の形をした赤い鉄塔展望台。神戸港とメリケンパークを一望できる神戸のシンボル的存在。', '9:00〜23:00（最終入場22:30）、年中無休', '兵庫県神戸市中央区波止場町5-5'),
-    ('kobe-port-tower', 'en', 'Kobe Port Tower', 'Landmark', 'A red steel tower shaped like a traditional tsuzumi drum, offering panoramic views of Kobe Port and Meriken Park. A defining symbol of the city.', '9:00-23:00 (last entry 22:30), open daily', '5-5 Hatobacho, Chuo-ku, Kobe, Hyogo'),
-    ('kobe-port-tower', 'zh', '神户港塔', '地标景点', '形似日本传统鼓「鼓」的红色铁塔展望台，可俯瞰神户港与美利坚公园，是神户的标志性建筑。', '9:00-23:00（最终入场22:30），全年无休', '兵库县神户市中央区波止场町5-5'),
-    ('kobe-port-tower', 'ko', '고베 포트 타워', '랜드마크', '일본 전통 북 ''츠즈미'' 모양을 한 붉은 철탑 전망대로, 고베항과 메리켄 파크를 한눈에 볼 수 있는 고베의 상징이다.', '9:00~23:00 (최종 입장 22:30), 연중무휴', '효고현 고베시 주오구 하토바초 5-5');
-
--- 南京町
-INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
-    ('nankinmachi', 'gourmet', 34.6890, 135.1900, 'https://images.kobe-pocket.example.com/spots/nankinmachi/main.jpg');
-INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
-    ('nankinmachi', 'ja', '南京町', 'グルメ', '横浜・長崎と並ぶ日本三大中華街のひとつ。食べ歩きグルメや雑貨店が並ぶにぎやかなエリア。', '店舗により異なる（目安 10:00〜20:00）', '兵庫県神戸市中央区栄町通・元町通1丁目'),
-    ('nankinmachi', 'en', 'Nankinmachi (Kobe Chinatown)', 'Gourmet', 'One of Japan''s three major Chinatowns, alongside Yokohama and Nagasaki. A lively area packed with street-food stalls and specialty shops.', 'Varies by shop (approx. 10:00-20:00)', 'Sakaemachi-dori / Motomachi-dori 1-chome, Chuo-ku, Kobe, Hyogo'),
-    ('nankinmachi', 'zh', '南京町（神户中华街）', '美食', '与横滨、长崎齐名的日本三大中华街之一，聚集了众多小吃摊和杂货店，热闹非凡。', '因店而异（约10:00-20:00）', '兵库县神户市中央区荣町通・元町通1丁目'),
-    ('nankinmachi', 'ko', '난킨마치 (고베 차이나타운)', '미식', '요코하마, 나가사키와 함께 일본 3대 차이나타운으로 꼽히며, 먹거리 노점과 잡화점이 늘어선 활기찬 거리이다.', '점포마다 다름 (대략 10:00~20:00)', '효고현 고베시 주오구 사카에마치도리·모토마치도리 1초메');
-
 -- 神戸ハーバーランド
 INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
     ('kobe-harborland', 'landmark', 34.6819, 135.1808, 'https://images.kobe-pocket.example.com/spots/kobe-harborland/main.jpg');
@@ -53,24 +75,6 @@ INSERT INTO spot_localization (spot_id, language, name, category_label, descript
     ('kobe-harborland', 'en', 'Kobe Harborland', 'Landmark', 'A waterfront shopping and entertainment district on Kobe Port, home to umie and Mosaic, and a popular spot for night views.', 'Varies by facility (approx. 10:00-20:00)', '1-chome, Higashikawasakicho, Chuo-ku, Kobe, Hyogo'),
     ('kobe-harborland', 'zh', '神户海港乐园', '地标景点', '面向神户港的综合商业区，umie、Mosaic等商业设施云集，也是热门的夜景观赏地。', '因设施而异（约10:00-20:00）', '兵库县神户市中央区东川崎町1丁目'),
     ('kobe-harborland', 'ko', '고베 하버랜드', '랜드마크', '고베항에 면한 복합 상업지구로, umie와 모자이크 등의 상업시설이 모여 있으며 야경 명소로도 인기가 높다.', '시설마다 다름 (대략 10:00~20:00)', '효고현 고베시 주오구 히가시카와사키초 1초메');
-
--- 有馬温泉 金の湯
-INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
-    ('arima-onsen-kinnoyu', 'onsen', 34.7975, 135.2481, 'https://images.kobe-pocket.example.com/spots/arima-onsen-kinnoyu/main.jpg');
-INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
-    ('arima-onsen-kinnoyu', 'ja', '有馬温泉 金の湯', '温泉', '日本三古湯のひとつ有馬温泉を代表する外湯。赤茶色の「金泉」を気軽に日帰りで楽しめる。', '8:00〜22:00（最終受付21:30）、第2・第4火曜定休', '兵庫県神戸市北区有馬町833'),
-    ('arima-onsen-kinnoyu', 'en', 'Arima Onsen Kin-no-yu', 'Hot Spring', 'A public bathhouse in Arima Onsen, one of Japan''s three oldest hot spring resorts, known for its iron-rich, reddish-brown golden waters.', '8:00-22:00 (last entry 21:30), closed 2nd & 4th Tuesdays', '833 Arima-cho, Kita-ku, Kobe, Hyogo'),
-    ('arima-onsen-kinnoyu', 'zh', '有马温泉 金之汤', '温泉', '日本三大古汤之一有马温泉的代表性公共浴场，可轻松体验红褐色的「金泉」。', '8:00-22:00（最终入场21:30），逢第2、第4个周二休息', '兵库县神户市北区有马町833'),
-    ('arima-onsen-kinnoyu', 'ko', '아리마 온천 킨노유', '온천', '일본 3대 고대 온천 중 하나인 아리마 온천을 대표하는 외탕으로, 붉은빛을 띠는 ''긴센(금천)''을 당일치기로 즐길 수 있다.', '8:00~22:00 (최종 접수 21:30), 둘째·넷째 화요일 휴무', '효고현 고베시 기타구 아리마초 833');
-
--- 六甲ガーデンテラス
-INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
-    ('rokko-garden-terrace', 'nature', 34.7307, 135.2436, 'https://images.kobe-pocket.example.com/spots/rokko-garden-terrace/main.jpg');
-INSERT INTO spot_localization (spot_id, language, name, category_label, description, business_hours, address) VALUES
-    ('rokko-garden-terrace', 'ja', '六甲ガーデンテラス', '自然', '六甲山頂に広がる展望施設。神戸・大阪の街並みと大阪湾を一望でき、「六甲枝垂れ」など夜景スポットとしても名高い。', '9:30〜21:00（季節・施設により変動）', '兵庫県神戸市灘区六甲山町五介山1877-9'),
-    ('rokko-garden-terrace', 'en', 'Rokko Garden Terrace', 'Nature', 'An observation complex atop Mt. Rokko offering sweeping views of Kobe, Osaka, and Osaka Bay, famed for its night views including the Rokko Shidare observatory.', '9:30-21:00 (varies by season and facility)', '1877-9 Gokaisan, Rokkosanmachi, Nada-ku, Kobe, Hyogo'),
-    ('rokko-garden-terrace', 'zh', '六甲花园露台', '自然风光', '位于六甲山顶的展望设施，可一览神户、大阪的街景与大阪湾，也因「六甲枝垂」等夜景景点而闻名。', '9:30-21:00（因季节、设施而异）', '兵库县神户市滩区六甲山町五介山1877-9'),
-    ('rokko-garden-terrace', 'ko', '롯코 가든 테라스', '자연', '롯코산 정상에 펼쳐진 전망 시설로, 고베·오사카 시가지와 오사카만을 한눈에 볼 수 있으며 ''롯코 시다레'' 등 야경 명소로도 유명하다.', '9:30~21:00 (계절·시설에 따라 변동)', '효고현 고베시 나다구 롯코산초 고카이산 1877-9');
 
 -- 布引の滝
 INSERT INTO spot (id, genre, latitude, longitude, image_url) VALUES
