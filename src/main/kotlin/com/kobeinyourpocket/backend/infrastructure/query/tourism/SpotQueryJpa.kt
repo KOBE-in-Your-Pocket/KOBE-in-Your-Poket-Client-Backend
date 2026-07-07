@@ -24,6 +24,7 @@ class SpotQueryJpa(
     ): SpotView? =
         resolvedQuery(language, "$SELECT_RESOLVED_SPOT WHERE s.id = :id")
             .setParameter("id", id.value)
+            .setMaxResults(1)
             .resultRows()
             .map(::toSpotView)
             .firstOrNull()
