@@ -3,10 +3,10 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
 import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewId
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping

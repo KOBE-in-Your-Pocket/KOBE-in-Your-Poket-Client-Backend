@@ -1,13 +1,13 @@
 package com.kobeinyourpocket.backend.application.tourism.command
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.repository.SpotRepository
-import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
-import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
 import org.springframework.stereotype.Service
 import java.util.UUID
 

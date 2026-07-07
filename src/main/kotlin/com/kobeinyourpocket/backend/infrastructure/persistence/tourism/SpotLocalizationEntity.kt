@@ -1,9 +1,9 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalization
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId

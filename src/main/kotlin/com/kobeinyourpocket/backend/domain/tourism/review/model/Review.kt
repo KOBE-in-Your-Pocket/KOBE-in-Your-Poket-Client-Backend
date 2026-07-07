@@ -1,14 +1,14 @@
-package com.kobeinyourpocket.backend.domain.tourism.aggregate
+package com.kobeinyourpocket.backend.domain.tourism.review.model
 
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewAuthor
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewId
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import java.time.Instant
 
 /**
- * レビュー集約ルート。
+ * [エンティティ] レビュー。
  *
  * 観光スポット（[SpotId]）に対してユーザーが投稿する星評価とコメントを表す。
  * 投稿者は [ReviewAuthor] VO で表現する（PublicUser 確定後に差し替え可能な薄い seam）。

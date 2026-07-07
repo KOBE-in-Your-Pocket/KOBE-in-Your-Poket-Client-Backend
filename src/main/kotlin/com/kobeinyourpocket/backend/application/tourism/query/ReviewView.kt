@@ -5,7 +5,7 @@ import java.time.Instant
 /**
  * 言語解決済みレビューの読みモデル。
  *
- * CQRS read 側専用。command 側の集約 [com.kobeinyourpocket.backend.domain.tourism.aggregate.Review] とは別経路。
+ * CQRS read 側専用。command 側の集約 [com.kobeinyourpocket.backend.domain.tourism.review.model.Review] とは別経路。
  */
 data class ReviewView(
     val id: String,

@@ -2,8 +2,8 @@ package com.kobeinyourpocket.backend.infrastructure.query.tourism
 
 import com.kobeinyourpocket.backend.application.tourism.query.SpotQuery
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import jakarta.persistence.EntityManager
 import jakarta.persistence.Query
 import org.springframework.stereotype.Repository

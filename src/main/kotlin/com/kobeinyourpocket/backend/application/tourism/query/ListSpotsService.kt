@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.application.tourism.query
 
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
 import org.springframework.stereotype.Service
 
 /** 一覧取得ユースケース（read）。domain 集約を経由せず [SpotQuery] port へ委譲する。 */

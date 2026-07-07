@@ -1,13 +1,13 @@
-package com.kobeinyourpocket.backend.domain.tourism.aggregate
+package com.kobeinyourpocket.backend.domain.tourism.spot.model
 
-import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
-import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotRating
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotRating
 
 /**
- * 観光スポット集約ルート（Entity・言語非依存部分）。
+ * [エンティティ] 観光スポット（言語非依存部分）。
  *
  * `vo` パッケージの Value Object をコンポジションで保持する。
  * 同一 [SpotId] により識別され、中身の更新は同じ Spot として扱う。

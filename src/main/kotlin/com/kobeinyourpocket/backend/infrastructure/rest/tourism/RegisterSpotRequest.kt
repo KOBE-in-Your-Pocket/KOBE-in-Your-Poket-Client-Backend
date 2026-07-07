@@ -1,8 +1,8 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalization
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty

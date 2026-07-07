@@ -1,7 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.repository.SpotRepository
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 

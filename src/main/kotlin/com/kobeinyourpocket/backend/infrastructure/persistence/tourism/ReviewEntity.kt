@@ -1,11 +1,11 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Review
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewAuthor
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewId
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

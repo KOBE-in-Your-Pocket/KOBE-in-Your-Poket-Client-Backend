@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.application.tourism.query
 
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 
 /** 指定 [SpotId] のスポットが存在しない場合の例外（REST では 404 / #83）。 */
 class SpotNotFoundException(
