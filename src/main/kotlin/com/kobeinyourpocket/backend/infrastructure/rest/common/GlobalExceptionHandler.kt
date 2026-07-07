@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class GlobalExceptionHandler {
     @ExceptionHandler(SpotNotFoundException::class)
-    fun handleSpotNotFound(ex: SpotNotFoundException): ResponseEntity<ApiErrorResponse> =
-        notFound(message = ex.message ?: "Spot not found")
+    fun handleSpotNotFound(ex: SpotNotFoundException): ResponseEntity<ApiErrorResponse> = notFound(message = ex.message ?: "Spot not found")
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ApiErrorResponse> =
