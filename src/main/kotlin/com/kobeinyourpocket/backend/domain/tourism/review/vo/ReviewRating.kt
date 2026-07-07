@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.review.vo
 
 /**
- * レビューの星評価 Value Object（1〜5 の整数）。
+ * [値オブジェクト] レビューの星評価（1〜5 の整数）。
  *
  * [SpotRating] が集計平均（小数）を表すのに対し、本クラスはユーザーが入力する
  * 1〜5 段階の整数評価を表す。[Companion.of] が生成入口。

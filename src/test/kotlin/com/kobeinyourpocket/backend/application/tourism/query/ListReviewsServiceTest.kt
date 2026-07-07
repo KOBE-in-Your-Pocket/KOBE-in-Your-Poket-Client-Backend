@@ -1,7 +1,7 @@
 package com.kobeinyourpocket.backend.application.tourism.query
 
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

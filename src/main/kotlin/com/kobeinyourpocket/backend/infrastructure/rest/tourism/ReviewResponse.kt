@@ -2,7 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Review
+import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import java.time.Instant
 
 /**

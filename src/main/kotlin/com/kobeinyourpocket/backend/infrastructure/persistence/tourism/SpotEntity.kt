@@ -1,11 +1,11 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
-import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
-import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotRating
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotRating
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id

@@ -2,8 +2,8 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 
 /**
  * `GET /api/v1/tourism/spots` および `POST /api/v1/tourism/spots` のレスポンス（モックの `Spot` 形 / §8）。

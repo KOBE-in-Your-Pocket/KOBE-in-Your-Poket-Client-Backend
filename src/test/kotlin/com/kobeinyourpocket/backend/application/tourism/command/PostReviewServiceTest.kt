@@ -1,10 +1,10 @@
 package com.kobeinyourpocket.backend.application.tourism.command
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Review
-import com.kobeinyourpocket.backend.domain.tourism.repository.ReviewRepository
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.ReviewRating
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
+import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

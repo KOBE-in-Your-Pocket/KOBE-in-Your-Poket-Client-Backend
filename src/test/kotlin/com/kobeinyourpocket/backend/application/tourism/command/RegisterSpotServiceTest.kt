@@ -1,13 +1,13 @@
 package com.kobeinyourpocket.backend.application.tourism.command
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.repository.SpotRepository
-import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
-import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalization
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

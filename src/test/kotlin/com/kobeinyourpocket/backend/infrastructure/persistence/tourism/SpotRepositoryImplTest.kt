@@ -1,16 +1,16 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.SpotWithLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.repository.SpotRepository
-import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
-import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotRating
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalization
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotRating
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase

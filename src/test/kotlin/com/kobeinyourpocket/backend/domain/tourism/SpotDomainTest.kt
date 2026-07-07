@@ -1,14 +1,14 @@
 package com.kobeinyourpocket.backend.domain.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.aggregate.Spot
-import com.kobeinyourpocket.backend.domain.tourism.vo.Coordinates
-import com.kobeinyourpocket.backend.domain.tourism.vo.Genre
-import com.kobeinyourpocket.backend.domain.tourism.vo.Language
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotId
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalization
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotMedia
-import com.kobeinyourpocket.backend.domain.tourism.vo.SpotRating
+import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalization
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotRating
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

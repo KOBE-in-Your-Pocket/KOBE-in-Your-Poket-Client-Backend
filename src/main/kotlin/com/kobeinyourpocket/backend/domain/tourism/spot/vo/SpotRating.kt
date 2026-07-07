@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.spot.vo
 
 /**
- * 5 段階評価の Value Object。
+ * [値オブジェクト] 5 段階評価。
  *
  * feature ① では未集計のため `aggregate.Spot` 上では通常 `null`。
  * Client `SpotRating` に対応する。

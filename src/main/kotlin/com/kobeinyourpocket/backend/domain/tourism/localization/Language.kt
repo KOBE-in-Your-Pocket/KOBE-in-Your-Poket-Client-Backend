@@ -1,7 +1,7 @@
-package com.kobeinyourpocket.backend.domain.tourism.vo
+package com.kobeinyourpocket.backend.domain.tourism.localization
 
 /**
- * 対応言語の Value Object。
+ * [値オブジェクト] 対応言語。
  *
  * 言語は i18n の対応範囲（API 契約 `?lang=`）として運営側で固定される閉じた集合のため、
  * 文字列ラップ（[Genre]）ではなく列挙で表現する。
