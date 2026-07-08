@@ -308,7 +308,7 @@ class SpotControllerTest {
     }
 
     @Test
-    fun `POST に4言語揃っていなければ 400 とドメインエラーメッセージを返す`() {
+    fun `POST に4言語揃っていなければ 400 とエラーメッセージを返す`() {
         mockMvc
             .perform(
                 post("/api/v1/tourism/spots")
