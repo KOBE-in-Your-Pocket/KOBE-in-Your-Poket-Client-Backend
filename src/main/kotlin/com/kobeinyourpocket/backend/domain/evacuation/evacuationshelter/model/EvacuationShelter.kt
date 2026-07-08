@@ -3,10 +3,10 @@ package com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterExternalUrl
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalizations
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
+import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 
 /**
  * 避難所エンティティ（集約ルート）。

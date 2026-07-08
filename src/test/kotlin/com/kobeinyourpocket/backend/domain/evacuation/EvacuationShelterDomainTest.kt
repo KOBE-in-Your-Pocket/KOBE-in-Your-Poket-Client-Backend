@@ -4,11 +4,11 @@ import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.Ev
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterExternalUrl
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalization
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalizations
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
+import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import com.kobeinyourpocket.backend.domain.tourism.localization.Language
 import kotlin.test.Test
 import kotlin.test.assertEquals

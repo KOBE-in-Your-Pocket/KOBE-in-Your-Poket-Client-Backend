@@ -32,7 +32,6 @@ data class ShelterLocalizations(
         val FALLBACK: Language = Language.EN
 
         /** 言語マップから防御的コピーを取り生成する。 */
-        fun of(byLanguage: Map<Language, ShelterLocalization>): ShelterLocalizations =
-            ShelterLocalizations(byLanguage.toMap())
+        fun of(byLanguage: Map<Language, ShelterLocalization>): ShelterLocalizations = ShelterLocalizations(byLanguage.toMap())
     }
 }
