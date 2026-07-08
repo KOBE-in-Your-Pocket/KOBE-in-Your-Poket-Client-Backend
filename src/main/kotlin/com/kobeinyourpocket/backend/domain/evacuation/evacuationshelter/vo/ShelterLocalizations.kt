@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo
 
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 
 /**
  * 避難所の言語別ローカライズ集合（値オブジェクト）。
