@@ -43,6 +43,27 @@ class ReviewApiIntegrationTest {
               "description": "神戸のシンボル。",
               "businessHours": "9:00-23:00",
               "address": "神戸市中央区波止場町5-5"
+            },
+            "en": {
+              "name": "Kobe Port Tower",
+              "categoryLabel": "Landmark",
+              "description": "The symbol of Kobe.",
+              "businessHours": "9:00-23:00",
+              "address": "5-5 Hatobacho, Chuo-ku, Kobe"
+            },
+            "zh": {
+              "name": "神户港塔",
+              "categoryLabel": "地标",
+              "description": "神户的象征。",
+              "businessHours": "9:00-23:00",
+              "address": "神户市中央区波止场町5-5"
+            },
+            "ko": {
+              "name": "고베 포트 타워",
+              "categoryLabel": "랜드마크",
+              "description": "고베의 상징.",
+              "businessHours": "9:00-23:00",
+              "address": "고베시 주오구 하토바초 5-5"
             }
           }
         }
@@ -114,19 +135,19 @@ class ReviewApiIntegrationTest {
     }
 
     @Test
-    fun `GET lang 未指定は ja フォールバック`() {
+    fun `GET lang 未指定は en フォールバック`() {
         val spotId = registerSpot()
         mockMvc.perform(
             post("/api/v1/tourism/spots/$spotId/reviews")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(reviewBody(5, "素晴らしい", "ja")),
+                .content(reviewBody(5, "Amazing", "en")),
         )
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/$spotId/reviews"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].language").value("ja"))
+            .andExpect(jsonPath("$[0].language").value("en"))
     }
 
     @Test

@@ -37,13 +37,13 @@ class ListSpotsServiceTest {
     }
 
     @Test
-    fun `要求言語のローカライズが無い場合は ja フォールバック済み SpotView を返す`() {
+    fun `要求言語のローカライズが無い場合は en フォールバック済み SpotView を返す`() {
         val spotQuery = mockk<SpotQuery>()
-        every { spotQuery.findAllResolved(Language.KO) } returns listOf(jaView)
+        every { spotQuery.findAllResolved(Language.KO) } returns listOf(enView)
 
         val result = ListSpotsService(spotQuery).listSpots(Language.KO)
 
-        assertEquals("神戸ポートタワー", result.single().name)
+        assertEquals("Kobe Port Tower", result.single().name)
         verify(exactly = 1) { spotQuery.findAllResolved(Language.KO) }
     }
 }
