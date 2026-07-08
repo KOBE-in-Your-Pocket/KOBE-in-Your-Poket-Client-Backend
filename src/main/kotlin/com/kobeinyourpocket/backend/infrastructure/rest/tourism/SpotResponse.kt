@@ -53,7 +53,7 @@ data class SpotResponse(
                 rating = view.rating?.let { RatingResponse(value = it) },
             )
 
-        /** POST 201 用。要求言語未指定時は ja（[Language.DEFAULT]）で解決した Spot 形を返す。 */
+        /** POST 201 用。要求言語未指定時は en（[Language.DEFAULT]）で解決した Spot 形を返す。 */
         fun fromRegistered(
             saved: SpotWithLocalizations,
             language: Language = Language.DEFAULT,

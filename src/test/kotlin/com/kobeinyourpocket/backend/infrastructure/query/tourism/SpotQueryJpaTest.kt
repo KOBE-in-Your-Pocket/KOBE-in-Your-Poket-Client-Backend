@@ -83,12 +83,12 @@ class SpotQueryJpaTest {
     }
 
     @Test
-    fun `要求言語が無ければ ja へフォールバックする`() {
+    fun `要求言語が無ければ en へフォールバックする`() {
         spotRepository.save(portTower)
 
         val result = spotQuery.findAllResolved(Language.KO).single()
 
-        assertEquals("神戸ポートタワー", result.name)
+        assertEquals("Kobe Port Tower", result.name)
     }
 
     @Test
@@ -141,12 +141,12 @@ class SpotQueryJpaTest {
     }
 
     @Test
-    fun `id 指定で要求言語が無ければ ja へフォールバックする`() {
+    fun `id 指定で要求言語が無ければ en へフォールバックする`() {
         spotRepository.save(portTower)
 
         val result = spotQuery.findByIdResolved(SpotId.of("kobe-port-tower"), Language.KO)
 
-        assertEquals("神戸ポートタワー", result?.name)
+        assertEquals("Kobe Port Tower", result?.name)
     }
 
     @Test

@@ -66,6 +66,22 @@ class SpotControllerTest {
                         "9:00-23:00",
                         "5-5 Hatobacho, Chuo-ku, Kobe",
                     ),
+                Language.ZH to
+                    SpotLocalization(
+                        "神户港塔",
+                        "地标",
+                        "神户的象征。",
+                        "9:00-23:00",
+                        "神户市中央区波止场町5-5",
+                    ),
+                Language.KO to
+                    SpotLocalization(
+                        "고베 포트 타워",
+                        "랜드마크",
+                        "고베의 상징.",
+                        "9:00-23:00",
+                        "고베시 주오구 하토바초 5-5",
+                    ),
             ),
         )
 
@@ -102,6 +118,20 @@ class SpotControllerTest {
               "description": "The symbol of Kobe.",
               "businessHours": "9:00-23:00",
               "address": "5-5 Hatobacho, Chuo-ku, Kobe"
+            },
+            "zh": {
+              "name": "神户港塔",
+              "categoryLabel": "地标",
+              "description": "神户的象征。",
+              "businessHours": "9:00-23:00",
+              "address": "神户市中央区波止场町5-5"
+            },
+            "ko": {
+              "name": "고베 포트 타워",
+              "categoryLabel": "랜드마크",
+              "description": "고베의 상징.",
+              "businessHours": "9:00-23:00",
+              "address": "고베시 주오구 하토바초 5-5"
             }
           }
         }
@@ -161,12 +191,12 @@ class SpotControllerTest {
     }
 
     @Test
-    fun `lang も Accept-Language も無ければ ja へフォールバックする`() {
-        given(listSpotsService.listSpots(Language.JA)).willReturn(emptyList())
+    fun `lang も Accept-Language も無ければ en へフォールバックする`() {
+        given(listSpotsService.listSpots(Language.EN)).willReturn(emptyList())
 
         mockMvc.perform(get("/api/v1/tourism/spots")).andExpect(status().isOk)
 
-        verify(listSpotsService).listSpots(Language.JA)
+        verify(listSpotsService).listSpots(Language.EN)
     }
 
     @Test
@@ -278,7 +308,7 @@ class SpotControllerTest {
     }
 
     @Test
-    fun `POST に ja が無ければ 400 とドメインエラーメッセージを返す`() {
+    fun `POST に4言語揃っていなければ 400 とドメインエラーメッセージを返す`() {
         mockMvc
             .perform(
                 post("/api/v1/tourism/spots")
@@ -303,7 +333,7 @@ class SpotControllerTest {
                     ),
             ).andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.message").value(containsString("default language")))
+            .andExpect(jsonPath("$.message").value(containsString("localizations")))
 
         verifyNoInteractions(registerSpotService)
     }

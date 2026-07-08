@@ -50,6 +50,20 @@ class SpotApiIntegrationTest {
               "description": "The symbol of Kobe.",
               "businessHours": "9:00-23:00",
               "address": "5-5 Hatobacho, Chuo-ku, Kobe"
+            },
+            "zh": {
+              "name": "神户港塔",
+              "categoryLabel": "地标",
+              "description": "神户的象征。",
+              "businessHours": "9:00-23:00",
+              "address": "神户市中央区波止场町5-5"
+            },
+            "ko": {
+              "name": "고베 포트 타워",
+              "categoryLabel": "랜드마크",
+              "description": "고베의 상징.",
+              "businessHours": "9:00-23:00",
+              "address": "고베시 주오구 하토바초 5-5"
             }
           }
         }
@@ -116,25 +130,47 @@ class SpotApiIntegrationTest {
     }
 
     @Test
-    fun `未収録言語は ja へフォールバックする`() {
+    fun `GET lang=zh で中国語ローカライズを返す`() {
         registerPortTower().andExpect(status().isCreated)
 
-        // ko は localizations 未収録 → ja 解決
         mockMvc
-            .perform(get("/api/v1/tourism/spots?lang=ko"))
+            .perform(get("/api/v1/tourism/spots?lang=zh"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$[0].name").value("神戸ポートタワー"))
-            .andExpect(jsonPath("$[0].category.label").value("ランドマーク"))
+            .andExpect(jsonPath("$[0].name").value("神户港塔"))
+            .andExpect(jsonPath("$[0].category.label").value("地标"))
     }
 
     @Test
-    fun `lang 未指定でも ja で取得できる`() {
+    fun `GET lang=ko で韓国語ローカライズを返す`() {
+        registerPortTower().andExpect(status().isCreated)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots?lang=ko"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].name").value("고베 포트 타워"))
+            .andExpect(jsonPath("$[0].category.label").value("랜드마크"))
+    }
+
+    @Test
+    fun `未対応の言語コードは en へフォールバックする`() {
+        registerPortTower().andExpect(status().isCreated)
+
+        // fr は非対応言語コード → Language.of が null を返し en（DEFAULT）で解決
+        mockMvc
+            .perform(get("/api/v1/tourism/spots?lang=fr"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].name").value("Kobe Port Tower"))
+            .andExpect(jsonPath("$[0].category.label").value("Landmark"))
+    }
+
+    @Test
+    fun `lang 未指定でも en で取得できる`() {
         registerPortTower().andExpect(status().isCreated)
 
         mockMvc
             .perform(get("/api/v1/tourism/spots"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$[0].name").value("神戸ポートタワー"))
+            .andExpect(jsonPath("$[0].name").value("Kobe Port Tower"))
     }
 
     @Test
