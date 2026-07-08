@@ -88,14 +88,14 @@ class ReviewControllerTest {
     }
 
     @Test
-    fun `GET lang 未指定は ja フォールバック`() {
-        given(listReviewsService.listReviews(spotId, Language.JA)).willReturn(emptyList())
+    fun `GET lang 未指定は en フォールバック`() {
+        given(listReviewsService.listReviews(spotId, Language.EN)).willReturn(emptyList())
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/kobe-port-tower/reviews"))
             .andExpect(status().isOk)
 
-        verify(listReviewsService).listReviews(spotId, Language.JA)
+        verify(listReviewsService).listReviews(spotId, Language.EN)
     }
 
     @Test

@@ -111,7 +111,7 @@ curl http://localhost:9090/actuator/health
 
 ## API
 
-ベース URL は `/api/v1`。言語は `?lang=`（`ja`/`en`/`ko`/`zh`、無指定は `ja` フォールバック）。
+ベース URL は `/api/v1`。言語は `?lang=`（`ja`/`en`/`ko`/`zh`、無指定は `en` フォールバック。Client `FALLBACK_LANGUAGE` と一致）。
 
 | メソッド | パス | 概要 | 状態 |
 | --- | --- | --- | --- |

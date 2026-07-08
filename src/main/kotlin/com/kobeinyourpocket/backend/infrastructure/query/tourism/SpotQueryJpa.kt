@@ -9,7 +9,7 @@ import jakarta.persistence.Query
 import org.springframework.stereotype.Repository
 
 /**
- * [SpotQuery] の JPA 実装。要求言語 + ja フォールバックを SQL で解決し projection を返す。
+ * [SpotQuery] の JPA 実装。要求言語 + フォールバック（既定 en / [Language.DEFAULT]）を SQL で解決し projection を返す。
  */
 @Repository
 class SpotQueryJpa(
@@ -61,21 +61,21 @@ class SpotQueryJpa(
             """
             SELECT
                 s.id,
-                COALESCE(l_req.name, l_ja.name) AS name,
+                COALESCE(l_req.name, l_fallback.name) AS name,
                 s.genre,
-                COALESCE(l_req.description, l_ja.description) AS description,
+                COALESCE(l_req.description, l_fallback.description) AS description,
                 s.latitude,
                 s.longitude,
-                COALESCE(l_req.business_hours, l_ja.business_hours) AS business_hours,
-                COALESCE(l_req.category_label, l_ja.category_label) AS category_label,
+                COALESCE(l_req.business_hours, l_fallback.business_hours) AS business_hours,
+                COALESCE(l_req.category_label, l_fallback.category_label) AS category_label,
                 s.image_url,
                 (SELECT AVG(r.rating) FROM review r WHERE r.spot_id = s.id) AS rating_value,
-                COALESCE(l_req.address, l_ja.address) AS address
+                COALESCE(l_req.address, l_fallback.address) AS address
             FROM spot s
             LEFT JOIN spot_localization l_req
                 ON s.id = l_req.spot_id AND l_req.language = :language
-            LEFT JOIN spot_localization l_ja
-                ON s.id = l_ja.spot_id AND l_ja.language = :fallback
+            LEFT JOIN spot_localization l_fallback
+                ON s.id = l_fallback.spot_id AND l_fallback.language = :fallback
             """.trimIndent()
     }
 }
