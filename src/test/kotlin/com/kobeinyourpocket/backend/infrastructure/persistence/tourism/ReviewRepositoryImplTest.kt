@@ -55,6 +55,8 @@ class ReviewRepositoryImplTest {
                         mapOf(
                             Language.JA to
                                 SpotLocalization("神戸ポートタワー", "ランドマーク", "説明", "9:00-23:00", "神戸市中央区波止場町5-5"),
+                            Language.EN to
+                                SpotLocalization("Kobe Port Tower", "Landmark", "Desc", "9:00-23:00", "5-5 Hatobacho, Chuo-ku, Kobe"),
                         ),
                     ),
             ),

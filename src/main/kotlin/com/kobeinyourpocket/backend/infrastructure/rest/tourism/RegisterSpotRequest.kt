@@ -8,7 +8,12 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
 
-/** `POST /api/v1/tourism/spots` のリクエストボディ（§8）。 */
+/**
+ * `POST /api/v1/tourism/spots` のリクエストボディ（§8）。
+ *
+ * `localizations` はフォールバックに依存しない運用（要件定義 D1 / #84）のため、
+ * ja/en/zh/ko の対応言語ちょうど4件を必須とする（[toLocalizations] で検証）。
+ */
 data class RegisterSpotRequest(
     @field:NotBlank
     val genre: String,
@@ -41,6 +46,10 @@ data class RegisterSpotRequest(
     )
 
     fun toLocalizations(): SpotLocalizations {
+        val requiredCodes = Language.entries.map { it.code }.toSet()
+        require(localizations.keys == requiredCodes) {
+            "localizations must contain exactly the supported languages ${requiredCodes.sorted()}, got ${localizations.keys.sorted()}"
+        }
         val byLanguage =
             localizations
                 .mapNotNull { (code, body) ->

@@ -236,7 +236,10 @@ spot_localization(spot_id, language, name, category_label, description, business
     PRIMARY KEY (spot_id, language)
 ```
 
-API は `lang` を受けて**解決済みの localized Spot を返す**（要求言語が無ければ `ja` フォールバック＝モックの `resolveLocalization` と同じ）。
+API は `lang` を受けて**解決済みの localized Spot を返す**（要求言語が無ければ `en` フォールバック＝モックの `resolveLocalization`／Client `FALLBACK_LANGUAGE` と同じ / #84）。
+
+スポット登録（`POST /api/v1/tourism/spots`）は、フォールバックに依存しない運用（要件定義 D1）のため
+`localizations` に ja/en/zh/ko の対応言語ちょうど4件を必須とする。1件でも欠けると 400 で拒否する。
 
 ### 7.2 位置情報（geo）
 

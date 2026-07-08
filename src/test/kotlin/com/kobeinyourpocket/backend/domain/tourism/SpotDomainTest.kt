@@ -138,8 +138,8 @@ class LanguageTest {
     }
 
     @Test
-    fun `既定言語は ja`() {
-        assertEquals(Language.JA, Language.DEFAULT)
+    fun `既定言語は en`() {
+        assertEquals(Language.EN, Language.DEFAULT)
     }
 }
 
@@ -206,10 +206,10 @@ class SpotLocalizationsTest {
     }
 
     @Test
-    fun `要求言語が無ければ ja へフォールバックする`() {
+    fun `要求言語が無ければ en へフォールバックする`() {
         val localizations = SpotLocalizations.of(mapOf(Language.JA to ja, Language.EN to en))
 
-        assertEquals(ja, localizations.resolve(Language.KO))
+        assertEquals(en, localizations.resolve(Language.KO))
     }
 
     @Test
@@ -220,9 +220,9 @@ class SpotLocalizationsTest {
     }
 
     @Test
-    fun `ja を含まない場合は拒否する`() {
+    fun `en を含まない場合は拒否する`() {
         assertFailsWith<IllegalArgumentException> {
-            SpotLocalizations.of(mapOf(Language.EN to en))
+            SpotLocalizations.of(mapOf(Language.JA to ja))
         }
     }
 }
