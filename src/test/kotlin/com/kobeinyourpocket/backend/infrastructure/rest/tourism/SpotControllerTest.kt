@@ -245,10 +245,10 @@ class SpotControllerTest {
             ).andExpect(status().isCreated)
             .andExpect(content().contentTypeCompatibleWith("application/json"))
             .andExpect(jsonPath("$.id").value("new-spot-id"))
-            .andExpect(jsonPath("$.name").value("神戸ポートタワー"))
+            .andExpect(jsonPath("$.name").value("Kobe Port Tower"))
             .andExpect(jsonPath("$.genre").value("landmark"))
             .andExpect(jsonPath("$.coordinates.latitude").value(34.6826))
-            .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
+            .andExpect(jsonPath("$.address").value("5-5 Hatobacho, Chuo-ku, Kobe"))
             .andExpect(jsonPath("$.media.imageUrl").value("https://example.com/kobe-port-tower.webp"))
             .andExpect(jsonPath("$.rating").doesNotExist())
 
