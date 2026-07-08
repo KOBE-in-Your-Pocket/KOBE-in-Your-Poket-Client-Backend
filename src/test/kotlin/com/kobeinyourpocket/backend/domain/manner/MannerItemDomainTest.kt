@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.domain.manner
 
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.manner.manneritem.model.MannerItem
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerIcon
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerKind
@@ -7,7 +8,6 @@ import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizati
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizations
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerScope
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.RelatedSpotId
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

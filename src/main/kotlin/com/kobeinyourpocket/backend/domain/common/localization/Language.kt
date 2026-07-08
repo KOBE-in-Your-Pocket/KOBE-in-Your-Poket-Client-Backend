@@ -1,10 +1,11 @@
-package com.kobeinyourpocket.backend.domain.tourism.localization
+package com.kobeinyourpocket.backend.domain.common.localization
 
 /**
  * [値オブジェクト] 対応言語。
  *
  * 言語は i18n の対応範囲（API 契約 `?lang=`）として運営側で固定される閉じた集合のため、
- * 文字列ラップ（[Genre]）ではなく列挙で表現する。
+ * 文字列ラップではなく列挙で表現する。tourism / evacuation / manner 等、複数 feature が
+ * 共用する汎用ドメイン（Localization は独立層にしない方針／architecture.md §4）の VO（#74）。
  * 既定（フォールバック先）は [DEFAULT]＝[EN]。Client `FALLBACK_LANGUAGE`（README の「無指定は en フォールバック」）に対応する（#84）。
  */
 enum class Language(

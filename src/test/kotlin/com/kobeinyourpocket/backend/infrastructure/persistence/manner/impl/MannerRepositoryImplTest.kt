@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.manner.impl
 
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.manner.manneritem.model.MannerItem
 import com.kobeinyourpocket.backend.domain.manner.manneritem.repository.MannerRepository
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerIcon
@@ -8,7 +9,6 @@ import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizati
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizations
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerScope
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.RelatedSpotId
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
 import com.kobeinyourpocket.backend.infrastructure.persistence.manner.repository.MannerItemJpaRepository
 import com.kobeinyourpocket.backend.infrastructure.persistence.manner.repository.MannerItemLocalizationJpaRepository
 import com.kobeinyourpocket.backend.infrastructure.persistence.manner.repository.MannerItemSpotJpaRepository

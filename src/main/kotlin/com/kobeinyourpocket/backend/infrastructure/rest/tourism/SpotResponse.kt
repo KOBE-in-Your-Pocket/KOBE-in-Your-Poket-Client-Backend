@@ -2,7 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 
 /**

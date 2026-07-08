@@ -2,7 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.query.tourism
 
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewQuery
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
