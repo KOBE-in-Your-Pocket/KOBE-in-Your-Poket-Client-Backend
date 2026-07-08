@@ -8,6 +8,10 @@ import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 /**
  * tourism コンテキストの Onion 層依存ルール（docs/architecture.md §6 / #25）。
  *
+ * domain 純粋性の2ルールは `domain.common`（tourism/evacuation/manner が共用する
+ * 汎用ドメイン、例: `Language` / #74）にも適用する。application/infrastructure 側の
+ * 2ルールは tourism 固有のため対象外。
+ *
  * プロトタイプ期の warn 運用は CI 側で段階導入する。ルール自体は本番同等に fail させる。
  */
 @AnalyzeClasses(
@@ -19,7 +23,7 @@ class TourismLayerArchitectureTest {
     val domainShouldNotDependOnApplicationOrInfrastructure =
         noClasses()
             .that()
-            .resideInAPackage("..domain.tourism..")
+            .resideInAnyPackage("..domain.tourism..", "..domain.common..")
             .should()
             .dependOnClassesThat()
             .resideInAnyPackage("..application..", "..infrastructure..")
@@ -29,7 +33,7 @@ class TourismLayerArchitectureTest {
     val domainShouldNotDependOnSpringOrJpa =
         noClasses()
             .that()
-            .resideInAPackage("..domain.tourism..")
+            .resideInAnyPackage("..domain.tourism..", "..domain.common..")
             .should()
             .dependOnClassesThat()
             .resideInAnyPackage(

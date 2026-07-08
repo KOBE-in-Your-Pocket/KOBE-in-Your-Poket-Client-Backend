@@ -3,10 +3,11 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
 import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.infrastructure.rest.common.LanguageResolver
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -33,8 +35,9 @@ class ReviewController(
     fun listReviews(
         @PathVariable spotId: String,
         @RequestParam(name = "lang", required = false) lang: String?,
+        @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
     ): List<ReviewResponse> {
-        val language = lang?.let { Language.of(it) } ?: Language.DEFAULT
+        val language = LanguageResolver.resolve(lang, acceptLanguage)
         return listReviewsService
             .listReviews(SpotId.of(spotId), language)
             .map(ReviewResponse::from)

@@ -1,9 +1,9 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.manner.entity
 
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.manner.manneritem.model.MannerItem
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalization
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizations
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId

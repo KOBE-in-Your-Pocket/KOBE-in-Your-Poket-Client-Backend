@@ -4,7 +4,7 @@ import com.kobeinyourpocket.backend.application.tourism.command.PostReviewServic
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
 import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId

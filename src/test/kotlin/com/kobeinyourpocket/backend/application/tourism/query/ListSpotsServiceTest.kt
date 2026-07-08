@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.application.tourism.query
 
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

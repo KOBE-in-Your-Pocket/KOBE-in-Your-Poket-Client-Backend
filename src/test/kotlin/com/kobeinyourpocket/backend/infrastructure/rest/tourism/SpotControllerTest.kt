@@ -5,7 +5,7 @@ import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
 import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
