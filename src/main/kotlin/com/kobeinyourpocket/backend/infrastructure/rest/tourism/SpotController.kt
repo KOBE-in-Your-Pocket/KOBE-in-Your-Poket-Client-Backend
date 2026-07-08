@@ -3,11 +3,11 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Genre
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
+import com.kobeinyourpocket.backend.infrastructure.rest.common.LanguageResolver
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
@@ -35,7 +35,7 @@ class SpotController(
         @RequestParam(name = "lang", required = false) lang: String?,
         @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
     ): List<SpotResponse> {
-        val language = resolveLanguage(lang, acceptLanguage)
+        val language = LanguageResolver.resolve(lang, acceptLanguage)
         return listSpotsService.listSpots(language).map(SpotResponse::from)
     }
 
@@ -45,7 +45,7 @@ class SpotController(
         @RequestParam(name = "lang", required = false) lang: String?,
         @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
     ): SpotResponse {
-        val language = resolveLanguage(lang, acceptLanguage)
+        val language = LanguageResolver.resolve(lang, acceptLanguage)
         return SpotResponse.from(getSpotService.getSpot(SpotId.of(id), language))
     }
 
@@ -63,18 +63,4 @@ class SpotController(
             )
         return SpotResponse.fromRegistered(saved)
     }
-
-    private fun resolveLanguage(
-        lang: String?,
-        acceptLanguage: String?,
-    ): Language =
-        lang?.let { Language.of(it) }
-            ?: acceptLanguage?.let(::parseAcceptLanguage)
-            ?: Language.DEFAULT
-
-    private fun parseAcceptLanguage(header: String): Language? =
-        header
-            .split(',')
-            .map { it.substringBefore(';').substringBefore('-').trim() }
-            .firstNotNullOfOrNull { Language.of(it) }
 }

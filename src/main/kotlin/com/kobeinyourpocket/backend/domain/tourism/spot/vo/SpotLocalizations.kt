@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.domain.tourism.spot.vo
 
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 
 /**
  * [値オブジェクト] スポットの言語別ローカライズ集合。

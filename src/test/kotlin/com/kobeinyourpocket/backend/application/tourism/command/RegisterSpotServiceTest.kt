@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.application.tourism.command
 
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates

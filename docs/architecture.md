@@ -93,13 +93,14 @@
 src/main/kotlin/com/kobeinyourpocket/backend/
 ├── KobeBackendApplication.kt
 ├── domain/                           # コンテキスト別ドメイン（context 内は集約ファースト）
+│   ├── common/                       # tourism/evacuation/manner が共用する汎用ドメイン
+│   │   └── localization/             # 全 feature 共通の i18n VO（Language / #74）
 │   ├── tourism/
 │   │   ├── spot/                     # 集約
 │   │   │   ├── model/                # エンティティ・集約ルート（Spot, SpotWithLocalizations）
 │   │   │   ├── vo/                   # Value Object（SpotId, Coordinates, ...）
 │   │   │   └── repository/           # SpotRepository（write port）
-│   │   ├── review/                   # 集約（model / vo / repository）
-│   │   └── localization/             # 集約横断の i18n VO（Language）。汎用サブドメイン
+│   │   └── review/                   # 集約（model / vo / repository）
 │   ├── evacuation/ ...
 │   └── manner/ ...
 ├── application/                      # ユースケース（CQRS: command / query）
@@ -110,7 +111,7 @@ src/main/kotlin/com/kobeinyourpocket/backend/
     ├── persistence/tourism/          # JPA write adapter
     ├── query/tourism/                # SpotQueryJpa（read adapter）
     └── rest/
-        ├── common/                   # GET /api/ping 等の横断 REST 部品
+        ├── common/                   # GET /api/ping、LanguageResolver 等の横断 REST 部品
         └── tourism/                  # SpotController, SpotResponse
 ```
 
@@ -123,7 +124,8 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 | tourism・spot 集約の Value Object | `domain/tourism/spot/vo/` |
 | tourism・spot 集約のエンティティ/ルート（write） | `domain/tourism/spot/model/` |
 | tourism・spot 集約の write port | `domain/tourism/spot/repository/` |
-| 集約横断の共通 VO（言語など） | `domain/tourism/localization/` 等の概念名パッケージ（§3.3 の理由でグローバル `shared/` は作らない） |
+| 単一 feature 内で集約横断の共通 VO | `domain/{context}/{概念名}/` のパッケージ（その feature 内に閉じる） |
+| 複数 feature が共用する共通 VO（言語など） | `domain/common/` 配下の概念名パッケージ（例: `domain/common/localization/` の `Language` / #74）。§3.3 の理由で実際に複数 feature に必要になるまでは作らない |
 | 書き込みユースケース | `application/tourism/command/` |
 | 読み取りユースケース・読みモデル・read port | `application/tourism/query/` |
 | JPA write adapter | `infrastructure/persistence/tourism/` |
@@ -134,7 +136,7 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 
 ### 3.3 `shared/` を作らない
 
-フロントの `shared/` は UI primitives・i18next ラッパ等「UI 層の横断物」の置き場で、backend に等価物が無い。横断的に必要なもの（例：グローバル例外ハンドラ `@RestControllerAdvice`）が**実際に複数 feature で必要になった時点で**、`infrastructure/rest/common` のように**用途を絞った名前**で切り出す。最初から横断バケツは作らない（YAGNI）。
+フロントの `shared/` は UI primitives・i18next ラッパ等「UI 層の横断物」の置き場で、backend に等価物が無い。横断的に必要なもの（例：グローバル例外ハンドラ `@RestControllerAdvice`、言語 VO `Language` / 言語解決 `LanguageResolver`）が**実際に複数 feature で必要になった時点で**、`infrastructure/rest/common`・`domain/common` のように**用途を絞った名前**で切り出す。最初から横断バケツは作らない（YAGNI）。
 
 ---
 
@@ -149,7 +151,7 @@ src/main/kotlin/com/kobeinyourpocket/backend/
 | Manner | コア | **フル Onion**（スポット連動マナーは spotId 参照のみ） |
 | User | 支援 | 軽量（application 省略可） |
 | ContentSubmission | 支援 | 軽量（書き込み・公開状態） |
-| Localization | 汎用 | 各 feature 内で言語解決（独立層にしない） |
+| Localization | 汎用 | 独立した Bounded Context（application/REST 層）は持たない。`Language` VO・`?lang=`/`Accept-Language` 解決ロジックは `domain/common`・`infrastructure/rest/common` に集約し、各 feature の Controller から共用する（#74） |
 | GeoLocation | 汎用 | 各 feature の persistence + PostGIS（§7.2） |
 
 ---
@@ -240,6 +242,10 @@ API は `lang` を受けて**解決済みの localized Spot を返す**（要求
 
 スポット登録（`POST /api/v1/tourism/spots`）は、フォールバックに依存しない運用（要件定義 D1）のため
 `localizations` に ja/en/zh/ko の対応言語ちょうど4件を必須とする。1件でも欠けると 400 で拒否する。
+
+`Language` VO と `?lang=` 主・`Accept-Language` 従の解決ロジック（`LanguageResolver`）は
+tourism 固有ではなく `domain/common/localization/`・`infrastructure/rest/common/` に置き、
+evacuation / manner を含む全 feature の Controller から共用する（§4 Localization / #74）。
 
 ### 7.2 位置情報（geo）
 

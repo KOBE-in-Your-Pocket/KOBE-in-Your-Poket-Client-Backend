@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.domain.tourism
 
-import com.kobeinyourpocket.backend.domain.tourism.localization.Language
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
