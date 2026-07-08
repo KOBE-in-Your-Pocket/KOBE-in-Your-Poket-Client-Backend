@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.domain.evacuation
 
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
@@ -9,7 +10,6 @@ import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.Shelt
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
 import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
-import com.kobeinyourpocket.backend.domain.common.localization.Language
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
