@@ -22,8 +22,8 @@ class ReviewEntity(
     var id: UUID,
     @Column(name = "spot_id", nullable = false)
     var spotId: String,
-    @Column(name = "rating", nullable = false)
-    var rating: Int,
+    @Column(name = "rating", nullable = false, columnDefinition = "SMALLINT")
+    var rating: Short,
     @Column(name = "comment", nullable = false)
     var comment: String,
     @Column(name = "author_name", nullable = false)
@@ -40,7 +40,7 @@ class ReviewEntity(
         return Review(
             id = ReviewId.of(id),
             spotId = SpotId.of(spotId),
-            rating = ReviewRating.of(rating),
+            rating = ReviewRating.of(rating.toInt()),
             comment = comment,
             author = ReviewAuthor(name = authorName, iconUrl = authorIconUrl.ifEmpty { null }),
             createdAt = createdAt,
@@ -53,7 +53,7 @@ class ReviewEntity(
             ReviewEntity(
                 id = review.id.value,
                 spotId = review.spotId.value,
-                rating = review.rating.value,
+                rating = review.rating.value.toShort(),
                 comment = review.comment,
                 authorName = review.author.name,
                 authorIconUrl = review.author.iconUrl.orEmpty(),
