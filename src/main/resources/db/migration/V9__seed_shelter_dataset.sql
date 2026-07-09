@@ -17,13 +17,15 @@
 -- 一律 false とし、実データが確認でき次第 UPDATE で見直す想定。
 -- capacity・external_url も CSV に無いため NULL のまま登録する。
 -- image_url は実画像が未調達のため spot（V4）と同じ方針でプレースホルダー URL を格納する。
+-- CSV の緯度は小数点以下 13 桁程度のノイズ（GISエクスポート由来のfloat精度アーティファクト。
+-- 経度側は綺麗な7桁のため非対称）を含んでいたため、意味のある精度（小数点以下7桁≒1cm程度）に丸めて格納する。
 
 INSERT INTO shelter_dataset_metadata (id, source, as_of) VALUES
     (1, '神戸市オープンデータポータル「神戸市避難場所」(CC BY 2.1 JP) https://catalog.city.kobe.lg.jp/dataset/evacuation', DATE '2025-04-02');
 
 -- 東灘小学校
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('higashinada-elementary-school', 34.7248160999997, 135.2944292, 'dual-use', 'school',
+    ('higashinada-elementary-school', 34.7248161, 135.2944292, 'dual-use', 'school',
      'https://images.kobe-pocket.example.com/shelters/higashinada-elementary-school/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('higashinada-elementary-school', 'ja', '東灘小学校', '神戸市東灘区深江北町2-4-1'),
@@ -33,7 +35,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 本庄小学校
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('honjo-elementary-school', 34.7210202199997, 135.2886997, 'dual-use', 'school',
+    ('honjo-elementary-school', 34.7210202, 135.2886997, 'dual-use', 'school',
      'https://images.kobe-pocket.example.com/shelters/honjo-elementary-school/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('honjo-elementary-school', 'ja', '本庄小学校', '神戸市東灘区青木4-4-1'),
@@ -43,7 +45,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 本庄中学校
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('honjo-junior-high-school', 34.7204612299997, 135.2875439, 'dual-use', 'school',
+    ('honjo-junior-high-school', 34.7204612, 135.2875439, 'dual-use', 'school',
      'https://images.kobe-pocket.example.com/shelters/honjo-junior-high-school/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('honjo-junior-high-school', 'ja', '本庄中学校', '神戸市東灘区青木4-4-2'),
@@ -53,7 +55,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 東灘高校
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('higashinada-high-school', 34.7099788999997, 135.3010486, 'dual-use', 'school',
+    ('higashinada-high-school', 34.7099789, 135.3010486, 'dual-use', 'school',
      'https://images.kobe-pocket.example.com/shelters/higashinada-high-school/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('higashinada-high-school', 'ja', '東灘高校', '神戸市東灘区深江浜町50'),
@@ -63,7 +65,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 東灘体育館
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('higashinada-gymnasium', 34.7146659999997, 135.278116, 'dual-use', 'gymnasium',
+    ('higashinada-gymnasium', 34.714666, 135.278116, 'dual-use', 'gymnasium',
      'https://images.kobe-pocket.example.com/shelters/higashinada-gymnasium/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('higashinada-gymnasium', 'ja', '東灘体育館', '神戸市東灘区魚崎南町6-5-11'),
@@ -73,7 +75,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 須磨体育館
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('suma-gymnasium', 34.6507527999997, 135.1289669, 'dual-use', 'gymnasium',
+    ('suma-gymnasium', 34.6507528, 135.1289669, 'dual-use', 'gymnasium',
      'https://images.kobe-pocket.example.com/shelters/suma-gymnasium/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('suma-gymnasium', 'ja', '須磨体育館', '神戸市須磨区中島町1-2-2'),
@@ -83,7 +85,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 垂水体育館
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('tarumi-gymnasium', 34.6262784899996, 135.0601363, 'dual-use', 'gymnasium',
+    ('tarumi-gymnasium', 34.6262785, 135.0601363, 'dual-use', 'gymnasium',
      'https://images.kobe-pocket.example.com/shelters/tarumi-gymnasium/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('tarumi-gymnasium', 'ja', '垂水体育館', '神戸市垂水区平磯1-1-56'),
@@ -93,7 +95,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 本庄中央公園（屋外の緊急避難場所のみ）
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('honjo-central-park', 34.7195557999997, 135.2850366, 'designated-emergency-evacuation-site', 'park',
+    ('honjo-central-park', 34.7195558, 135.2850366, 'designated-emergency-evacuation-site', 'park',
      'https://images.kobe-pocket.example.com/shelters/honjo-central-park/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('honjo-central-park', 'ja', '本庄中央公園', '神戸市東灘区青木5-18'),
@@ -103,7 +105,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 住吉宮町公園（屋外の緊急避難場所のみ）
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('sumiyoshi-miyamachi-park', 34.7167953299997, 135.2635727, 'designated-emergency-evacuation-site', 'park',
+    ('sumiyoshi-miyamachi-park', 34.7167953, 135.2635727, 'designated-emergency-evacuation-site', 'park',
      'https://images.kobe-pocket.example.com/shelters/sumiyoshi-miyamachi-park/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('sumiyoshi-miyamachi-park', 'ja', '住吉宮町公園', '神戸市東灘区住吉宮町3-2'),
@@ -113,7 +115,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- 住吉公園（屋外の緊急避難場所のみ）
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('sumiyoshi-park', 34.7162363999997, 135.2624276, 'designated-emergency-evacuation-site', 'park',
+    ('sumiyoshi-park', 34.7162364, 135.2624276, 'designated-emergency-evacuation-site', 'park',
      'https://images.kobe-pocket.example.com/shelters/sumiyoshi-park/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('sumiyoshi-park', 'ja', '住吉公園', '神戸市東灘区住吉宮町3-3'),
@@ -123,7 +125,7 @@ INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
 
 -- コミスタこうべ（生涯学習支援センター）
 INSERT INTO shelter (id, latitude, longitude, type, facility_category, image_url, accessible) VALUES
-    ('comista-kobe-lifelong-learning-center', 34.6982260999997, 135.2046319, 'dual-use', 'government',
+    ('comista-kobe-lifelong-learning-center', 34.6982261, 135.2046319, 'dual-use', 'government',
      'https://images.kobe-pocket.example.com/shelters/comista-kobe-lifelong-learning-center/main.jpg', false);
 INSERT INTO shelter_localization (shelter_id, language, name, address) VALUES
     ('comista-kobe-lifelong-learning-center', 'ja', 'コミスタこうべ（生涯学習支援センター）', '神戸市中央区吾妻通4-1-6'),
