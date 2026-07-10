@@ -1,8 +1,8 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.evacuation
 
-import com.kobeinyourpocket.backend.application.evacuation.query.GetShelterDatasetMetadataService
-import com.kobeinyourpocket.backend.application.evacuation.query.ListSheltersService
+import com.kobeinyourpocket.backend.application.evacuation.query.GetShelterListService
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterDatasetMetadataView
+import com.kobeinyourpocket.backend.application.evacuation.query.ShelterListView
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
@@ -28,10 +28,7 @@ class ShelterControllerTest {
     private lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    private lateinit var listSheltersService: ListSheltersService
-
-    @MockitoBean
-    private lateinit var getShelterDatasetMetadataService: GetShelterDatasetMetadataService
+    private lateinit var getShelterListService: GetShelterListService
 
     private val metadata =
         ShelterDatasetMetadataView(
@@ -70,10 +67,16 @@ class ShelterControllerTest {
             externalUrl = null,
         )
 
+    private fun stub(
+        language: Language,
+        shelters: List<ShelterView>,
+    ) {
+        given(getShelterListService.getShelterList(language)).willReturn(ShelterListView(shelters, metadata))
+    }
+
     @Test
     fun `lang=ja で Client EvacuationShelter 形の JSON を data に返す`() {
-        given(listSheltersService.listShelters(Language.JA)).willReturn(listOf(kobeCityHall, minimalShelter))
-        given(getShelterDatasetMetadataService.getMetadata()).willReturn(metadata)
+        stub(Language.JA, listOf(kobeCityHall, minimalShelter))
 
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=ja"))
@@ -97,8 +100,7 @@ class ShelterControllerTest {
 
     @Test
     fun `meta にデータセットの出典・データ基準日・最終更新日時を返す`() {
-        given(listSheltersService.listShelters(Language.JA)).willReturn(emptyList())
-        given(getShelterDatasetMetadataService.getMetadata()).willReturn(metadata)
+        stub(Language.JA, emptyList())
 
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=ja"))
@@ -110,45 +112,41 @@ class ShelterControllerTest {
 
     @Test
     fun `lang クエリを主として言語解決する`() {
-        given(listSheltersService.listShelters(Language.EN)).willReturn(emptyList())
-        given(getShelterDatasetMetadataService.getMetadata()).willReturn(metadata)
+        stub(Language.EN, emptyList())
 
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=en").header("Accept-Language", "ja"))
             .andExpect(status().isOk)
 
-        verify(listSheltersService).listShelters(Language.EN)
+        verify(getShelterListService).getShelterList(Language.EN)
     }
 
     @Test
     fun `lang 未指定なら Accept-Language を従として解決する`() {
-        given(listSheltersService.listShelters(Language.KO)).willReturn(emptyList())
-        given(getShelterDatasetMetadataService.getMetadata()).willReturn(metadata)
+        stub(Language.KO, emptyList())
 
         mockMvc
             .perform(get("/api/v1/evacuation/shelters").header("Accept-Language", "ko-KR,ko;q=0.9,en;q=0.8"))
             .andExpect(status().isOk)
 
-        verify(listSheltersService).listShelters(Language.KO)
+        verify(getShelterListService).getShelterList(Language.KO)
     }
 
     @Test
     fun `未対応の言語コードは en へフォールバックする`() {
-        given(listSheltersService.listShelters(Language.EN)).willReturn(emptyList())
-        given(getShelterDatasetMetadataService.getMetadata()).willReturn(metadata)
+        stub(Language.EN, emptyList())
 
         mockMvc.perform(get("/api/v1/evacuation/shelters?lang=fr")).andExpect(status().isOk)
 
-        verify(listSheltersService).listShelters(Language.EN)
+        verify(getShelterListService).getShelterList(Language.EN)
     }
 
     @Test
     fun `lang も Accept-Language も無ければ en へフォールバックする`() {
-        given(listSheltersService.listShelters(Language.EN)).willReturn(emptyList())
-        given(getShelterDatasetMetadataService.getMetadata()).willReturn(metadata)
+        stub(Language.EN, emptyList())
 
         mockMvc.perform(get("/api/v1/evacuation/shelters")).andExpect(status().isOk)
 
-        verify(listSheltersService).listShelters(Language.EN)
+        verify(getShelterListService).getShelterList(Language.EN)
     }
 }
