@@ -159,6 +159,7 @@ curl http://localhost:9090/actuator/health
 ## 設定
 
 接続情報などは環境変数で上書きできる。`.env.example` を `.env` にコピーして利用する。
+Supabase キーの取得場所・置き場所は [`docs/supabase-env.md`](./docs/supabase-env.md) を参照（キー本体はリポジトリに入れない）。
 
 | 環境変数 | 既定値 | 用途 |
 | --- | --- | --- |
@@ -167,6 +168,10 @@ curl http://localhost:9090/actuator/health
 | `SPRING_DATASOURCE_PASSWORD` | `kobe` | DB パスワード |
 | `SPRING_JPA_DDL_AUTO` | `validate` | Hibernate のスキーマ検証（スキーマは Flyway が所有） |
 | `SERVER_PORT` | `9090` | アプリのポート（Metro/Expo 8081 系との衝突回避） |
+| `SUPABASE_URL` | （未設定） | Supabase Project URL |
+| `SUPABASE_ANON_KEY` | （未設定） | anon / public API key |
+| `SUPABASE_SERVICE_ROLE_KEY` | （未設定） | service_role（backend 専用） |
+| `SUPABASE_JWT_SECRET` | （未設定） | JWT 検証用 secret |
 
 ---
 
