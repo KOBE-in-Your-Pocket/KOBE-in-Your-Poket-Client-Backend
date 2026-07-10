@@ -1,0 +1,7 @@
+# Supabase 接続時に有効化する profile。
+# 起動例: SPRING_PROFILES_ACTIVE=supabase
+# または環境変数だけでも可: SPRING_FLYWAY_BASELINE_ON_MIGRATE=true
+spring:
+  flyway:
+    # public が拡張などで非空でも、履歴テーブルが無い初回は baseline してから migrate
+    baseline-on-migrate: true
