@@ -17,4 +17,4 @@ Supabase ダッシュボード → **Project Settings → API**
 
 - `.env` は gitignore 済み。コミットしない
 - Client・Issue・PR に `service_role` / JWT secret を出さない
-- チーム向けの詳細（DB session mode 等）はワークスペースの `infrastructure/aws/architecture/Supabase接続メモ.md`
+- チーム向けの詳細（DB session mode 等）は [`infrastructure/Supabase接続メモ.md`](./infrastructure/Supabase接続メモ.md)
