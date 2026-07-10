@@ -41,15 +41,40 @@ jobs:
 
       - name: Ensure EC2 + SSM are ready
         run: |
-          STATE=$(aws ec2 describe-instances \
-            --instance-ids "${EC2_INSTANCE_ID}" \
-            --query 'Reservations[0].Instances[0].State.Name' --output text)
-          echo "EC2 state=${STATE}"
-          if [[ "${STATE}" != "running" ]]; then
-            echo "EC2 is stopped. Starting..."
-            aws ec2 start-instances --instance-ids "${EC2_INSTANCE_ID}"
-            aws ec2 wait instance-running --instance-ids "${EC2_INSTANCE_ID}"
-          fi
+          # stopping/pending 中に start すると IncorrectInstanceState になるため、
+          # start 可能な状態になるまで待ってから起動する。
+          for i in $(seq 1 60); do
+            STATE=$(aws ec2 describe-instances \
+              --instance-ids "${EC2_INSTANCE_ID}" \
+              --query 'Reservations[0].Instances[0].State.Name' --output text)
+            echo "EC2 state=${STATE}"
+            case "${STATE}" in
+              running)
+                break
+                ;;
+              stopped)
+                echo "EC2 is stopped. Starting..."
+                if aws ec2 start-instances --instance-ids "${EC2_INSTANCE_ID}"; then
+                  aws ec2 wait instance-running --instance-ids "${EC2_INSTANCE_ID}"
+                  break
+                fi
+                echo "Start failed (likely transitional). Retrying..."
+                sleep 10
+                ;;
+              stopping|shutting-down|pending)
+                echo "Waiting for transitional state (${STATE}) to finish..."
+                sleep 10
+                ;;
+              *)
+                echo "Unexpected EC2 state: ${STATE}" >&2
+                exit 1
+                ;;
+            esac
+            if [[ "${i}" -eq 60 ]]; then
+              echo "Timed out waiting for EC2 to become startable/running" >&2
+              exit 1
+            fi
+          done
           for i in $(seq 1 36); do
             STATUS=$(aws ssm describe-instance-information \
               --filters "Key=InstanceIds,Values=${EC2_INSTANCE_ID}" \
