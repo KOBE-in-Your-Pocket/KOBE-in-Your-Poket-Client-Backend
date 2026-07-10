@@ -27,18 +27,33 @@ class ShelterQueryJpa(
 
     private fun toShelterView(row: Array<Any?>): ShelterView =
         ShelterView(
-            id = row[0] as String,
-            name = row[1] as String,
-            address = row[2] as String,
-            latitude = (row[3] as Number).toDouble(),
-            longitude = (row[4] as Number).toDouble(),
-            type = row[5] as String,
-            facilityCategory = row[6] as String,
-            imageUrl = row[7] as String,
-            capacity = (row[8] as Number?)?.toInt(),
-            accessible = row[9] as Boolean,
-            externalUrl = row[10] as String?,
+            id = row[Column.ID] as String,
+            name = row[Column.NAME] as String,
+            address = row[Column.ADDRESS] as String,
+            latitude = (row[Column.LATITUDE] as Number).toDouble(),
+            longitude = (row[Column.LONGITUDE] as Number).toDouble(),
+            type = row[Column.TYPE] as String,
+            facilityCategory = row[Column.FACILITY_CATEGORY] as String,
+            imageUrl = row[Column.IMAGE_URL] as String,
+            capacity = (row[Column.CAPACITY] as Number?)?.toInt(),
+            accessible = row[Column.ACCESSIBLE] as Boolean,
+            externalUrl = row[Column.EXTERNAL_URL] as String?,
         )
+
+    /** [SELECT_RESOLVED_SHELTER] の列順と対応する index。列の並び替え時は両方を合わせて更新すること。 */
+    private object Column {
+        const val ID = 0
+        const val NAME = 1
+        const val ADDRESS = 2
+        const val LATITUDE = 3
+        const val LONGITUDE = 4
+        const val TYPE = 5
+        const val FACILITY_CATEGORY = 6
+        const val IMAGE_URL = 7
+        const val CAPACITY = 8
+        const val ACCESSIBLE = 9
+        const val EXTERNAL_URL = 10
+    }
 
     private companion object {
         val SELECT_RESOLVED_SHELTER =

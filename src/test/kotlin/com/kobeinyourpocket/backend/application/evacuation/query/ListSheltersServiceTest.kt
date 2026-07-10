@@ -41,13 +41,13 @@ class ListSheltersServiceTest {
     }
 
     @Test
-    fun `要求言語のローカライズが無い場合は en フォールバック済み ShelterView を返す`() {
+    fun `ShelterQuery が返した ShelterView をそのまま返す`() {
         val shelterQuery = mockk<ShelterQuery>()
         every { shelterQuery.findAllResolved(Language.KO) } returns listOf(enView)
 
         val result = ListSheltersService(shelterQuery).listShelters(Language.KO)
 
-        assertEquals("Kobe City Hall", result.single().name)
+        assertEquals(enView, result.single())
         verify(exactly = 1) { shelterQuery.findAllResolved(Language.KO) }
     }
 }

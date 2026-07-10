@@ -3,9 +3,12 @@ package com.kobeinyourpocket.backend.infrastructure.rest.evacuation
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterView
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertFalse
+import tools.jackson.databind.json.JsonMapper
 
 class ShelterResponseTest {
+    private val objectMapper = JsonMapper.builder().build()
+
     private val view =
         ShelterView(
             id = "kobe-city-hall",
@@ -39,10 +42,13 @@ class ShelterResponseTest {
     }
 
     @Test
-    fun `capacity・externalUrl が null の ShelterView は null のまま保持する`() {
+    fun `capacity・externalUrl が null の ShelterView は JSON から除外される`() {
         val response = ShelterResponse.from(view.copy(capacity = null, externalUrl = null))
 
-        assertNull(response.capacity)
-        assertNull(response.externalUrl)
+        val json = objectMapper.writeValueAsString(response)
+        val node = objectMapper.readTree(json)
+
+        assertFalse(node.has("capacity"))
+        assertFalse(node.has("externalUrl"))
     }
 }
