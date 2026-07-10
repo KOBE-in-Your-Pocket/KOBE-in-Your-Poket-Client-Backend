@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # 既存 CI を再利用したい場合は needs で lint/test を待つ運用に変更可
@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up QEMU (arm64 build on Actions)
         uses: docker/setup-qemu-action@v3
@@ -29,14 +31,17 @@ jobs:
           IMAGE_TAG="${GITHUB_SHA}"
           PLATFORM="${DOCKER_PLATFORM:-linux/arm64}"
           docker build --platform "${PLATFORM}" \
+            --load \
             -t "kobe-backend:${IMAGE_TAG}" -t kobe-backend:latest .
           docker save "kobe-backend:${IMAGE_TAG}" -o /tmp/kobe-backend.tar
           ls -lh /tmp/kobe-backend.tar
 
       - name: Prepare SSH key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2.pem
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2.pem
           chmod 600 ~/.ssh/ec2.pem
 
       - name: Copy image to EC2
