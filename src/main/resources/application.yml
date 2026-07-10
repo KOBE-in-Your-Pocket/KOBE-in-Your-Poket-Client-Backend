@@ -8,6 +8,10 @@ spring:
   flyway:
     # スキーマは Flyway が管理 (db/migration の V__*.sql を起動時に適用)
     enabled: true
+    # Supabase の public は拡張などで非空のため、履歴テーブルが無い初回は baseline してから migrate
+    baseline-on-migrate: true
+    # 既定 baseline-version=1 だと V1 がスキップされるため 0 にする
+    baseline-version: 0
   jpa:
     hibernate:
       # スキーマは Flyway が所有。Hibernate は検証のみ行う
