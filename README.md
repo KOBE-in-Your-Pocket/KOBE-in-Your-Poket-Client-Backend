@@ -160,6 +160,7 @@ curl http://localhost:9090/actuator/health
 
 接続情報などは環境変数で上書きできる。`.env.example` を `.env` にコピーして利用する。
 Supabase キーの取得場所・置き場所は [`docs/supabase-env.md`](./docs/supabase-env.md) を参照（キー本体はリポジトリに入れない）。
+CD（S3 + SSM）の構成図は [`docs/infrastructure/cd-s3-ssm.md`](./docs/infrastructure/cd-s3-ssm.md) を参照。
 
 | 環境変数 | 既定値 | 用途 |
 | --- | --- | --- |
