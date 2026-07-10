@@ -1,10 +1,10 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.evacuation
 
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterView
+import tools.jackson.databind.json.JsonMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import tools.jackson.databind.json.JsonMapper
 
 class ShelterResponseTest {
     private val objectMapper = JsonMapper.builder().build()
