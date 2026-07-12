@@ -130,7 +130,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${EC2_INSTANCE_ID}" \
             --document-name "AWS-RunShellScript" \
-            --comment "deploy ${IMAGE_URI}" \
+            --comment "deploy ${GITHUB_SHA}" \
             --parameters "file://${PARAMS}" \
             --query 'Command.CommandId' --output text)
           echo "COMMAND_ID=${COMMAND_ID}"
