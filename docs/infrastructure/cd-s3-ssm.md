@@ -1,9 +1,10 @@
-# CD 構成（S3 + SSM）
+# CD 構成（S3 + SSM）— 旧方式
 
-> 図: [`cd_s3_ssm.png`](./cd_s3_ssm.png)  
-> workflow: [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml)
+> **現行は ECR + SSM です。** → [`cd-ecr-ssm.md`](./cd-ecr-ssm.md)  
+> 図: [`cd_s3_ssm.png`](./cd_s3_ssm.png)（履歴用）
 
-SSH（22番）をインターネットに開けず、GitHub Actions から EC2 へデプロイするための構成です。
+SSH（22番）をインターネットに開けず、GitHub Actions から EC2 へデプロイしていた **以前の構成**です。  
+`docker save`/`load` の tar 置き場として S3 を使い、SSM で取得していました。
 
 ## 全体像
 
@@ -30,7 +31,7 @@ SSH（22番）をインターネットに開けず、GitHub Actions から EC2 �
 | --- | --- |
 | SSH + SG で Actions IP を許可 | 可能だが、Actions の出口 IP が多数・変動する |
 | SSH を `0.0.0.0/0` | 入口を世界に晒すため非推奨 |
-| **S3 + SSM（採用）** | 22番不要。OIDC の一時権限。pem を GitHub に置かない |
+| **S3 + SSM（当時採用）** | 22番不要。OIDC の一時権限。pem を GitHub に置かない。現行は ECR |
 
 SSH 自体は鍵つきの安全な通信だが、今回の課題は「**誰が 22番に届けるか**」。  
 CD のために入口を広げず、AWS API（SSM）経由でデプロイする。

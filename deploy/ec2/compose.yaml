@@ -1,0 +1,10 @@
+services:
+  app:
+    image: ${APP_IMAGE:-kobe-backend:local}
+    container_name: kobe-backend
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-9090}:${SERVER_PORT:-9090}"
+    env_file:
+      - /opt/kobe-backend/app.env
+    # DB はコンテナ内ではなく Supabase（Session pooler :5432）
