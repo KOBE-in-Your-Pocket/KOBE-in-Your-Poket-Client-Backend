@@ -1,7 +1,8 @@
 name: deploy
 
-# 本番想定 CD: GitHub Actions → ECR → SSM Run Command → EC2
+# 本番想定 CD: GitHub Actions → ECR → SSM Run Command → EC2 (t3.small / amd64)
 # SSH (22) をインターネットに開けない。OIDC で AWS に一時認証する。
+# EC2 が x86 のため ubuntu-latest でネイティブビルド（QEMU / arm ランナー不要）。
 
 on:
   push:
@@ -19,7 +20,7 @@ permissions:
 env:
   AWS_REGION: ap-northeast-1
   ECR_REPOSITORY: kobe-backend
-  EC2_INSTANCE_ID: i-0d0c06a6ced085c4d
+  EC2_INSTANCE_ID: i-033fbb6ce4e9f49ae
   EC2_HOST: 18.181.34.28
   APP_PORT: "9090"
 
@@ -88,9 +89,6 @@ jobs:
           echo "SSM agent is not Online" >&2
           exit 1
 
-      - name: Set up QEMU (arm64 build on Actions)
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -102,7 +100,7 @@ jobs:
         run: |
           IMAGE_TAG="${GITHUB_SHA}"
           IMAGE_URI="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-          PLATFORM="${DOCKER_PLATFORM:-linux/arm64}"
+          PLATFORM="${DOCKER_PLATFORM:-linux/amd64}"
           docker buildx build \
             --platform "${PLATFORM}" \
             --push \
