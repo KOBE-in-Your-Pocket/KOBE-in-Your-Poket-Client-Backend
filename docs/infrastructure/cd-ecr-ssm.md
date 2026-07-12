@@ -50,5 +50,17 @@ SSH（22番）をインターネットに開けず、GitHub Actions から EC2 �
 
 ## EC2 上の deploy.sh
 
-`/opt/kobe-backend/deploy.sh` は `APP_IMAGE` が ECR URI のとき login → pull → `compose up` する。  
+`/opt/kobe-backend/deploy.sh`（リポジトリ上は [`deploy/ec2/deploy.sh`](../../deploy/ec2/deploy.sh)）は、`APP_IMAGE` が ECR URI のとき login → pull → `compose up` する。  
 旧来の tar 引数（`docker load`）も互換のため残している。
+
+### app.env / Secrets Manager の前提
+
+現行 workflow は **`USE_SECRETS_MANAGER=false`** で `deploy.sh` を実行する。  
+このモードでは **`/opt/kobe-backend/app.env` が無いと `compose up` 前に終了**する。
+
+| 段階 | やり方 | 詳細 |
+| --- | --- | --- |
+| **開発（現行 CD）** | EC2 bootstrap で `app.env` を事前配置 | [`ec2-app-env.md`](./ec2-app-env.md#bootstrap-で-appenv-を配置する) |
+| **本番寄り** | Secrets Manager を有効化し、CD で `USE_SECRETS_MANAGER=true` | [`ec2-app-env.md`](./ec2-app-env.md#secrets-manager-を有効化する本番寄り) |
+
+環境変数のキー一覧は [`../supabase-env.md`](../supabase-env.md) を参照。
