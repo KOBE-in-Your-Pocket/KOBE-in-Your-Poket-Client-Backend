@@ -61,6 +61,6 @@ SSH（22番）をインターネットに開けず、GitHub Actions から EC2 �
 | 段階 | やり方 | 詳細 |
 | --- | --- | --- |
 | **開発（現行 CD）** | EC2 bootstrap で `app.env` を事前配置 | [`ec2-app-env.md`](./ec2-app-env.md#bootstrap-で-appenv-を配置する) |
-| **本番寄り** | Secrets Manager を有効化し、CD で `USE_SECRETS_MANAGER=true` | [`ec2-app-env.md`](./ec2-app-env.md#secrets-manager-を有効化する本番寄り) |
+| **本番寄り** | Secrets Manager を有効化し、CD で `USE_SECRETS_MANAGER=true`（一時 `app.env` → up 後削除） | [`ec2-app-env.md`](./ec2-app-env.md#secrets-manager-を有効化する本番寄り) |
 
 環境変数のキー一覧は [`../supabase-env.md`](../supabase-env.md) を参照。
