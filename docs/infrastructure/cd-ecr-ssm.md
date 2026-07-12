@@ -8,7 +8,7 @@ SSH（22番）をインターネットに開けず、GitHub Actions から EC2 �
 
 ```text
 開発者 push → GitHub (develop)
-                 → GitHub Actions（arm64 ビルド）
+                 → GitHub Actions（amd64 ネイティブビルド）
                       │
                       ├─ OIDC で AWS 一時認証
                       ├─ docker buildx --push → ECR
@@ -40,8 +40,10 @@ SSH（22番）をインターネットに開けず、GitHub Actions から EC2 �
 | ECR | `515966496540.dkr.ecr.ap-northeast-1.amazonaws.com/kobe-backend` |
 | IAM Role（Actions） | `kobe-backend-github-actions-deploy`（OIDC・ECR push・SSM） |
 | IAM Role（EC2） | `kobe-backend-ec2-role`（ECR pull）+ `AmazonSSMManagedInstanceCore` |
-| EC2 | `i-0d0c06a6ced085c4d`（`t4g.small` / arm64） |
+| EC2 | `i-033fbb6ce4e9f49ae`（`t3.small` / x86_64・amd64） |
 | Elastic IP | `18.181.34.28` |
+
+Actions は `ubuntu-latest`（x86_64）のまま。EC2 も同じアーキテクチャのため **QEMU / arm ランナーは不要**（`linux/amd64` をネイティブビルド）。
 
 ## GitHub 側で必要なもの
 
