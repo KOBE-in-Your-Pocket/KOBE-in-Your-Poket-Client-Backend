@@ -1,0 +1,12 @@
+services:
+  app:
+    image: ${APP_IMAGE:-kobe-backend:local}
+    container_name: kobe-backend
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-9090}:${SERVER_PORT:-9090}"
+    # 起動時に host 上の app.env をコンテナ env へ取り込む。
+    # Secrets Manager モードでは deploy.sh が up 直後に app.env を削除する（平文を残さない）。
+    env_file:
+      - /opt/kobe-backend/app.env
+    # DB はコンテナ内ではなく Supabase（Session pooler :5432）
