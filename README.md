@@ -160,7 +160,7 @@ curl http://localhost:9090/actuator/health
 
 接続情報などは環境変数で上書きできる。`.env.example` を `.env` にコピーして利用する。
 Supabase キーの取得場所・置き場所は [`docs/supabase-env.md`](./docs/supabase-env.md) を参照（キー本体はリポジトリに入れない）。
-CD（ECR + SSM）の説明は [`docs/infrastructure/cd-ecr-ssm.md`](./docs/infrastructure/cd-ecr-ssm.md) を参照。
+CD（ECR + SSM）の説明は [`docs/infrastructure/cd-ecr-ssm.md`](./docs/infrastructure/cd-ecr-ssm.md) を参照。開発用 EC2 の使い方は下記「開発用 EC2 / CD（チーム共有）」を参照。
 
 | 環境変数 | 既定値 | 用途 |
 | --- | --- | --- |
@@ -173,6 +173,144 @@ CD（ECR + SSM）の説明は [`docs/infrastructure/cd-ecr-ssm.md`](./docs/infra
 | `SUPABASE_ANON_KEY` | （未設定） | anon / public API key |
 | `SUPABASE_SERVICE_ROLE_KEY` | （未設定） | service_role（backend 専用） |
 | `SUPABASE_JWT_SECRET` | （未設定） | JWT 検証用 secret |
+
+---
+
+## 開発用 EC2 / CD（チーム共有）
+
+更新日: 2026-07-13（関連: #78）
+
+### API エンドポイント（開発）
+
+| 用途 | URL |
+| --- | --- |
+| Health | `http://18.181.34.28:9090/actuator/health` |
+| Spots 例 | `http://18.181.34.28:9090/api/v1/tourism/spots` |
+
+- HTTPS 未設定（HTTP）
+- インターネットから届くので、認証前の書き込み API には注意
+
+### 稼働時間（自動）
+
+- **平日 9:00–18:00（JST）** のみ自動起動
+- **平日 18:00 以降・土日** は止まっている（課金節約）
+- その時間帯に触る／CD を流すときは **手動起動が必要**
+
+### いまの構成（要約）
+
+| 項目 | 内容 |
+| --- | --- |
+| インスタンス | **`t3.small`（x86_64 / amd64）** |
+| インスタンス ID | `i-033fbb6ce4e9f49ae`（AWS 操作する人向け） |
+| Elastic IP | `18.181.34.28`（API の向き先。普段はこれだけでよい） |
+| CD | `develop` へ push / マージ → **ECR → SSM** でデプロイ（SSH 不要） |
+| 秘密情報（開発） | EC2 上の `/opt/kobe-backend/app.env`（Git に入れない） |
+
+**API を叩くだけなら、覚えるのは EIP（上記 URL）と稼働時間で十分です。**  
+インスタンス ID は、手動 start/stop や AWS コンソール操作用です。
+
+### 旧構成からの注意
+
+- 旧インスタンス `i-0d0c06a6ced085c4d`（t4g / arm64）は **使わない**（停止済み）
+- Docker イメージは **`linux/amd64`**（arm64 イメージは動かない）
+- GitHub の `EC2_SSH_KEY` は **CD には不要**（SSM 方式）
+
+### 動作確認
+
+時間内（平日 9–18）か、手動起動後に確認する。
+
+```bash
+curl -sS http://18.181.34.28:9090/actuator/health
+# 期待: "status":"UP"
+
+curl -sS http://18.181.34.28:9090/api/v1/tourism/spots | head
+# JSON が返れば OK
+```
+
+- **Client**: API のベース URL を `http://18.181.34.28:9090` にする（ローカル backend を向いていないか）
+- **CD 後（Backend 担当）**: GitHub Actions の `deploy` が成功していること、上記 health / spots が通ること
+
+### EC2 の手動起動・停止
+
+前提: ローカルに AWS CLI があり、認証済み（`aws login` または `aws configure`）。  
+リージョンは **東京（`ap-northeast-1`）**。
+
+```text
+インスタンス ID: i-033fbb6ce4e9f49ae
+Elastic IP:     18.181.34.28
+```
+
+起動:
+
+```bash
+aws ec2 start-instances \
+  --instance-ids i-033fbb6ce4e9f49ae \
+  --region ap-northeast-1
+```
+
+起動確認:
+
+```bash
+aws ec2 describe-instances \
+  --instance-ids i-033fbb6ce4e9f49ae \
+  --region ap-northeast-1 \
+  --query 'Reservations[0].Instances[0].[State.Name,PublicIpAddress]' \
+  --output text
+```
+
+`running` と `18.181.34.28` になれば OK。アプリ起動まで **1〜2 分**かかることがあるので、続けて health を確認する。
+
+停止:
+
+```bash
+aws ec2 stop-instances \
+  --instance-ids i-033fbb6ce4e9f49ae \
+  --region ap-northeast-1
+```
+
+停止中も **EBS・Elastic IP の料金はかかる**（計算時間だけ止まる）。
+
+### `.env` / 秘密情報
+
+| 誰 | やること |
+| --- | --- |
+| **Client 開発** | API 向き先を `http://18.181.34.28:9090` にする（プロジェクトの env 名に合わせる）。**`service_role` / JWT secret は Client に入れない** |
+| **Backend ローカル** | 従来どおりローカル `.env`（[`docs/supabase-env.md`](./docs/supabase-env.md) 参照）。EC2 用ではない |
+| **EC2 上の設定** | `/opt/kobe-backend/app.env` は運用担当が配置済み。**全員が書き換える必要はない**。キー追加時は担当に依頼 |
+
+- `.env` / `app.env` / `.pem` は **Git にコミットしない**
+- Supabase の強い鍵は **backend 経由のみ**
+
+### CD（ざっくり）
+
+1. `develop` にマージ（または push）
+2. GitHub Actions が **amd64 イメージを ECR に push**
+3. SSM で EC2 が pull → コンテナ再起動
+4. health check
+
+注意:
+
+- **EC2 が停止中だとデプロイは失敗し得る** → 先に手動 start
+- 平日 18 時直前のマージは、停止スケジュールと重なることがある
+
+詳細: [`docs/infrastructure/cd-ecr-ssm.md`](./docs/infrastructure/cd-ecr-ssm.md) / [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
+
+### DB マイグレーション（開発 EC2）
+
+- `develop` に載った新しい `V*.sql` は、**デプロイ後のアプリ起動時に Flyway が自動適用**
+- Supabase コンソールで手動マイグレーションする必要はない
+- **適用済みの `V{n}__*.sql` は変更禁止**（新規ファイルを追加）
+
+### 困ったとき
+
+| 症状 | 確認 |
+| --- | --- |
+| curl がタイムアウト | 稼働時間外ではないか → 手動 start |
+| health が UP にならない | start 直後なら少し待つ。それでもダメなら担当へ |
+| CD 失敗 | Actions ログ。EC2 が `running` / SSM Online か |
+| Client だけ繋がらない | API URL が EIP になっているか |
+
+AWS / インフラ操作に自信がない場合は、無理に触らず担当に依頼してください。
 
 ---
 
