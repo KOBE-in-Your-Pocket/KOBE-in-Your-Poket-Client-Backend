@@ -5,7 +5,9 @@ import com.kobeinyourpocket.backend.application.user.auth.AuthSession
 import com.kobeinyourpocket.backend.domain.user.model.PublicUser
 import com.kobeinyourpocket.backend.domain.user.model.User
 import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 
 /**
@@ -13,20 +15,42 @@ import org.springframework.transaction.annotation.Transactional
  *
  * [SignUpService] / [SignInService] からプロキシ経由で呼ばれる別 Bean。
  * 同一クラス内の自己呼び出しでは Spring AOP の `@Transactional` が効かないため切り出している。
- * [saveIfAbsent] は冪等（既存行があれば再利用）なので、Auth 作成後の失敗後も
- * 同じ [User.Id] で再実行すればプロフィールに収束できる。
+ * [saveIfAbsent] は冪等（既存行があれば再利用）。同時 insert で PK 重複した場合も
+ * 既存行を再読込して返す。
  */
 @Service
 class EnsureUserProfileService(
     private val userRepository: UserRepository,
+    private val userProfileInserter: UserProfileInserter,
 ) {
-    @Transactional
     fun saveIfAbsent(
         userId: User.Id,
         name: String,
-    ): User =
-        userRepository.findById(userId)
-            ?: User.create(id = userId, name = name).also { userRepository.save(it) }
+    ): User {
+        userRepository.findById(userId)?.let { return it }
+        return try {
+            userProfileInserter.insert(userId, name)
+        } catch (ex: DataIntegrityViolationException) {
+            // 同時実行で先勝ち insert 済み。既存行を返して冪等に収束させる。
+            // insert は REQUIRES_NEW のため、こちらの再読込はロールバックの影響を受けない。
+            userRepository.findById(userId) ?: throw ex
+        }
+    }
+}
+
+/**
+ * プロフィール新規 insert 専用。
+ * [Propagation.REQUIRES_NEW] で包み、PK 重複時に外側の再読込を汚さない。
+ */
+@Service
+class UserProfileInserter(
+    private val userRepository: UserRepository,
+) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun insert(
+        userId: User.Id,
+        name: String,
+    ): User = User.create(id = userId, name = name).also { userRepository.save(it) }
 }
 
 /**

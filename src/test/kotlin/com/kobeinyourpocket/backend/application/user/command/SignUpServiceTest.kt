@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.dao.DataIntegrityViolationException
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,7 +18,8 @@ import kotlin.test.assertFailsWith
 class SignUpServiceTest {
     private val authGateway = mockk<AuthGateway>()
     private val userRepository = mockk<UserRepository>(relaxed = true)
-    private val ensureUserProfileService = EnsureUserProfileService(userRepository)
+    private val userProfileInserter = UserProfileInserter(userRepository)
+    private val ensureUserProfileService = EnsureUserProfileService(userRepository, userProfileInserter)
     private val service = SignUpService(authGateway, ensureUserProfileService)
 
     private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
@@ -82,7 +84,8 @@ class SignUpServiceTest {
 class SignInServiceTest {
     private val authGateway = mockk<AuthGateway>()
     private val userRepository = mockk<UserRepository>(relaxed = true)
-    private val ensureUserProfileService = EnsureUserProfileService(userRepository)
+    private val userProfileInserter = UserProfileInserter(userRepository)
+    private val ensureUserProfileService = EnsureUserProfileService(userRepository, userProfileInserter)
     private val service = SignInService(authGateway, ensureUserProfileService)
     private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
 
@@ -178,9 +181,30 @@ class SignOutServiceTest {
     }
 }
 
+class EnsureUserProfileServiceTest {
+    private val userRepository = mockk<UserRepository>()
+    private val userProfileInserter = UserProfileInserter(userRepository)
+    private val ensure = EnsureUserProfileService(userRepository, userProfileInserter)
+    private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
+
+    @Test
+    fun `PK 重複時は既存ユーザーを再読込して返す`() {
+        val existing = User.create(id = userId, name = "Existing")
+        every { userRepository.findById(userId) } returns null andThen existing
+        every { userRepository.save(any()) } throws DataIntegrityViolationException("duplicate")
+
+        val result = ensure.saveIfAbsent(userId, "Alice")
+
+        assertEquals("Existing", result.name)
+        verify(exactly = 1) { userRepository.save(any()) }
+        verify(exactly = 2) { userRepository.findById(userId) }
+    }
+}
+
 class EnsureUserProfileResilientTest {
     private val userRepository = mockk<UserRepository>(relaxed = true)
-    private val ensure = EnsureUserProfileService(userRepository)
+    private val userProfileInserter = UserProfileInserter(userRepository)
+    private val ensure = EnsureUserProfileService(userRepository, userProfileInserter)
     private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
 
     @Test
