@@ -18,7 +18,8 @@ import kotlin.test.assertNull
 class SignUpServiceTest {
     private val authGateway = mockk<AuthGateway>()
     private val userRepository = mockk<UserRepository>(relaxed = true)
-    private val service = SignUpService(authGateway, userRepository)
+    private val ensureUserProfileService = EnsureUserProfileService(userRepository)
+    private val service = SignUpService(authGateway, ensureUserProfileService)
 
     private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
 
