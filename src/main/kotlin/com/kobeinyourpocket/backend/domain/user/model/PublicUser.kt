@@ -1,12 +1,13 @@
-package com.kobeinyourpocket.backend.domain.user.vo
+package com.kobeinyourpocket.backend.domain.user.model
 
 /**
  * [値オブジェクト] Client 向け公開ユーザー射影。
  *
- * Client 契約の `PublicUser { name, iconUrl }` に対応する。
+ * Client 契約の `PublicUser { id, name, iconUrl }` に対応する。
  * クレデンシャルやロールは含まない。
  */
 data class PublicUser(
+    val id: User.Id,
     val name: String,
     val iconUrl: String? = null,
 ) {
