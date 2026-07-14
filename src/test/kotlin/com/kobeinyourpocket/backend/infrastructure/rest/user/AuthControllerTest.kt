@@ -46,18 +46,22 @@ class AuthControllerTest {
 
     private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
 
+    private fun session(access: String = "access") =
+        AuthSession(
+            userId = userId,
+            accessToken = access,
+            refreshToken = "refresh",
+            expiresIn = 3600,
+            tokenType = "bearer",
+        )
+
+    // --- signup ---
+
     @Test
     fun `POST signup は 201 とセッション JSON を返す`() {
         given(signUpService.execute("a@example.com", "password1", "Alice")).willReturn(
             AuthCommandResult(
-                session =
-                    AuthSession(
-                        userId = userId,
-                        accessToken = "access",
-                        refreshToken = "refresh",
-                        expiresIn = 3600,
-                        tokenType = "bearer",
-                    ),
+                session = session(),
                 user = PublicUser(id = userId, name = "Alice"),
             ),
         )
@@ -66,16 +70,34 @@ class AuthControllerTest {
             .perform(
                 post("/api/v1/auth/signup")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        """
-                        {"email":"a@example.com","password":"password1","name":"Alice"}
-                        """.trimIndent(),
-                    ),
+                    .content("""{"email":"a@example.com","password":"password1","name":"Alice"}"""),
             ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.accessToken").value("access"))
             .andExpect(jsonPath("$.user.id").value(userId.toString()))
             .andExpect(jsonPath("$.user.name").value("Alice"))
     }
+
+    @Test
+    fun `POST signup でメールが空なら 400`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/signup")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"","password":"password1","name":"Alice"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `POST signup でパスワードが短すぎたら 400`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/signup")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"a@example.com","password":"abc","name":"Alice"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    // --- login ---
 
     @Test
     fun `POST login で AuthGateway の 400 は統一エラーになる`() {
@@ -92,6 +114,39 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.message").value("Invalid login credentials"))
     }
 
+    // --- refresh ---
+
+    @Test
+    fun `POST refresh 成功は 200 とセッション JSON を返す`() {
+        given(refreshSessionService.execute("rt")).willReturn(
+            AuthCommandResult(session = session("new-token"), user = null),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"refreshToken":"rt"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.accessToken").value("new-token"))
+    }
+
+    @Test
+    fun `POST refresh で AuthGateway の 401 は統一エラーになる`() {
+        given(refreshSessionService.execute("expired")).willThrow(
+            AuthGatewayException(status = 401, message = "Invalid refresh token"),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"refreshToken":"expired"}"""),
+            ).andExpect(status().isUnauthorized)
+    }
+
+    // --- logout ---
+
     @Test
     fun `POST logout は Bearer を渡して 204`() {
         mockMvc
@@ -101,5 +156,21 @@ class AuthControllerTest {
             ).andExpect(status().isNoContent)
 
         verify(signOutService).execute("access-token")
+    }
+
+    @Test
+    fun `POST logout で Authorization ヘッダが無ければ 401`() {
+        mockMvc
+            .perform(post("/api/v1/auth/logout"))
+            .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `POST logout で Bearer でない Authorization は 401`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/logout")
+                    .header("Authorization", "Basic dXNlcjpwYXNz"),
+            ).andExpect(status().isUnauthorized)
     }
 }

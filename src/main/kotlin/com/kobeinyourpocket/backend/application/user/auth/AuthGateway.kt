@@ -36,4 +36,5 @@ data class AuthSession(
 class AuthGatewayException(
     val status: Int,
     message: String,
-) : RuntimeException(message)
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

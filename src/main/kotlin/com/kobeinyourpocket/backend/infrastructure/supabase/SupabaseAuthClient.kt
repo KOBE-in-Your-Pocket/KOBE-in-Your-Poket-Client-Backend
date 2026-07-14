@@ -6,11 +6,12 @@ import com.kobeinyourpocket.backend.application.user.auth.AuthGateway
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
 import com.kobeinyourpocket.backend.application.user.auth.AuthSession
 import com.kobeinyourpocket.backend.domain.user.model.User
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.http.MediaType
+import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.RestClientResponseException
+import java.time.Duration
 
 /**
  * Supabase GoTrue HTTP クライアント（#89-b）。
@@ -18,7 +19,6 @@ import org.springframework.web.client.RestClientResponseException
  * Client → backend → 本クラス → SUPABASE_URL の /auth/v1 配下。
  */
 @Component
-@EnableConfigurationProperties(SupabaseAuthProperties::class)
 class SupabaseAuthClient(
     private val props: SupabaseAuthProperties,
 ) : AuthGateway {
@@ -28,7 +28,12 @@ class SupabaseAuthClient(
             .baseUrl(props.url.trimEnd('/'))
             .defaultHeader("apikey", props.anonKey)
             .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            .build()
+            .requestFactory(
+                SimpleClientHttpRequestFactory().apply {
+                    setConnectTimeout(Duration.ofSeconds(5))
+                    setReadTimeout(Duration.ofSeconds(10))
+                },
+            ).build()
 
     override fun signUp(
         email: String,
@@ -55,9 +60,6 @@ class SupabaseAuthClient(
         )
 
     override fun signOut(accessToken: String) {
-        require(props.url.isNotBlank() && props.anonKey.isNotBlank()) {
-            "supabase.url / supabase.anon-key (SUPABASE_URL / SUPABASE_ANON_KEY) must be set"
-        }
         try {
             restClient
                 .post()
@@ -69,6 +71,7 @@ class SupabaseAuthClient(
             throw AuthGatewayException(
                 status = ex.statusCode.value(),
                 message = ex.responseBodyAsString.ifBlank { ex.message ?: "Supabase logout failed" },
+                cause = ex,
             )
         }
     }
@@ -77,9 +80,6 @@ class SupabaseAuthClient(
         path: String,
         body: Map<String, String>,
     ): AuthSession {
-        require(props.url.isNotBlank() && props.anonKey.isNotBlank()) {
-            "supabase.url / supabase.anon-key (SUPABASE_URL / SUPABASE_ANON_KEY) must be set"
-        }
         val response =
             try {
                 restClient
@@ -92,12 +92,21 @@ class SupabaseAuthClient(
                 throw AuthGatewayException(
                     status = ex.statusCode.value(),
                     message = ex.responseBodyAsString.ifBlank { ex.message ?: "Supabase auth failed" },
+                    cause = ex,
                 )
             } ?: throw AuthGatewayException(status = 502, message = "Empty response from Supabase Auth")
 
+        // Confirm email ON 時の再 signup や、メール送信レート制限直後などでは
+        // 2xx でも user が空になることがある（列挙防止・制限レスポンスの取り違え防止）。
         val userId =
             response.user?.id
-                ?: throw AuthGatewayException(status = 502, message = "Supabase Auth response missing user.id")
+                ?: throw AuthGatewayException(
+                    status = 502,
+                    message =
+                        "Supabase Auth response missing user.id " +
+                            "(already registered, confirmation pending, or email rate limited). " +
+                            "Confirm the email then POST /api/v1/auth/login, or wait and retry with a new +alias.",
+                )
         return AuthSession(
             userId = User.Id.of(userId),
             accessToken = response.accessToken,

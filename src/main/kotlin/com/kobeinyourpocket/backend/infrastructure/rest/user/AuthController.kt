@@ -60,7 +60,8 @@ class AuthController(
     fun logout(
         @RequestHeader(HttpHeaders.AUTHORIZATION, required = false) authorization: String?,
     ): ResponseEntity<Void> {
-        val token = bearerToken(authorization) ?: throw IllegalArgumentException("Authorization Bearer token is required")
+        val token = bearerToken(authorization)
+            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         signOutService.execute(token)
         return ResponseEntity.noContent().build()
     }

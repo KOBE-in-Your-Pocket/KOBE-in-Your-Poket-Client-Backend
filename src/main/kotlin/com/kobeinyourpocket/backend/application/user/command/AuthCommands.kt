@@ -10,25 +10,33 @@ import org.springframework.transaction.annotation.Transactional
 
 /**
  * メール+パスワードでサインアップし、Auth ユーザーと同期してプロフィール行を作る（#89-b / #88）。
+ *
+ * [authGateway.signUp] は外部 HTTP 呼び出しのため @Transactional 境界外で実行する。
+ * DB コネクションを GoTrue の応答待ち中に確保し続けるとプール枯渇につながるため、
+ * プロフィールの永続化だけを別メソッドで @Transactional にする。
  */
 @Service
 class SignUpService(
     private val authGateway: AuthGateway,
     private val userRepository: UserRepository,
 ) {
-    @Transactional
     fun execute(
         email: String,
         password: String,
         name: String,
     ): AuthCommandResult {
         val session = authGateway.signUp(email = email.trim(), password = password)
-        val existing = userRepository.findById(session.userId)
-        val user =
-            existing
-                ?: User.create(id = session.userId, name = name.trim()).also { userRepository.save(it) }
+        val user = saveProfileIfAbsent(session.userId, name.trim())
         return AuthCommandResult(session = session, user = user.toPublicUser())
     }
+
+    @Transactional
+    fun saveProfileIfAbsent(
+        userId: User.Id,
+        name: String,
+    ): User =
+        userRepository.findById(userId)
+            ?: User.create(id = userId, name = name).also { userRepository.save(it) }
 }
 
 /** ログイン（プロフィールが無ければ PublicUser は null）。 */
