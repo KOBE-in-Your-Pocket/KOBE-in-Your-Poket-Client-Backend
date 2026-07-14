@@ -12,7 +12,9 @@ spring:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
 
-# Resource Server 起動用（本番値ではない）
+# Resource Server / Auth プロキシ起動用（本番値ではない）
 supabase:
+  url: http://localhost:54321
+  anon-key: test-anon-key
   jwt:
     secret: test-supabase-jwt-secret-for-hs256-only

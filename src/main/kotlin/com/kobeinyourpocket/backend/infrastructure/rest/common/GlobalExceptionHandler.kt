@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.common
 
 import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
+import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -13,6 +14,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 class GlobalExceptionHandler {
     @ExceptionHandler(SpotNotFoundException::class)
     fun handleSpotNotFound(ex: SpotNotFoundException): ResponseEntity<ApiErrorResponse> = notFound(message = ex.message ?: "Spot not found")
+
+    @ExceptionHandler(AuthGatewayException::class)
+    fun handleAuthGateway(ex: AuthGatewayException): ResponseEntity<ApiErrorResponse> {
+        val status = HttpStatus.resolve(ex.status) ?: HttpStatus.BAD_GATEWAY
+        val safeStatus =
+            when {
+                status.is4xxClientError -> status
+                status == HttpStatus.TOO_MANY_REQUESTS -> status
+                else -> HttpStatus.BAD_GATEWAY
+            }
+        return ResponseEntity
+            .status(safeStatus)
+            .body(
+                ApiErrorResponse(
+                    status = safeStatus.value(),
+                    error = safeStatus.reasonPhrase,
+                    message = ex.message ?: "Authentication failed",
+                ),
+            )
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ApiErrorResponse> =

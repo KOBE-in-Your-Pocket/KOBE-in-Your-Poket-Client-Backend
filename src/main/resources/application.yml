@@ -28,8 +28,10 @@ server:
   port: ${SERVER_PORT:9090}
 
 # Supabase Auth JWT（#89）。検証は HS256 + JWT Secret（JWKS ではない）。
-# 詳細: docs/supabase-jwt.md
+# Auth プロキシ（#89-b）は url / anon-key を使う。詳細: docs/supabase-jwt.md / docs/supabase-auth-proxy.md
 supabase:
+  url: ${SUPABASE_URL:}
+  anon-key: ${SUPABASE_ANON_KEY:}
   jwt:
     secret: ${SUPABASE_JWT_SECRET:}
 

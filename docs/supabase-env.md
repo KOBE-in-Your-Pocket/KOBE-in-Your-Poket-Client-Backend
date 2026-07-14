@@ -16,6 +16,7 @@ Supabase ダッシュボード → **Project Settings → API**
 ## JWT 検証
 
 Resource Server による検証手順・ロール対応は [`supabase-jwt.md`](./supabase-jwt.md) を参照（#89: HS256 + JWT Secret）。
+Auth プロキシ（signup/login 等）は [`supabase-auth-proxy.md`](./supabase-auth-proxy.md) を参照。
 
 ## ルール
 
