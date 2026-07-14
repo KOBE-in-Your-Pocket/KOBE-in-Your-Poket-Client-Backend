@@ -26,7 +26,7 @@ class UserEntity(
     var updatedAt: Instant,
 ) {
     fun toDomain(): User =
-        User(
+        User.rehydrate(
             id = User.Id.of(id),
             name = name,
             icon = iconUrl.ifEmpty { null }?.let(UserIcon::of),

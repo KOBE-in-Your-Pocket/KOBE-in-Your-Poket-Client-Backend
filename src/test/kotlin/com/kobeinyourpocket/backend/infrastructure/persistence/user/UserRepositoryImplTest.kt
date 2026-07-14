@@ -75,7 +75,12 @@ class UserRepositoryImplTest {
             )
         repository.save(user)
 
-        assertEquals(user, repository.findById(userId))
+        val found = repository.findById(userId)!!
+        assertEquals(userId, found.id)
+        assertEquals("Carol", found.name)
+        assertEquals(UserIcon.of("https://example.com/carol.png"), found.icon)
+        assertEquals(now, found.createdAt)
+        assertEquals(now, found.updatedAt)
     }
 
     @Test
