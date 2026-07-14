@@ -11,3 +11,8 @@ spring:
     hibernate:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.H2Dialect
+
+# Resource Server 起動用（本番値ではない）
+supabase:
+  jwt:
+    secret: test-supabase-jwt-secret-for-hs256-only

@@ -13,6 +13,10 @@ Supabase ダッシュボード → **Project Settings → API**
 | `SUPABASE_SERVICE_ROLE_KEY` | `service_role` `secret` |
 | `SUPABASE_JWT_SECRET` | JWT Settings → JWT Secret |
 
+## JWT 検証
+
+Resource Server による検証手順・ロール対応は [`supabase-jwt.md`](./supabase-jwt.md) を参照（#89: HS256 + JWT Secret）。
+
 ## ルール
 
 - `.env` は gitignore 済み。コミットしない
