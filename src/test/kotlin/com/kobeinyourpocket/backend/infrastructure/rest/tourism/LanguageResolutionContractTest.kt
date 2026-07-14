@@ -13,6 +13,7 @@ import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHa
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -32,6 +33,7 @@ import kotlin.test.Test
  * 本テストにも同じ4パターン（lang優先／Accept-Language従／非対応langはAccept-Languageへ／
  * 無指定はenへ）を追加すること。
  */
+@AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(controllers = [SpotController::class, ReviewController::class])
 @Import(GlobalExceptionHandler::class)
 class LanguageResolutionContractTest {

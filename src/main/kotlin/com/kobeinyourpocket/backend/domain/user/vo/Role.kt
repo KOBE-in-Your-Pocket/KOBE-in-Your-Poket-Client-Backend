@@ -18,6 +18,10 @@ enum class Role(
     OPERATOR("operator"),
     ;
 
+    /** Spring Security の `ROLE_*`（例: `hasRole("OPERATOR")` → `ROLE_OPERATOR`）。 */
+    val authority: String
+        get() = "ROLE_$name"
+
     companion object {
         /** claim 文字列から解決する。未対応・空は `null`。 */
         fun of(value: String): Role? {

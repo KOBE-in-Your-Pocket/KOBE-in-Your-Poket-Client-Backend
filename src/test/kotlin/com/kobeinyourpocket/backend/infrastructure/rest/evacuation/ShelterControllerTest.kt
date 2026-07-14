@@ -9,6 +9,7 @@ import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHa
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -21,6 +22,7 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
 
+@AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(ShelterController::class)
 @Import(GlobalExceptionHandler::class)
 class ShelterControllerTest {
