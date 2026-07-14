@@ -12,11 +12,14 @@ import java.util.UUID
  * パスワード等のクレデンシャルは持たない（Supabase Auth が管理）。
  * ロールは [com.kobeinyourpocket.backend.domain.user.vo.Role] として JWT から解決し、
  * 本集約・users テーブルには含めない。
+ *
+ * 生成は [create] / 永続化からの復元は [rehydrate] のみ。
+ * 同一性は [id] のみで判定する（属性の差分では別インスタンス扱いしない）。
  */
-data class User(
+class User private constructor(
     val id: Id,
     val name: String,
-    val icon: UserIcon? = null,
+    val icon: UserIcon?,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
@@ -67,11 +70,23 @@ data class User(
         icon: UserIcon? = this.icon,
         updatedAt: Instant = Instant.now(),
     ): User =
-        copy(
+        User(
+            id = id,
             name = name,
             icon = icon,
+            createdAt = createdAt,
             updatedAt = updatedAt,
         )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is User) return false
+        return id == other.id
+    }
+
+    override fun hashCode(): Int = id.hashCode()
+
+    override fun toString(): String = "User(id=$id, name=$name, icon=$icon, createdAt=$createdAt, updatedAt=$updatedAt)"
 
     companion object {
         const val MAX_NAME_LENGTH = PublicUser.MAX_NAME_LENGTH
@@ -88,6 +103,24 @@ data class User(
             icon: UserIcon? = null,
             createdAt: Instant = Instant.now(),
             updatedAt: Instant = createdAt,
+        ): User =
+            User(
+                id = id,
+                name = name,
+                icon = icon,
+                createdAt = createdAt,
+                updatedAt = updatedAt,
+            )
+
+        /**
+         * 永続化層から集約を再構成する。アプリケーションの新規作成経路では使わない。
+         */
+        fun rehydrate(
+            id: Id,
+            name: String,
+            icon: UserIcon? = null,
+            createdAt: Instant,
+            updatedAt: Instant,
         ): User =
             User(
                 id = id,
