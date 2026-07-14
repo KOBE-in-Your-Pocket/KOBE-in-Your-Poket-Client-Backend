@@ -37,7 +37,12 @@ class UserRepositoryPortTest {
 
         repository.save(user)
 
-        assertEquals(user, repository.findById(user.id))
+        val found = repository.findById(user.id)!!
+        assertEquals(user.id, found.id)
+        assertEquals("Alice", found.name)
+        assertEquals(UserIcon.of("https://example.com/alice.png"), found.icon)
+        assertEquals(now, found.createdAt)
+        assertEquals(now, found.updatedAt)
     }
 
     @Test
@@ -66,7 +71,7 @@ class UserRepositoryPortTest {
         repository.save(alice)
         repository.save(bob)
 
-        assertEquals(alice, repository.findById(alice.id))
-        assertEquals(bob, repository.findById(bob.id))
+        assertEquals("Alice", repository.findById(alice.id)!!.name)
+        assertEquals("Bob", repository.findById(bob.id)!!.name)
     }
 }

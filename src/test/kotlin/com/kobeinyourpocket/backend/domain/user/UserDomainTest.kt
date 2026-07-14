@@ -9,7 +9,10 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class UserIdTest {
     @Test
@@ -168,6 +171,50 @@ class UserDomainTest {
     fun `name が上限を超えたら拒否する`() {
         assertFailsWith<IllegalArgumentException> {
             User.create(id = userId, name = "a".repeat(User.MAX_NAME_LENGTH + 1), createdAt = now)
+        }
+    }
+
+    @Test
+    fun `同一性は id のみで判定する`() {
+        val alice =
+            User.create(
+                id = userId,
+                name = "Alice",
+                icon = aliceIcon,
+                createdAt = now,
+            )
+        val renamed =
+            User.rehydrate(
+                id = userId,
+                name = "Alice Renamed",
+                icon = null,
+                createdAt = Instant.parse("2026-01-01T00:00:00Z"),
+                updatedAt = Instant.parse("2026-01-02T00:00:00Z"),
+            )
+        val other =
+            User.create(
+                id = User.Id.of(UUID.fromString("22222222-2222-2222-2222-222222222222")),
+                name = "Alice",
+                icon = aliceIcon,
+                createdAt = now,
+            )
+
+        assertEquals(alice, renamed)
+        assertEquals(alice.hashCode(), renamed.hashCode())
+        assertNotEquals(alice, other)
+        assertTrue(alice in setOf(renamed))
+        assertFalse(other in setOf(alice))
+    }
+
+    @Test
+    fun `rehydrate でも name の不変条件は守られる`() {
+        assertFailsWith<IllegalArgumentException> {
+            User.rehydrate(
+                id = userId,
+                name = "   ",
+                createdAt = now,
+                updatedAt = now,
+            )
         }
     }
 }
