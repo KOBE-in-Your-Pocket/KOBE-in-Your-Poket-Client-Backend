@@ -13,7 +13,6 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNull
 
 class SignUpServiceTest {
     private val authGateway = mockk<AuthGateway>()
@@ -65,24 +64,53 @@ class SignUpServiceTest {
             service.execute(email = "a@example.com", password = "password1", name = "Alice")
         }
     }
+
+    @Test
+    fun `プロフィール保存が一時失敗してもリトライして成功する`() {
+        every { authGateway.signUp("a@example.com", "password1") } returns
+            AuthSession(userId = userId, accessToken = "access", refreshToken = "r", expiresIn = 1, tokenType = "bearer")
+        every { userRepository.findById(userId) } returns null andThen null
+        every { userRepository.save(any()) } throws RuntimeException("transient") andThenAnswer { it.invocation.args[0] as User }
+
+        val result = service.execute(email = "a@example.com", password = "password1", name = "Alice")
+
+        assertEquals("Alice", result.user!!.name)
+        verify(exactly = 2) { userRepository.save(any()) }
+    }
 }
 
 class SignInServiceTest {
     private val authGateway = mockk<AuthGateway>()
-    private val userRepository = mockk<UserRepository>()
-    private val service = SignInService(authGateway, userRepository)
+    private val userRepository = mockk<UserRepository>(relaxed = true)
+    private val ensureUserProfileService = EnsureUserProfileService(userRepository)
+    private val service = SignInService(authGateway, ensureUserProfileService)
     private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
 
     @Test
-    fun `プロフィールが無ければ user は null`() {
+    fun `プロフィールが無ければ Auth id で冪等に補完する`() {
         every { authGateway.signInWithPassword("a@example.com", "password1") } returns
             AuthSession(userId = userId, accessToken = "a", refreshToken = "r", expiresIn = 1, tokenType = "bearer")
         every { userRepository.findById(userId) } returns null
 
         val result = service.execute("a@example.com", "password1")
 
-        assertNull(result.user)
+        assertEquals(userId, result.user!!.id)
+        assertEquals("a", result.user!!.name)
         assertEquals("a", result.session.accessToken)
+        verify(exactly = 1) { userRepository.save(match { it.id == userId && it.name == "a" }) }
+    }
+
+    @Test
+    fun `既存プロフィールがあれば再作成しない`() {
+        val existing = User.create(id = userId, name = "Alice")
+        every { authGateway.signInWithPassword("a@example.com", "password1") } returns
+            AuthSession(userId = userId, accessToken = "a", refreshToken = "r", expiresIn = 1, tokenType = "bearer")
+        every { userRepository.findById(userId) } returns existing
+
+        val result = service.execute("a@example.com", "password1")
+
+        assertEquals("Alice", result.user!!.name)
+        verify(exactly = 0) { userRepository.save(any()) }
     }
 
     @Test
@@ -147,5 +175,32 @@ class SignOutServiceTest {
         assertFailsWith<AuthGatewayException> {
             service.execute("bad")
         }
+    }
+}
+
+class EnsureUserProfileResilientTest {
+    private val userRepository = mockk<UserRepository>(relaxed = true)
+    private val ensure = EnsureUserProfileService(userRepository)
+    private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
+
+    @Test
+    fun `永続化がすべて失敗したら最後の例外を再送出する`() {
+        every { userRepository.findById(userId) } returns null
+        every { userRepository.save(any()) } throws RuntimeException("db down")
+
+        assertFailsWith<RuntimeException> {
+            ensureUserProfileResilient(ensure, userId, "Alice", maxAttempts = 3)
+        }
+        verify(exactly = 3) { userRepository.save(any()) }
+    }
+
+    @Test
+    fun `IllegalArgumentException はリトライせず即失敗する`() {
+        every { userRepository.findById(userId) } returns null
+
+        assertFailsWith<IllegalArgumentException> {
+            ensureUserProfileResilient(ensure, userId, "   ", maxAttempts = 3)
+        }
+        verify(exactly = 0) { userRepository.save(any()) }
     }
 }
