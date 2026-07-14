@@ -27,9 +27,11 @@ server:
   # Metro/Expo (8081 系) との衝突回避のためデフォルトを 9090 にずらしている
   port: ${SERVER_PORT:9090}
 
-# Supabase Auth JWT（#89）。検証は HS256 + JWT Secret（JWKS ではない）。
-# 詳細: docs/supabase-jwt.md
+# Supabase Auth JWT（#89）。検証は JWKS（Signing Keys / ES256 等）。url 空時のみ JWT Secret(HS256)。
+# Auth プロキシ（#89-b）は url / anon-key を使う。詳細: docs/supabase-jwt.md / docs/supabase-auth-proxy.md
 supabase:
+  url: ${SUPABASE_URL:}
+  anon-key: ${SUPABASE_ANON_KEY:}
   jwt:
     secret: ${SUPABASE_JWT_SECRET:}
 

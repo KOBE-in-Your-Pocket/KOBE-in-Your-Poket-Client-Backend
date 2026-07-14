@@ -3,20 +3,25 @@
 backend は Spring Security **OAuth2 Resource Server** として、Supabase Auth が発行した JWT を検証する。
 自前のトークン発行・パスワード管理は行わない。
 
-## 検証方式（確定: HMAC / JWT Secret）
+## 検証方式（JWKS / Signing Keys）
+
+現行の Supabase プロジェクトは **JWT Signing Keys（例: ES256）** を使う。
+access token の header に `alg: ES256` と `kid` が付くため、共有秘密鍵（HS256）では検証できない。
 
 | 項目 | 内容 |
 | --- | --- |
-| 方式 | **HS256**（対称鍵） |
-| 鍵 | Project Settings → API → **JWT Settings → JWT Secret** |
-| 環境変数 | `SUPABASE_JWT_SECRET` → `supabase.jwt.secret` |
-| 実装 | `NimbusJwtDecoder.withSecretKey`（`infrastructure/security/SecurityConfig`） |
+| 方式 | **JWKS**（公開鍵） |
+| 取得先 | `{SUPABASE_URL}/auth/v1/.well-known/jwks.json` |
+| アルゴリズム | **ES256**（Signing Keys）。Spring の JWKS decoder 既定は RS256 のみなので `discoverJwsAlgorithms()` が必要 |
+| 環境変数 | `SUPABASE_URL`（必須・ローカル/本番） |
+| 実装 | `NimbusJwtDecoder.withJwkSetUri`（`infrastructure/security/SecurityConfig`） |
 
-### JWKS について
+`SUPABASE_URL` が空のときだけ、レガシー互換で **HS256 + `SUPABASE_JWT_SECRET`** にフォールバックする（主にユニットテスト）。
 
-JWKS（JSON Web Key Set）は公開鍵一覧を URL から取得して検証する方式。
-本プロジェクトはダッシュボードの JWT Secret を使うため **現状は JWKS を使わない**。
-将来切替える場合は `JwtDecoder` だけ差し替え、認可ルールはそのままにできる。
+### 以前の JWT Secret（HS256）について
+
+ダッシュボードの JWT Secret はレガシー方式。Signing Keys 移行後のトークンは Secret では検証できない。
+Bearer 付きリクエストが 401 になる場合、まず JWT header の `alg` が `ES256` か確認する。
 
 ## ロールクレーム
 
@@ -37,5 +42,6 @@ Bearer トークンが付いていれば署名検証し、Authentication にロ�
 
 ## ローカル起動
 
-`.env` に実値の `SUPABASE_JWT_SECRET` が必要（空だと起動時に失敗する）。
+`.env` に実値の `SUPABASE_URL`（と Auth プロキシ用の `SUPABASE_ANON_KEY`）が必要。
+JWKS 検証だけなら `SUPABASE_JWT_SECRET` は必須ではないが、既存ドキュメント・EC2 設定との互換のため残してよい。
 取得場所は [`supabase-env.md`](./supabase-env.md)。
