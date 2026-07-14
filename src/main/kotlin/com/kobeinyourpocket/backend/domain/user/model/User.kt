@@ -1,6 +1,5 @@
 package com.kobeinyourpocket.backend.domain.user.model
 
-import com.kobeinyourpocket.backend.domain.user.vo.PublicUser
 import com.kobeinyourpocket.backend.domain.user.vo.UserIcon
 import java.time.Instant
 import java.util.UUID
@@ -58,7 +57,7 @@ class User private constructor(
     }
 
     /** Client 契約の [PublicUser] へ射影する（wire 形の iconUrl は [UserIcon.url]）。 */
-    fun toPublicUser(): PublicUser = PublicUser(name = name, iconUrl = icon?.url)
+    fun toPublicUser(): PublicUser = PublicUser(id = id, name = name, iconUrl = icon?.url)
 
     /**
      * 表示名・アイコンを更新する。id / createdAt は維持する。

@@ -1,7 +1,7 @@
 package com.kobeinyourpocket.backend.domain.user
 
+import com.kobeinyourpocket.backend.domain.user.model.PublicUser
 import com.kobeinyourpocket.backend.domain.user.model.User
-import com.kobeinyourpocket.backend.domain.user.vo.PublicUser
 import com.kobeinyourpocket.backend.domain.user.vo.Role
 import com.kobeinyourpocket.backend.domain.user.vo.UserIcon
 import java.time.Instant
@@ -77,30 +77,33 @@ class UserIconTest {
 }
 
 class PublicUserTest {
-    @Test
-    fun `name と iconUrl を指定して生成できる`() {
-        val user = PublicUser(name = "Alice", iconUrl = "https://example.com/alice.png")
+    private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
 
+    @Test
+    fun `id と name と iconUrl を指定して生成できる`() {
+        val user = PublicUser(id = userId, name = "Alice", iconUrl = "https://example.com/alice.png")
+
+        assertEquals(userId, user.id)
         assertEquals("Alice", user.name)
         assertEquals("https://example.com/alice.png", user.iconUrl)
     }
 
     @Test
     fun `iconUrl は省略できる`() {
-        assertNull(PublicUser(name = "Alice").iconUrl)
+        assertNull(PublicUser(id = userId, name = "Alice").iconUrl)
     }
 
     @Test
     fun `name が空白のみなら拒否する`() {
         assertFailsWith<IllegalArgumentException> {
-            PublicUser(name = "   ")
+            PublicUser(id = userId, name = "   ")
         }
     }
 
     @Test
     fun `name が上限を超えたら拒否する`() {
         assertFailsWith<IllegalArgumentException> {
-            PublicUser(name = "a".repeat(PublicUser.MAX_NAME_LENGTH + 1))
+            PublicUser(id = userId, name = "a".repeat(PublicUser.MAX_NAME_LENGTH + 1))
         }
     }
 }
@@ -128,7 +131,7 @@ class UserDomainTest {
     }
 
     @Test
-    fun `toPublicUser は name と iconUrl のみを射影する`() {
+    fun `toPublicUser は id と name と iconUrl を射影する`() {
         val user =
             User.create(
                 id = userId,
@@ -137,7 +140,10 @@ class UserDomainTest {
                 createdAt = now,
             )
 
-        assertEquals(PublicUser(name = "Alice", iconUrl = "https://example.com/alice.png"), user.toPublicUser())
+        assertEquals(
+            PublicUser(id = userId, name = "Alice", iconUrl = "https://example.com/alice.png"),
+            user.toPublicUser(),
+        )
     }
 
     @Test
