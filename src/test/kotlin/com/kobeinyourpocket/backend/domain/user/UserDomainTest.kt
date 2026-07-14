@@ -207,6 +207,22 @@ class UserDomainTest {
     }
 
     @Test
+    fun `toString は id のみを含み属性を出さない`() {
+        val user =
+            User.create(
+                id = userId,
+                name = "Alice",
+                icon = aliceIcon,
+                createdAt = now,
+            )
+
+        assertEquals("User(id=$userId)", user.toString())
+        assertFalse(user.toString().contains("Alice"))
+        assertFalse(user.toString().contains("example.com"))
+        assertFalse(user.toString().contains("createdAt"))
+    }
+
+    @Test
     fun `rehydrate でも name の不変条件は守られる`() {
         assertFailsWith<IllegalArgumentException> {
             User.rehydrate(

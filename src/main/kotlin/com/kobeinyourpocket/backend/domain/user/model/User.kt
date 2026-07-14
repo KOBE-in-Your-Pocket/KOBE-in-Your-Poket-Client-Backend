@@ -86,7 +86,8 @@ class User private constructor(
 
     override fun hashCode(): Int = id.hashCode()
 
-    override fun toString(): String = "User(id=$id, name=$name, icon=$icon, createdAt=$createdAt, updatedAt=$updatedAt)"
+    /** ログ・例外向け。個人情報や監査属性は含めない（詳細は呼び出し側で明示選択）。 */
+    override fun toString(): String = "User(id=$id)"
 
     companion object {
         const val MAX_NAME_LENGTH = PublicUser.MAX_NAME_LENGTH
