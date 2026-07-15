@@ -136,6 +136,54 @@ class SignInService(
     }
 }
 
+/**
+ * SSO プロバイダの ID トークンでサインインする（#89-c）。
+ *
+ * GoTrue の `grant_type=id_token` は初回ログイン時に Auth ユーザーを自動作成するため、
+ * signup / login の区別なく本サービス 1 本で済む。プロフィール行は [SignInService] と
+ * 同じく冪等に補完する。表示名はプロバイダの表示名 → email ローカル部 → "user" の順。
+ */
+@Service
+class SignInWithIdTokenService(
+    private val authGateway: AuthGateway,
+    private val ensureUserProfileService: EnsureUserProfileService,
+) {
+    fun execute(
+        provider: String,
+        idToken: String,
+        accessToken: String? = null,
+        nonce: String? = null,
+    ): AuthCommandResult {
+        val session =
+            authGateway.signInWithIdToken(
+                provider = provider,
+                idToken = idToken,
+                accessToken = accessToken,
+                nonce = nonce,
+            )
+        val name = displayNameForSso(displayName = session.displayName, email = session.email)
+        val user =
+            ensureUserProfileResilient(
+                ensureUserProfileService = ensureUserProfileService,
+                userId = session.userId,
+                name = name,
+            )
+        return AuthCommandResult(session = session, user = user.toPublicUser())
+    }
+}
+
+/**
+ * SSO ログイン時の表示名。プロバイダの表示名を優先し、[User.MAX_NAME_LENGTH] を超える分は
+ * ドメイン不変条件違反（即失敗）にせず切り詰める。
+ */
+internal fun displayNameForSso(
+    displayName: String?,
+    email: String?,
+): String {
+    val name = displayName?.trim().orEmpty().ifBlank { displayNameFromEmail(email.orEmpty()) }
+    return name.take(User.MAX_NAME_LENGTH)
+}
+
 /** プロフィール補完時の表示名。既存行があれば [EnsureUserProfileService] がそちらを優先する。 */
 internal fun displayNameFromEmail(email: String): String {
     val local = email.substringBefore('@').trim()

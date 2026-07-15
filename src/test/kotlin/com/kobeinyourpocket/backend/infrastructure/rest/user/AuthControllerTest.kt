@@ -5,6 +5,7 @@ import com.kobeinyourpocket.backend.application.user.auth.AuthSession
 import com.kobeinyourpocket.backend.application.user.command.AuthCommandResult
 import com.kobeinyourpocket.backend.application.user.command.RefreshSessionService
 import com.kobeinyourpocket.backend.application.user.command.SignInService
+import com.kobeinyourpocket.backend.application.user.command.SignInWithIdTokenService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.application.user.command.SignUpService
 import com.kobeinyourpocket.backend.domain.user.model.PublicUser
@@ -37,6 +38,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private lateinit var signInService: SignInService
+
+    @MockitoBean
+    private lateinit var signInWithIdTokenService: SignInWithIdTokenService
 
     @MockitoBean
     private lateinit var refreshSessionService: RefreshSessionService
@@ -112,6 +116,53 @@ class AuthControllerTest {
                     .content("""{"email":"a@example.com","password":"bad"}"""),
             ).andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("Invalid login credentials"))
+    }
+
+    // --- google (id_token) ---
+
+    @Test
+    fun `POST google は 200 とセッション JSON を返す`() {
+        given(signInWithIdTokenService.execute("google", "id-token", null, null)).willReturn(
+            AuthCommandResult(
+                session = session(),
+                user = PublicUser(id = userId, name = "Google Taro"),
+            ),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/google")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.accessToken").value("access"))
+            .andExpect(jsonPath("$.user.id").value(userId.toString()))
+            .andExpect(jsonPath("$.user.name").value("Google Taro"))
+    }
+
+    @Test
+    fun `POST google で idToken が空なら 400`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/google")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":""}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `POST google で AuthGateway の 400 は統一エラーになる`() {
+        given(signInWithIdTokenService.execute("google", "bad", null, null)).willThrow(
+            AuthGatewayException(status = 400, message = "Invalid id token"),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/google")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"bad"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Invalid id token"))
     }
 
     // --- refresh ---
