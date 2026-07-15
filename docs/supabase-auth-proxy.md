@@ -49,7 +49,7 @@ Google は `POST /api/v1/auth/google`（id_token グラント中継）で対応�
 
 - リクエスト: `{"idToken": "...", "accessToken": null, "nonce": null}`（`idToken` 必須。`nonce` はトークン取得時に使った場合のみ）
 - 初回ログイン時は GoTrue が Auth ユーザーを自動作成（signup / login の区別なし）。
-  プロフィール行は login と同じく冪等補完し、表示名は `user_metadata.full_name` → email ローカル部 → `"user"`
+  プロフィール行は login と同じく冪等補完し、表示名は `user_metadata.full_name` → `user_metadata.name` → email ローカル部 → `"user"`
 - 事前設定: Supabase ダッシュボード → Authentication → Sign In / Providers → Google を有効化し、
   Client IDs に Google OAuth クライアント ID を登録（カンマ区切りで複数可。トークンの `aud` と照合される）
 - Apple / Kakao / LinkedIn / X は後続（`AuthGateway.signInWithIdToken` の provider 引数で拡張する）

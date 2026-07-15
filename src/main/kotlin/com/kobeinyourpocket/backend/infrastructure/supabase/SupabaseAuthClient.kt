@@ -65,8 +65,8 @@ class SupabaseAuthClient(
                 buildMap {
                     put("provider", provider)
                     put("id_token", idToken)
-                    accessToken?.let { put("access_token", it) }
-                    nonce?.let { put("nonce", it) }
+                    accessToken?.takeIf { it.isNotBlank() }?.let { put("access_token", it) }
+                    nonce?.takeIf { it.isNotBlank() }?.let { put("nonce", it) }
                 },
         )
 
