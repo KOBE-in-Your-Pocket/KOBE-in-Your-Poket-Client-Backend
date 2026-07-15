@@ -53,6 +53,23 @@ class SupabaseAuthClient(
             body = mapOf("email" to email, "password" to password),
         )
 
+    override fun signInWithIdToken(
+        provider: String,
+        idToken: String,
+        accessToken: String?,
+        nonce: String?,
+    ): AuthSession =
+        postJson(
+            path = "/auth/v1/token?grant_type=id_token",
+            body =
+                buildMap {
+                    put("provider", provider)
+                    put("id_token", idToken)
+                    accessToken?.takeIf { it.isNotBlank() }?.let { put("access_token", it) }
+                    nonce?.takeIf { it.isNotBlank() }?.let { put("nonce", it) }
+                },
+        )
+
     override fun refresh(refreshToken: String): AuthSession =
         postJson(
             path = "/auth/v1/token?grant_type=refresh_token",
@@ -113,6 +130,8 @@ class SupabaseAuthClient(
             refreshToken = response.refreshToken,
             expiresIn = response.expiresIn,
             tokenType = response.tokenType,
+            email = response.user?.email,
+            displayName = response.user?.userMetadata?.displayName(),
         )
     }
 
@@ -128,5 +147,16 @@ class SupabaseAuthClient(
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class GoTrueUser(
         val id: String? = null,
+        val email: String? = null,
+        @JsonProperty("user_metadata") val userMetadata: GoTrueUserMetadata? = null,
     )
+
+    /** SSO プロバイダ由来のプロフィール。Google は full_name、他プロバイダは name に入ることがある。 */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class GoTrueUserMetadata(
+        @JsonProperty("full_name") val fullName: String? = null,
+        val name: String? = null,
+    ) {
+        fun displayName(): String? = fullName?.takeIf { it.isNotBlank() } ?: name?.takeIf { it.isNotBlank() }
+    }
 }

@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.user
 
 import com.kobeinyourpocket.backend.application.user.command.RefreshSessionService
 import com.kobeinyourpocket.backend.application.user.command.SignInService
+import com.kobeinyourpocket.backend.application.user.command.SignInWithIdTokenService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.application.user.command.SignUpService
 import jakarta.validation.Valid
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 class AuthController(
     private val signUpService: SignUpService,
     private val signInService: SignInService,
+    private val signInWithIdTokenService: SignInWithIdTokenService,
     private val refreshSessionService: RefreshSessionService,
     private val signOutService: SignOutService,
 ) {
@@ -48,6 +50,23 @@ class AuthController(
             signInService.execute(
                 email = request.email,
                 password = request.password,
+            ),
+        )
+
+    /**
+     * Google ID トークンによるサインイン（#89-c）。
+     * 初回ログイン時は GoTrue が Auth ユーザーを自動作成するため signup / login 兼用。
+     */
+    @PostMapping("/google")
+    fun signInWithGoogle(
+        @Valid @RequestBody request: IdTokenSignInRequest,
+    ): AuthSessionResponse =
+        AuthSessionResponse.from(
+            signInWithIdTokenService.execute(
+                provider = "google",
+                idToken = request.idToken,
+                accessToken = request.accessToken,
+                nonce = request.nonce,
             ),
         )
 
