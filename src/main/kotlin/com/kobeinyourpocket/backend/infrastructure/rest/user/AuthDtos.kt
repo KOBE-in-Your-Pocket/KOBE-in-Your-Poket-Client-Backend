@@ -28,6 +28,17 @@ data class RefreshRequest(
     val refreshToken: String,
 )
 
+/**
+ * SSO の ID トークンサインイン（#89-c）。
+ * Client がネイティブ SDK で取得した Google 等の ID トークンを backend が GoTrue へ中継する。
+ */
+data class IdTokenSignInRequest(
+    @field:NotBlank
+    val idToken: String,
+    val accessToken: String? = null,
+    val nonce: String? = null,
+)
+
 data class AuthSessionResponse(
     val accessToken: String?,
     val refreshToken: String?,

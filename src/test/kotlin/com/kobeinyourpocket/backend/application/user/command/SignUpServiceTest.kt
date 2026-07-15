@@ -127,6 +127,105 @@ class SignInServiceTest {
     }
 }
 
+class SignInWithIdTokenServiceTest {
+    private val authGateway = mockk<AuthGateway>()
+    private val userRepository = mockk<UserRepository>(relaxed = true)
+    private val userProfileInserter = UserProfileInserter(userRepository)
+    private val ensureUserProfileService = EnsureUserProfileService(userRepository, userProfileInserter)
+    private val service = SignInWithIdTokenService(authGateway, ensureUserProfileService)
+    private val userId = User.Id.of(UUID.fromString("33333333-3333-3333-3333-333333333333"))
+
+    private fun session(
+        displayName: String? = "Google Taro",
+        email: String? = "taro@example.com",
+    ) = AuthSession(
+        userId = userId,
+        accessToken = "a",
+        refreshToken = "r",
+        expiresIn = 3600,
+        tokenType = "bearer",
+        email = email,
+        displayName = displayName,
+    )
+
+    @Test
+    fun `初回ログインはプロバイダの表示名でプロフィールを作成する`() {
+        every { authGateway.signInWithIdToken("google", "id-token", null, null) } returns session()
+        every { userRepository.findById(userId) } returns null
+
+        val result = service.execute(provider = "google", idToken = "id-token")
+
+        assertEquals(userId, result.user!!.id)
+        assertEquals("Google Taro", result.user!!.name)
+        verify(exactly = 1) { userRepository.save(match { it.id == userId && it.name == "Google Taro" }) }
+    }
+
+    @Test
+    fun `表示名が無ければ email ローカル部で補完する`() {
+        every { authGateway.signInWithIdToken("google", "id-token", null, null) } returns
+            session(displayName = null)
+        every { userRepository.findById(userId) } returns null
+
+        val result = service.execute(provider = "google", idToken = "id-token")
+
+        assertEquals("taro", result.user!!.name)
+    }
+
+    @Test
+    fun `表示名も email も無ければ user で補完する`() {
+        every { authGateway.signInWithIdToken("google", "id-token", null, null) } returns
+            session(displayName = null, email = null)
+        every { userRepository.findById(userId) } returns null
+
+        val result = service.execute(provider = "google", idToken = "id-token")
+
+        assertEquals("user", result.user!!.name)
+    }
+
+    @Test
+    fun `表示名が最大長を超えたら切り詰める`() {
+        every { authGateway.signInWithIdToken("google", "id-token", null, null) } returns
+            session(displayName = "x".repeat(User.MAX_NAME_LENGTH + 10))
+        every { userRepository.findById(userId) } returns null
+
+        val result = service.execute(provider = "google", idToken = "id-token")
+
+        assertEquals(User.MAX_NAME_LENGTH, result.user!!.name.length)
+    }
+
+    @Test
+    fun `既存プロフィールがあれば再作成しない`() {
+        val existing = User.create(id = userId, name = "Existing")
+        every { authGateway.signInWithIdToken("google", "id-token", null, null) } returns session()
+        every { userRepository.findById(userId) } returns existing
+
+        val result = service.execute(provider = "google", idToken = "id-token")
+
+        assertEquals("Existing", result.user!!.name)
+        verify(exactly = 0) { userRepository.save(any()) }
+    }
+
+    @Test
+    fun `accessToken と nonce は authGateway へそのまま渡す`() {
+        every { authGateway.signInWithIdToken("google", "id-token", "at", "n") } returns session()
+        every { userRepository.findById(userId) } returns null
+
+        service.execute(provider = "google", idToken = "id-token", accessToken = "at", nonce = "n")
+
+        verify(exactly = 1) { authGateway.signInWithIdToken("google", "id-token", "at", "n") }
+    }
+
+    @Test
+    fun `authGateway が AuthGatewayException を投げたらそのまま伝播する`() {
+        every { authGateway.signInWithIdToken("google", "bad", null, null) } throws
+            AuthGatewayException(status = 400, message = "Invalid id token")
+
+        assertFailsWith<AuthGatewayException> {
+            service.execute(provider = "google", idToken = "bad")
+        }
+    }
+}
+
 class RefreshSessionServiceTest {
     private val authGateway = mockk<AuthGateway>()
     private val userRepository = mockk<UserRepository>()
