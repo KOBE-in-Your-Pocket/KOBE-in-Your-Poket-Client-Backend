@@ -25,8 +25,9 @@ interface AuthGateway {
     /**
      * Supabase Admin API でユーザーを完全削除する（service_role キーが必要）。
      *
-     * 呼び出し側（[com.kobeinyourpocket.backend.application.user.command.DeleteUserService]）が
-     * admin ロールの認可を担保する。
+     * 既に削除済み（404）は冪等成功として扱う。再試行で Auth と DB プロフィールの
+     * 片側だけ残った状態を収束させるため。
+     * 認可は呼び出し側（[com.kobeinyourpocket.backend.application.user.command.DeleteUserService]）が担保する。
      */
     fun deleteUser(userId: User.Id)
 }

@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
@@ -21,15 +22,19 @@ class DeleteUserServiceTest {
     private val existingUser = User.create(id = userId, name = "Alice")
 
     @Test
-    fun `存在するユーザーを削除すると Auth と DB の両方が削除される`() {
+    fun `存在するユーザーを削除すると Auth の後に DB プロフィールを削除する`() {
         every { userRepository.findById(userId) } returns existingUser
         justRun { authGateway.deleteUser(userId) }
         justRun { userRepository.deleteById(userId) }
 
         service.execute(userId)
 
-        verify(exactly = 1) { authGateway.deleteUser(userId) }
-        verify(exactly = 1) { userRepository.deleteById(userId) }
+        // Auth HTTP はトランザクション外。失敗し得ないロールバックで Auth だけ消える事態を避ける。
+        verifyOrder {
+            userRepository.findById(userId)
+            authGateway.deleteUser(userId)
+            userRepository.deleteById(userId)
+        }
     }
 
     @Test

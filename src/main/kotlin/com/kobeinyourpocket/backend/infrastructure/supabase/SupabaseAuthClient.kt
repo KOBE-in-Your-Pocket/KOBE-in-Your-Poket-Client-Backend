@@ -99,6 +99,8 @@ class SupabaseAuthClient(
                 .retrieve()
                 .toBodilessEntity()
         } catch (ex: RestClientResponseException) {
+            // 再試行時など、既に Auth 側が無い場合は冪等成功とする。
+            if (ex.statusCode.value() == 404) return
             throw AuthGatewayException(
                 status = ex.statusCode.value(),
                 message = ex.responseBodyAsString.ifBlank { ex.message ?: "Supabase user deletion failed" },
