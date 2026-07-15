@@ -17,4 +17,9 @@ class UserRepositoryImpl(
     }
 
     override fun findById(id: User.Id): User? = userJpa.findById(id.value).map { it.toDomain() }.orElse(null)
+
+    @Transactional
+    override fun deleteById(id: User.Id) {
+        userJpa.deleteById(id.value)
+    }
 }

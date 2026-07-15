@@ -21,6 +21,14 @@ interface AuthGateway {
     fun refresh(refreshToken: String): AuthSession
 
     fun signOut(accessToken: String)
+
+    /**
+     * Supabase Admin API でユーザーを完全削除する（service_role キーが必要）。
+     *
+     * 呼び出し側（[com.kobeinyourpocket.backend.application.user.command.DeleteUserService]）が
+     * admin ロールの認可を担保する。
+     */
+    fun deleteUser(userId: User.Id)
 }
 
 /** Auth 成功後に Client へ返すセッション（トークンは Supabase 発行分）。 */

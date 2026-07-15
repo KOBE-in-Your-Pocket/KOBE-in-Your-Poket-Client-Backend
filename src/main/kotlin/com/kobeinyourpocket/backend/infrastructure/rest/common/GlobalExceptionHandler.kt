@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.common
 
 import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
+import com.kobeinyourpocket.backend.application.user.command.UserNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 class GlobalExceptionHandler {
     @ExceptionHandler(SpotNotFoundException::class)
     fun handleSpotNotFound(ex: SpotNotFoundException): ResponseEntity<ApiErrorResponse> = notFound(message = ex.message ?: "Spot not found")
+
+    @ExceptionHandler(UserNotFoundException::class)
+    fun handleUserNotFound(ex: UserNotFoundException): ResponseEntity<ApiErrorResponse> = notFound(message = ex.message ?: "User not found")
 
     @ExceptionHandler(AuthGatewayException::class)
     fun handleAuthGateway(ex: AuthGatewayException): ResponseEntity<ApiErrorResponse> {
