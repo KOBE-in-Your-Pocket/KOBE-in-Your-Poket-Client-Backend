@@ -27,18 +27,24 @@ Bearer 付きリクエストが 401 になる場合、まず JWT header の `alg
 
 | JWT | Spring authority | domain |
 | --- | --- | --- |
+| `app_metadata.role` = `admin` | `ROLE_ADMIN` | [Role.ADMIN] |
 | `app_metadata.role` = `operator` | `ROLE_OPERATOR` | [Role.OPERATOR] |
 | 未設定 / その他 | `ROLE_GENERAL` | [Role.GENERAL] |
 
-`hasRole("OPERATOR")` で運営限定にできる（#90 で `POST /tourism/spots` 等に適用予定）。
+ロール階層は `ADMIN > OPERATOR > GENERAL`（`SecurityConfig.roleHierarchy`）。
 
-## 認可（#89-a 時点）
+## 認可（#90 適用済み）
 
-閲覧・書き込みとも **permitAll**（認証なしで従来どおり利用可）。
-Bearer トークンが付いていれば署名検証し、Authentication にロールを載せる。
-不正な Bearer は 401。
+書き込み系（POST / PUT / PATCH / DELETE）は **deny-by-default**。
 
-書き込みの運営限定は **#90**。
+- GET 系は公開
+- `POST /api/v1/auth/signup|login|google|refresh` は公開（認証の入り口）
+- `POST /api/v1/auth/logout` とレビュー投稿・更新は認証必須（一般ロール可）
+- 上記以外の書き込みは運営（OPERATOR）ロール必須
+
+エンドポイント別の一覧・運営ロール付与の運用手順は [`authorization.md`](./authorization.md)。
+401/403 は統一エラー形式（`{ status, error, message, violations }`）で返る。
+不正な Bearer は従来どおり 401。
 
 ## ローカル起動
 
