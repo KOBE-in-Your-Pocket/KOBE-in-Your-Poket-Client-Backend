@@ -1,6 +1,8 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.jayway.jsonpath.JsonPath
+import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -74,6 +76,7 @@ class ReviewApiIntegrationTest {
             mockMvc
                 .perform(
                     post("/api/v1/tourism/spots")
+                        .with(withRole(Role.OPERATOR))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(spotBody),
                 ).andExpect(status().isCreated)
@@ -101,6 +104,7 @@ class ReviewApiIntegrationTest {
         mockMvc
             .perform(
                 post("/api/v1/tourism/spots/$spotId/reviews")
+                    .with(withRole(Role.GENERAL))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(reviewBody(5, "最高の景色")),
             ).andExpect(status().isCreated)
@@ -117,11 +121,13 @@ class ReviewApiIntegrationTest {
         val spotId = registerSpot()
         mockMvc.perform(
             post("/api/v1/tourism/spots/$spotId/reviews")
+                .with(withRole(Role.GENERAL))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(reviewBody(4, "良い", "ja")),
         )
         mockMvc.perform(
             post("/api/v1/tourism/spots/$spotId/reviews")
+                .with(withRole(Role.GENERAL))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(reviewBody(3, "Good", "en")),
         )
@@ -139,6 +145,7 @@ class ReviewApiIntegrationTest {
         val spotId = registerSpot()
         mockMvc.perform(
             post("/api/v1/tourism/spots/$spotId/reviews")
+                .with(withRole(Role.GENERAL))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(reviewBody(5, "Amazing", "en")),
         )
@@ -165,6 +172,7 @@ class ReviewApiIntegrationTest {
             mockMvc
                 .perform(
                     post("/api/v1/tourism/spots/$spotId/reviews")
+                        .with(withRole(Role.GENERAL))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(reviewBody(3, "普通")),
                 ).andReturn()
@@ -173,6 +181,7 @@ class ReviewApiIntegrationTest {
         mockMvc
             .perform(
                 put("/api/v1/tourism/spots/$spotId/reviews/$reviewId")
+                    .with(withRole(Role.GENERAL))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{ "rating": 5, "comment": "やっぱり最高" }"""),
             ).andExpect(status().isOk)
@@ -185,11 +194,13 @@ class ReviewApiIntegrationTest {
         val spotId = registerSpot()
         mockMvc.perform(
             post("/api/v1/tourism/spots/$spotId/reviews")
+                .with(withRole(Role.GENERAL))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(reviewBody(4, "good")),
         )
         mockMvc.perform(
             post("/api/v1/tourism/spots/$spotId/reviews")
+                .with(withRole(Role.GENERAL))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(reviewBody(2, "meh")),
         )
