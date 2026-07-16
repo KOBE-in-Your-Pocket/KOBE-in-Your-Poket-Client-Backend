@@ -41,12 +41,12 @@ fi
 BASE_URL="${SUPABASE_URL%/}"
 
 # GoTrue Admin API。app_metadata はトップレベルキー単位でマージされる（role だけ更新）。
-curl -fsS -X PUT "$BASE_URL/auth/v1/admin/users/$USER_ID" \
+# レスポンス本文には email 等の PII が含まれるため破棄し、HTTP ステータスのみ表示する。
+curl -fsS -o /dev/null -w 'HTTP %{http_code}\n' -X PUT "$BASE_URL/auth/v1/admin/users/$USER_ID" \
   -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
   -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
   -d "{\"app_metadata\":{\"role\":\"$ROLE\"}}"
 
-echo
 echo "done: user=$USER_ID role=$ROLE"
 echo "note: 既存セッションの JWT には反映されない。対象ユーザーの再ログイン / refresh 後に有効。"

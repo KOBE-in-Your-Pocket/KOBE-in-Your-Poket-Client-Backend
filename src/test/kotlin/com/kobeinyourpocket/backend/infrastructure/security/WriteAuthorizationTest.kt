@@ -35,6 +35,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -107,10 +108,7 @@ class WriteAuthorizationTest {
     fun `logout は未認証だと 401 を統一エラー形式で返す`() {
         mockMvc
             .perform(post("/api/v1/auth/logout"))
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.status").value(401))
-            .andExpect(jsonPath("$.error").value("Unauthorized"))
-            .andExpect(jsonPath("$.message").isNotEmpty)
+            .andExpectUnauthorizedApiError()
     }
 
     @Test
@@ -134,8 +132,7 @@ class WriteAuthorizationTest {
                 post("/api/v1/tourism/spots/kobe-port-tower/reviews")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(reviewBody),
-            ).andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.status").value(401))
+            ).andExpectUnauthorizedApiError()
     }
 
     @Test
@@ -169,7 +166,7 @@ class WriteAuthorizationTest {
                 put("/api/v1/tourism/spots/kobe-port-tower/reviews/$REVIEW_ID")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(reviewUpdateBody),
-            ).andExpect(status().isUnauthorized)
+            ).andExpectUnauthorizedApiError()
     }
 
     @Test
@@ -200,9 +197,7 @@ class WriteAuthorizationTest {
                 post("/api/v1/tourism/spots")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(registerSpotBody),
-            ).andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.status").value(401))
-            .andExpect(jsonPath("$.error").value("Unauthorized"))
+            ).andExpectUnauthorizedApiError()
     }
 
     @Test
@@ -213,10 +208,7 @@ class WriteAuthorizationTest {
                     .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(registerSpotBody),
-            ).andExpect(status().isForbidden)
-            .andExpect(jsonPath("$.status").value(403))
-            .andExpect(jsonPath("$.error").value("Forbidden"))
-            .andExpect(jsonPath("$.message").isNotEmpty)
+            ).andExpectForbiddenApiError()
     }
 
     @Test
@@ -251,8 +243,7 @@ class WriteAuthorizationTest {
             .perform(
                 delete("/api/v1/auth/users/$TARGET_USER_ID")
                     .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
-            ).andExpect(status().isForbidden)
-            .andExpect(jsonPath("$.status").value(403))
+            ).andExpectForbiddenApiError()
     }
 
     @Test
@@ -261,8 +252,7 @@ class WriteAuthorizationTest {
             .perform(
                 delete("/api/v1/auth/users/$TARGET_USER_ID")
                     .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
-            ).andExpect(status().isForbidden)
-            .andExpect(jsonPath("$.status").value(403))
+            ).andExpectForbiddenApiError()
     }
 
     @Test
@@ -282,7 +272,7 @@ class WriteAuthorizationTest {
     fun `未分類の POST は未認証だと 401`() {
         mockMvc
             .perform(post("/api/v1/nonexistent"))
-            .andExpect(status().isUnauthorized)
+            .andExpectUnauthorizedApiError()
     }
 
     @Test
@@ -291,10 +281,26 @@ class WriteAuthorizationTest {
             .perform(
                 post("/api/v1/nonexistent")
                     .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
-            ).andExpect(status().isForbidden)
+            ).andExpectForbiddenApiError()
     }
 
     // ---- fixtures / helpers ----
+
+    /** 401 と統一エラー形式（§3.3 の4フィールド契約）を検証する。 */
+    private fun ResultActions.andExpectUnauthorizedApiError(): ResultActions =
+        andExpect(status().isUnauthorized)
+            .andExpect(jsonPath("$.status").value(401))
+            .andExpect(jsonPath("$.error").value("Unauthorized"))
+            .andExpect(jsonPath("$.message").isNotEmpty)
+            .andExpect(jsonPath("$.violations").isArray)
+
+    /** 403 と統一エラー形式（§3.3 の4フィールド契約）を検証する。 */
+    private fun ResultActions.andExpectForbiddenApiError(): ResultActions =
+        andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.status").value(403))
+            .andExpect(jsonPath("$.error").value("Forbidden"))
+            .andExpect(jsonPath("$.message").isNotEmpty)
+            .andExpect(jsonPath("$.violations").isArray)
 
     private fun jwt(role: Role): String {
         val claims =

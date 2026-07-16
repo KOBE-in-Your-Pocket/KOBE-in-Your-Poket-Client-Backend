@@ -65,7 +65,8 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ... \
 ### 方法 2: Admin API を直接叩く
 
 ```bash
-curl -X PUT "$SUPABASE_URL/auth/v1/admin/users/<user-uuid>" \
+# レスポンスには email 等の PII が含まれるため破棄し、HTTP ステータスのみ表示する
+curl -fsS -o /dev/null -w '%{http_code}\n' -X PUT "$SUPABASE_URL/auth/v1/admin/users/<user-uuid>" \
   -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
   -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
   -H "Content-Type: application/json" \
