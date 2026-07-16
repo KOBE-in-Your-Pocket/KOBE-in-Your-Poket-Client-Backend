@@ -3,15 +3,19 @@ package com.kobeinyourpocket.backend.infrastructure.rest.user
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
 import com.kobeinyourpocket.backend.application.user.auth.AuthSession
 import com.kobeinyourpocket.backend.application.user.command.AuthCommandResult
+import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.RefreshSessionService
 import com.kobeinyourpocket.backend.application.user.command.SignInService
 import com.kobeinyourpocket.backend.application.user.command.SignInWithIdTokenService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.application.user.command.SignUpService
+import com.kobeinyourpocket.backend.application.user.command.UserNotFoundException
 import com.kobeinyourpocket.backend.domain.user.model.PublicUser
 import com.kobeinyourpocket.backend.domain.user.model.User
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.willDoNothing
+import org.mockito.BDDMockito.willThrow
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -20,6 +24,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -47,6 +52,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private lateinit var signOutService: SignOutService
+
+    @MockitoBean
+    private lateinit var deleteUserService: DeleteUserService
 
     private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
 
@@ -223,5 +231,35 @@ class AuthControllerTest {
                 post("/api/v1/auth/logout")
                     .header("Authorization", "Basic dXNlcjpwYXNz"),
             ).andExpect(status().isUnauthorized)
+    }
+
+    // --- deleteUser ---
+
+    @Test
+    fun `DELETE users-userId は 204 を返す`() {
+        willDoNothing().given(deleteUserService).execute(userId)
+
+        mockMvc
+            .perform(delete("/api/v1/auth/users/${userId.value}"))
+            .andExpect(status().isNoContent)
+
+        verify(deleteUserService).execute(userId)
+    }
+
+    @Test
+    fun `DELETE users-userId でユーザーが存在しなければ 404`() {
+        willThrow(UserNotFoundException(userId)).given(deleteUserService).execute(userId)
+
+        mockMvc
+            .perform(delete("/api/v1/auth/users/${userId.value}"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+    }
+
+    @Test
+    fun `DELETE users-userId で無効な UUID なら 400`() {
+        mockMvc
+            .perform(delete("/api/v1/auth/users/not-a-uuid"))
+            .andExpect(status().isBadRequest)
     }
 }

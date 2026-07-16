@@ -7,6 +7,7 @@ import java.time.Instant
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 /** UserRepository write port の契約を Fake で検証する。 */
@@ -20,6 +21,10 @@ class UserRepositoryPortTest {
         }
 
         override fun findById(id: User.Id): User? = store[id]
+
+        override fun deleteById(id: User.Id) {
+            store.remove(id)
+        }
     }
 
     private val now = Instant.parse("2026-07-13T02:00:00Z")
@@ -50,6 +55,23 @@ class UserRepositoryPortTest {
         val repository = FakeUserRepository()
 
         assertNull(repository.findById(User.Id.of(UUID.randomUUID())))
+    }
+
+    @Test
+    fun `deleteById で保存済みの User を削除できる`() {
+        val repository = FakeUserRepository()
+        val user =
+            User.create(
+                id = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111")),
+                name = "Alice",
+                createdAt = now,
+            )
+        repository.save(user)
+        assertNotNull(repository.findById(user.id))
+
+        repository.deleteById(user.id)
+
+        assertNull(repository.findById(user.id))
     }
 
     @Test

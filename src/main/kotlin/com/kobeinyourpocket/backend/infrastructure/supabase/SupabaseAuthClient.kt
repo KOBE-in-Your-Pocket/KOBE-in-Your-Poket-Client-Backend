@@ -35,6 +35,21 @@ class SupabaseAuthClient(
                 },
             ).build()
 
+    /** Admin API（service_role キー）専用クライアント。ユーザー削除等の高権限操作に使用。 */
+    private val adminRestClient: RestClient =
+        RestClient
+            .builder()
+            .baseUrl(props.url.trimEnd('/'))
+            .defaultHeader("apikey", props.serviceRoleKey)
+            .defaultHeader("Authorization", "Bearer ${props.serviceRoleKey}")
+            .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            .requestFactory(
+                SimpleClientHttpRequestFactory().apply {
+                    setConnectTimeout(Duration.ofSeconds(5))
+                    setReadTimeout(Duration.ofSeconds(10))
+                },
+            ).build()
+
     override fun signUp(
         email: String,
         password: String,
@@ -88,6 +103,24 @@ class SupabaseAuthClient(
             throw AuthGatewayException(
                 status = ex.statusCode.value(),
                 message = ex.responseBodyAsString.ifBlank { ex.message ?: "Supabase logout failed" },
+                cause = ex,
+            )
+        }
+    }
+
+    override fun deleteUser(userId: User.Id) {
+        try {
+            adminRestClient
+                .delete()
+                .uri("/auth/v1/admin/users/${userId.value}")
+                .retrieve()
+                .toBodilessEntity()
+        } catch (ex: RestClientResponseException) {
+            // 再試行時など、既に Auth 側が無い場合は冪等成功とする。
+            if (ex.statusCode.value() == 404) return
+            throw AuthGatewayException(
+                status = ex.statusCode.value(),
+                message = ex.responseBodyAsString.ifBlank { ex.message ?: "Supabase user deletion failed" },
                 cause = ex,
             )
         }

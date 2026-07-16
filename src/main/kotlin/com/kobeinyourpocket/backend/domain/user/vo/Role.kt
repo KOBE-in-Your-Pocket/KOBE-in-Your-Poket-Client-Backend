@@ -16,6 +16,9 @@ enum class Role(
 
     /** 運営 */
     OPERATOR("operator"),
+
+    /** システム管理者（ユーザー削除など高権限操作が可能） */
+    ADMIN("admin"),
     ;
 
     /** Spring Security の `ROLE_*`（例: `hasRole("OPERATOR")` → `ROLE_OPERATOR`）。 */

@@ -13,4 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class SupabaseAuthProperties(
     val url: String = "",
     val anonKey: String = "",
+    /** Supabase Admin API（GoTrue admin/users 操作）に必要な service_role キー。 */
+    val serviceRoleKey: String = "",
 )

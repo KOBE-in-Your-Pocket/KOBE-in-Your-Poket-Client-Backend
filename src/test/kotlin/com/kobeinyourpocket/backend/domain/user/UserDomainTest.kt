@@ -41,9 +41,10 @@ class UserIdTest {
 
 class RoleTest {
     @Test
-    fun `claim 文字列から一般・運営を解決できる`() {
+    fun `claim 文字列から各ロールを解決できる`() {
         assertEquals(Role.GENERAL, Role.of("general"))
         assertEquals(Role.OPERATOR, Role.of("operator"))
+        assertEquals(Role.ADMIN, Role.of("admin"))
         assertEquals(Role.GENERAL, Role.of(" GENERAL "))
     }
 
@@ -51,7 +52,7 @@ class RoleTest {
     fun `未対応・空の claim は null`() {
         assertNull(Role.of(""))
         assertNull(Role.of("   "))
-        assertNull(Role.of("admin"))
+        assertNull(Role.of("unknown"))
     }
 }
 

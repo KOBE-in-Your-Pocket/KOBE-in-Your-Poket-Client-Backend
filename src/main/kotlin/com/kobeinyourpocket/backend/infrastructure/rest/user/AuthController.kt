@@ -1,14 +1,19 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.user
 
+import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.RefreshSessionService
 import com.kobeinyourpocket.backend.application.user.command.SignInService
 import com.kobeinyourpocket.backend.application.user.command.SignInWithIdTokenService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.application.user.command.SignUpService
+import com.kobeinyourpocket.backend.domain.user.model.User
 import jakarta.validation.Valid
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -28,6 +33,7 @@ class AuthController(
     private val signInWithIdTokenService: SignInWithIdTokenService,
     private val refreshSessionService: RefreshSessionService,
     private val signOutService: SignOutService,
+    private val deleteUserService: DeleteUserService,
 ) {
     @PostMapping("/signup")
     fun signUp(
@@ -83,6 +89,20 @@ class AuthController(
             bearerToken(authorization)
                 ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         signOutService.execute(token)
+        return ResponseEntity.noContent().build()
+    }
+
+    /**
+     * 指定ユーザーを完全削除する（admin ロール専用）。
+     *
+     * Supabase Auth と DB プロフィール行の両方を削除する。
+     */
+    @DeleteMapping("/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    fun deleteUser(
+        @PathVariable userId: String,
+    ): ResponseEntity<Void> {
+        deleteUserService.execute(User.Id.of(userId))
         return ResponseEntity.noContent().build()
     }
 
