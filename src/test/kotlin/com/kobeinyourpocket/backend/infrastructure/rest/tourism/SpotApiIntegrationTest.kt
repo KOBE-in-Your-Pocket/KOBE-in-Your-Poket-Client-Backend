@@ -1,6 +1,8 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.jayway.jsonpath.JsonPath
+import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -73,6 +75,7 @@ class SpotApiIntegrationTest {
         mockMvc
             .perform(
                 post("/api/v1/tourism/spots")
+                    .with(withRole(Role.OPERATOR))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(registerBody),
             )
