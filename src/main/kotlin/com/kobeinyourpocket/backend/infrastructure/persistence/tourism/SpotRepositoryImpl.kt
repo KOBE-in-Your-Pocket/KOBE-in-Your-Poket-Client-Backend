@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,5 +21,13 @@ class SpotRepositoryImpl(
             },
         )
         return spot
+    }
+
+    override fun existsById(id: SpotId): Boolean = spotJpa.existsById(id.value)
+
+    /** spot_localization・review は `ON DELETE CASCADE`（V1 / V2）で DB 側が連動削除する。 */
+    @Transactional
+    override fun deleteById(id: SpotId) {
+        spotJpa.deleteById(id.value)
     }
 }

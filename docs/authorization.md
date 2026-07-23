@@ -12,6 +12,7 @@
 | `POST /api/v1/auth/logout` | 認証必須 |
 | `POST /api/v1/tourism/spots/{spotId}/reviews`・`PUT .../reviews/{reviewId}` | 認証済みユーザー（一般ロール可） |
 | `DELETE /api/v1/auth/users/{userId}` | ADMIN のみ（`@PreAuthorize` / #137） |
+| `DELETE /api/v1/tourism/spots/{spotId}` | ADMIN のみ（`@PreAuthorize`） |
 | 上記以外の書き込み全て（`POST /api/v1/tourism/spots` 等、今後追加分も含む） | **運営（OPERATOR）ロール必須** |
 | GET 系 | 公開 |
 

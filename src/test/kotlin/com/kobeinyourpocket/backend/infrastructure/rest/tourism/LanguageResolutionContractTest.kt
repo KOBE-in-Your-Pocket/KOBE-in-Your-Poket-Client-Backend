@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
@@ -48,6 +49,9 @@ class LanguageResolutionContractTest {
 
     @MockitoBean
     private lateinit var registerSpotService: RegisterSpotService
+
+    @MockitoBean
+    private lateinit var deleteSpotService: DeleteSpotService
 
     @MockitoBean
     private lateinit var listReviewsService: ListReviewsService

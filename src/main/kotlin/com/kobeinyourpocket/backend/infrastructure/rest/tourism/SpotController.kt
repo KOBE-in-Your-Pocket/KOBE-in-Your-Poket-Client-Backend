@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
@@ -10,6 +11,9 @@ import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
 import com.kobeinyourpocket.backend.infrastructure.rest.common.LanguageResolver
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,6 +33,7 @@ class SpotController(
     private val listSpotsService: ListSpotsService,
     private val getSpotService: GetSpotService,
     private val registerSpotService: RegisterSpotService,
+    private val deleteSpotService: DeleteSpotService,
 ) {
     @GetMapping
     fun listSpots(
@@ -62,5 +67,15 @@ class SpotController(
                 localizations = request.toLocalizations(),
             )
         return SpotResponse.fromRegistered(saved)
+    }
+
+    /** 指定スポットを完全削除する（admin ロール専用）。 */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    fun deleteSpot(
+        @PathVariable id: String,
+    ): ResponseEntity<Void> {
+        deleteSpotService.execute(SpotId.of(id))
+        return ResponseEntity.noContent().build()
     }
 }
