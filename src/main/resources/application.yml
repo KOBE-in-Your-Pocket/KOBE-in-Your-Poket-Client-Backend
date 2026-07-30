@@ -22,6 +22,11 @@ spring:
       hibernate:
         format_sql: true
     show-sql: ${SPRING_JPA_SHOW_SQL:false}
+  servlet:
+    multipart:
+      # 画像アップロードの上限（UploadMediaService の検証と整合）
+      max-file-size: ${MEDIA_MAX_FILE_SIZE:5MB}
+      max-request-size: ${MEDIA_MAX_REQUEST_SIZE:6MB}
 
 server:
   # Metro/Expo (8081 系) との衝突回避のためデフォルトを 9090 にずらしている
@@ -35,6 +40,15 @@ supabase:
   service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
   jwt:
     secret: ${SUPABASE_JWT_SECRET:}
+
+# 画像アップロード（S3 代理保存 / #86）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）。
+# bucket / region 未設定時は起動は妨げず、初回アップロードで例外にする。
+# public-base-url を設定すると返却 URL のベースにする（CloudFront 等）。空なら S3 仮想ホスト URL。
+media:
+  s3:
+    bucket: ${MEDIA_S3_BUCKET:}
+    region: ${MEDIA_S3_REGION:}
+    public-base-url: ${MEDIA_S3_PUBLIC_BASE_URL:}
 
 management:
   endpoints:
