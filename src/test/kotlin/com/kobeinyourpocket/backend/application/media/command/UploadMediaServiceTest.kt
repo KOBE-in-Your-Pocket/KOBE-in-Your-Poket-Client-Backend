@@ -1,5 +1,7 @@
-package com.kobeinyourpocket.backend.application.media
+package com.kobeinyourpocket.backend.application.media.command
 
+import com.kobeinyourpocket.backend.application.media.MediaStorage
+import org.springframework.util.unit.DataSize
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -23,8 +25,9 @@ class UploadMediaServiceTest {
         }
     }
 
+    private val maxBytes = 5L * 1024 * 1024
     private val storage = FakeMediaStorage()
-    private val service = UploadMediaService(storage)
+    private val service = UploadMediaService(storage, DataSize.ofBytes(maxBytes))
 
     /** magic bytes を含む最小のダミー画像バイト列。 */
     private fun jpeg() = bytesOf(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10)
@@ -94,7 +97,7 @@ class UploadMediaServiceTest {
     @Test
     fun `サイズ上限を超えると弾く`() {
         assertFailsWith<IllegalArgumentException> {
-            service.upload(ByteArray(UploadMediaService.MAX_BYTES + 1), "image/jpeg")
+            service.upload(ByteArray((maxBytes + 1).toInt()), "image/jpeg")
         }
     }
 }

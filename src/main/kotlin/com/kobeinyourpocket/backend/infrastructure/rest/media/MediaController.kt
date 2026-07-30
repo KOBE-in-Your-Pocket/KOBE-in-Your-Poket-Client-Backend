@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.media
 
-import com.kobeinyourpocket.backend.application.media.UploadMediaService
+import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping

@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.media
 
-import com.kobeinyourpocket.backend.application.media.UploadMediaService
+import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given

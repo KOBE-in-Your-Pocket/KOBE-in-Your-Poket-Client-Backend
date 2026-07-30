@@ -1,6 +1,9 @@
-package com.kobeinyourpocket.backend.application.media
+package com.kobeinyourpocket.backend.application.media.command
 
+import com.kobeinyourpocket.backend.application.media.MediaStorage
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.unit.DataSize
 import java.util.UUID
 
 /**
@@ -13,7 +16,11 @@ import java.util.UUID
 @Service
 class UploadMediaService(
     private val mediaStorage: MediaStorage,
+    @param:Value("\${spring.servlet.multipart.max-file-size}") maxFileSize: DataSize,
 ) {
+    // HTTP 境界（multipart 上限）と同じ設定値を単一ソースにする（設定変更時の分岐を防ぐ）。
+    private val maxBytes: Long = maxFileSize.toBytes()
+
     /**
      * @param bytes ファイルのバイト列
      * @param contentType リクエストの content-type（検証は magic bytes 主。申告との食い違いは拒否）
@@ -23,7 +30,7 @@ class UploadMediaService(
         contentType: String?,
     ): String {
         require(bytes.isNotEmpty()) { "empty file" }
-        require(bytes.size <= MAX_BYTES) { "file too large" }
+        require(bytes.size.toLong() <= maxBytes) { "file too large" }
 
         // 実体（magic bytes）で判定する。申告 MIME だけを信用しない。
         val detected =
@@ -49,7 +56,6 @@ class UploadMediaService(
     )
 
     companion object {
-        const val MAX_BYTES: Int = 5 * 1024 * 1024
         const val KEY_PREFIX: String = "uploads"
 
         private val IMAGE_CONTENT_TYPES =
