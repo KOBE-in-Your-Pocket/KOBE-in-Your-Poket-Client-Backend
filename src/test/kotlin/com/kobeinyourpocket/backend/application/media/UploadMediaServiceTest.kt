@@ -26,35 +26,61 @@ class UploadMediaServiceTest {
     private val storage = FakeMediaStorage()
     private val service = UploadMediaService(storage)
 
+    /** magic bytes を含む最小のダミー画像バイト列。 */
+    private fun jpeg() = bytesOf(0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10)
+
+    private fun png() = bytesOf(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00)
+
+    private fun webp() = bytesOf(0x52, 0x49, 0x46, 0x46, 0x1A, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50)
+
+    private fun bytesOf(vararg ints: Int): ByteArray = ints.map { it.toByte() }.toByteArray()
+
     @Test
-    fun `保存してサーバー採番のキーで公開 URL を返す`() {
-        val url = service.upload(bytes = byteArrayOf(1, 2, 3), contentType = "image/jpeg")
+    fun `実体が JPEG なら jpg として保存し公開 URL を返す`() {
+        val url = service.upload(bytes = jpeg(), contentType = "image/jpeg")
 
         assertTrue(url.startsWith("https://cdn.example.com/uploads/"))
         assertTrue(url.endsWith(".jpg"))
         assertEquals("image/jpeg", storage.lastContentType)
-        assertTrue(storage.lastKey!!.startsWith("uploads/"))
     }
 
     @Test
-    fun `content-type にパラメータが付いていても正規化して許可する`() {
-        val url = service.upload(byteArrayOf(1), "image/png; charset=binary")
+    fun `content-type にパラメータが付いていても実体判定で保存する`() {
+        val url = service.upload(png(), "image/png; charset=binary")
 
         assertTrue(url.endsWith(".png"))
         assertEquals("image/png", storage.lastContentType)
     }
 
     @Test
-    fun `未対応の content-type は弾く`() {
+    fun `WebP を webp として保存する`() {
+        val url = service.upload(webp(), "image/webp")
+
+        assertTrue(url.endsWith(".webp"))
+        assertEquals("image/webp", storage.lastContentType)
+    }
+
+    @Test
+    fun `content-type が無くても実体が画像なら保存する（実形式で判定）`() {
+        val url = service.upload(png(), null)
+
+        assertTrue(url.endsWith(".png"))
+        assertEquals("image/png", storage.lastContentType)
+    }
+
+    @Test
+    fun `任意バイト列を image と偽っても magic bytes 不一致で拒否する`() {
+        // image/jpeg と申告するが中身は画像ではない
         assertFailsWith<IllegalArgumentException> {
-            service.upload(byteArrayOf(1), "application/pdf")
+            service.upload(bytesOf(0x25, 0x50, 0x44, 0x46), "image/jpeg") // "%PDF"
         }
     }
 
     @Test
-    fun `content-type が無い場合は弾く`() {
+    fun `申告 MIME が実体と食い違う画像は拒否する`() {
+        // 中身は PNG だが image/jpeg と申告
         assertFailsWith<IllegalArgumentException> {
-            service.upload(byteArrayOf(1), null)
+            service.upload(png(), "image/jpeg")
         }
     }
 
