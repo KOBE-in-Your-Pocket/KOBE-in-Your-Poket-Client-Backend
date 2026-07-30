@@ -10,7 +10,7 @@
 # 認証情報はここには書かない。Backend は AWS SDK 既定チェーン（EC2 の IAM ロール）で認証する。
 #
 # 使い方（AWS 認証済みで実行）:
-#   ./scripts/provision-media-s3.sh
+#   ./infrastructure/provision-media-s3.sh
 #
 # 変数（環境変数で上書き可）:
 #   BUCKET       (default: kobe-in-your-pocket-media)
