@@ -7,6 +7,7 @@ import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import java.time.Duration
 
 /**
  * [MediaStorage] の S3 実装（#86）。
@@ -14,6 +15,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest
  * 認証情報は AWS SDK 既定の認証チェーン（IAM ロール / 環境変数）に委ね、コードに持たない。
  * bucket / region 未設定でも起動は妨げず、初回利用時に [IllegalStateException] で気付けるよう
  * S3Client は遅延生成し、Spring 終了時に（生成済みなら）close する。
+ * 同期 putObject が S3 遅延時にワーカースレッドを長時間占有しないよう API 呼び出しに上限を設ける。
  */
 @Component
 class S3MediaStorage(
@@ -25,7 +27,14 @@ class S3MediaStorage(
             check(properties.region.isNotBlank()) {
                 "media.s3.region (MEDIA_S3_REGION) must be set to upload media"
             }
-            S3Client.builder().region(Region.of(properties.region)).build()
+            S3Client
+                .builder()
+                .region(Region.of(properties.region))
+                .overrideConfiguration { override ->
+                    override
+                        .apiCallTimeout(Duration.ofSeconds(API_CALL_TIMEOUT_SECONDS))
+                        .apiCallAttemptTimeout(Duration.ofSeconds(API_CALL_ATTEMPT_TIMEOUT_SECONDS))
+                }.build()
         }
     private val client: S3Client by clientDelegate
 
@@ -59,5 +68,11 @@ class S3MediaStorage(
         val base = properties.publicBaseUrl.trim().trimEnd('/')
         if (base.isNotBlank()) return "$base/$key"
         return "https://${properties.bucket}.s3.${properties.region}.amazonaws.com/$key"
+    }
+
+    private companion object {
+        // リトライ込みの全体上限と 1 試行あたりの上限。ハング時のスレッド占有を防ぐ。
+        const val API_CALL_TIMEOUT_SECONDS = 30L
+        const val API_CALL_ATTEMPT_TIMEOUT_SECONDS = 10L
     }
 }
