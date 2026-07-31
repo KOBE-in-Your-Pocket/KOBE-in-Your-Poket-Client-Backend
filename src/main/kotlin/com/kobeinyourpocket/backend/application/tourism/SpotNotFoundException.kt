@@ -1,4 +1,4 @@
-package com.kobeinyourpocket.backend.application.tourism.query
+package com.kobeinyourpocket.backend.application.tourism
 
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 
