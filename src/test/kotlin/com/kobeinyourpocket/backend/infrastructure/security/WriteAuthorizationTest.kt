@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.infrastructure.security
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
+import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.domain.common.localization.Language
@@ -71,6 +72,9 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var registerSpotService: RegisterSpotService
+
+    @MockitoBean
+    private lateinit var updateSpotService: UpdateSpotService
 
     @MockitoBean
     private lateinit var signOutService: SignOutService
@@ -235,6 +239,53 @@ class WriteAuthorizationTest {
             ).andExpect(status().isCreated)
     }
 
+    // ---- PUT /api/v1/tourism/spots/{id}: 運営ロール必須 ----
+
+    @Test
+    fun `スポット編集は未認証だと 401 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/kobe-port-tower")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registerSpotBody),
+            ).andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `スポット編集は一般ユーザーだと 403 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registerSpotBody),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `スポット編集は運営ロールで 200`() {
+        stubUpdateSpot()
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registerSpotBody),
+            ).andExpect(status().isOk)
+    }
+
+    @Test
+    fun `スポット編集は管理者ロールでも 200（階層 ADMIN 大なり OPERATOR）`() {
+        stubUpdateSpot()
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.ADMIN)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registerSpotBody),
+            ).andExpect(status().isOk)
+    }
+
     // ---- DELETE /api/v1/auth/users/{id}: ADMIN 専用（@PreAuthorize） ----
 
     @Test
@@ -333,6 +384,18 @@ class WriteAuthorizationTest {
     private fun stubRegisterSpot() {
         given(
             registerSpotService.registerSpot(
+                genre = Genre.of("landmark"),
+                coordinates = Coordinates.of(34.6826, 135.1863),
+                media = SpotMedia(imageUrl = "https://example.com/kobe-port-tower.webp"),
+                localizations = localizations,
+            ),
+        ).willReturn(createdSpot)
+    }
+
+    private fun stubUpdateSpot() {
+        given(
+            updateSpotService.updateSpot(
+                id = SpotId.of("kobe-port-tower"),
                 genre = Genre.of("landmark"),
                 coordinates = Coordinates.of(34.6826, 135.1863),
                 media = SpotMedia(imageUrl = "https://example.com/kobe-port-tower.webp"),

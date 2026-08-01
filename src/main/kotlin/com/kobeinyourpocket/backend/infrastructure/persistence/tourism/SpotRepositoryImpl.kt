@@ -1,7 +1,9 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
+import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
@@ -11,6 +13,9 @@ class SpotRepositoryImpl(
     private val spotJpa: SpotJpaRepository,
     private val localizationJpa: SpotLocalizationJpaRepository,
 ) : SpotRepository {
+    @Transactional(readOnly = true)
+    override fun findSpotById(id: SpotId): Spot? = spotJpa.findById(id.value).orElse(null)?.toDomainSpot()
+
     @Transactional
     override fun save(spot: SpotWithLocalizations): SpotWithLocalizations {
         spotJpa.save(SpotEntity.fromDomain(spot.spot))

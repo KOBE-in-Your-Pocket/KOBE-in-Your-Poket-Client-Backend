@@ -18,6 +18,8 @@ class SpotRepositoryPortTest {
     private class FakeSpotRepository : SpotRepository {
         private val store = linkedMapOf<SpotId, SpotWithLocalizations>()
 
+        override fun findSpotById(id: SpotId): Spot? = store[id]?.spot
+
         override fun save(spot: SpotWithLocalizations): SpotWithLocalizations {
             store[spot.spot.id] = spot
             return spot
