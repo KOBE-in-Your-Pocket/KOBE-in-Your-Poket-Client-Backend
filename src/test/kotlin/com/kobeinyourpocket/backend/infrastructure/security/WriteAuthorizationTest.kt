@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.security
 
+import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
@@ -26,6 +27,7 @@ import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.MACSigner
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,12 +35,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -81,6 +85,9 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var deleteUserService: DeleteUserService
+
+    @MockitoBean
+    private lateinit var uploadMediaService: UploadMediaService
 
     // ---- GET 系は公開のまま ----
 
@@ -286,6 +293,38 @@ class WriteAuthorizationTest {
             ).andExpect(status().isOk)
     }
 
+    // ---- POST /api/v1/media/uploads: 運営ロール必須（anyRequest().hasRole(OPERATOR)） ----
+
+    @Test
+    fun `画像アップロードは未認証だと 401 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(post("/api/v1/media/uploads"))
+            .andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `画像アップロードは一般ユーザーだと 403 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(
+                post("/api/v1/media/uploads")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `画像アップロードは運営ロールで 201`() {
+        given(uploadMediaService.upload(anyByteArray(), ArgumentMatchers.any()))
+            .willReturn("https://cdn.example.com/uploads/x.jpg")
+
+        mockMvc
+            .perform(
+                multipart("/api/v1/media/uploads")
+                    .file(MockMultipartFile("file", "x.jpg", "image/jpeg", byteArrayOf(1, 2, 3)))
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
+            ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.imageUrl").value("https://cdn.example.com/uploads/x.jpg"))
+    }
+
     // ---- DELETE /api/v1/auth/users/{id}: ADMIN 専用（@PreAuthorize） ----
 
     @Test
@@ -352,6 +391,9 @@ class WriteAuthorizationTest {
             .andExpect(jsonPath("$.error").value("Forbidden"))
             .andExpect(jsonPath("$.message").isNotEmpty)
             .andExpect(jsonPath("$.violations").isArray)
+
+    /** ByteArray 用の any マッチャ（mockito-kotlin 非導入のため薄いラッパ）。 */
+    private fun anyByteArray(): ByteArray = ArgumentMatchers.any(ByteArray::class.java) ?: ByteArray(0)
 
     private fun jwt(role: Role): String {
         val claims =
