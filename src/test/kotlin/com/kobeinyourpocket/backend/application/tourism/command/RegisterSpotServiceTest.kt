@@ -97,6 +97,27 @@ class RegisterSpotServiceTest {
     }
 
     @Test
+    fun `確定対象外の URL でも登録は成功する（外部 URL・シードデータ）`() {
+        val repository = mockk<SpotRepository>()
+        val storage = mediaStorage()
+        // 自ストレージ配下でない URL。commit は何もせず false を返す。
+        every { storage.commit(any()) } returns false
+        every { repository.save(any()) } answers { firstArg() }
+
+        val created =
+            RegisterSpotService(repository, storage).registerSpot(
+                genre = Genre.LANDMARK,
+                coordinates = Coordinates.of(34.6826, 135.1863),
+                media = SpotMedia(imageUrl),
+                localizations = localizations,
+            )
+
+        assertEquals(imageUrl, created.spot.media.imageUrl)
+        verify(exactly = 1) { repository.save(any()) }
+        verify(exactly = 0) { storage.release(any()) }
+    }
+
+    @Test
     fun `画像の確定に失敗したら保存せず登録を失敗させる`() {
         val repository = mockk<SpotRepository>()
         val storage = mediaStorage()

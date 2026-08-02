@@ -69,7 +69,8 @@ class S3MediaStorageTest {
     }
 
     @Test
-    fun `ベース URL そのもの（キーが空）は null`() {
+    fun `ベース URL そのものはプレフィクス外なので null`() {
+        // キーが空文字列になり uploads/ 判定で外れる。
         assertNull(storage().keyOf("https://$bucket.s3.$region.amazonaws.com/"))
     }
 

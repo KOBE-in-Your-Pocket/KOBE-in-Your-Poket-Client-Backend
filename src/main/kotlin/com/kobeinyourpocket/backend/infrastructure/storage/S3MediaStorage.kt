@@ -77,6 +77,9 @@ class S3MediaStorage(
 
     override fun commit(imageUrl: String): Boolean {
         val key = keyOf(imageUrl) ?: return false
+        // publicBaseUrl だけ設定して bucket が空、のような設定ミスを SDK の低レベル例外でなく
+        // 設定名の分かるメッセージで落とす（commit の失敗はスポット登録ごと失敗させるため）。
+        requireBucket()
         // タグを消せばライフサイクル規則（タグ絞り込み）の対象から外れる。
         client.deleteObjectTagging(
             DeleteObjectTaggingRequest
@@ -90,6 +93,7 @@ class S3MediaStorage(
 
     override fun release(imageUrl: String): Boolean {
         val key = keyOf(imageUrl) ?: return false
+        requireBucket()
         client.putObjectTagging(
             PutObjectTaggingRequest
                 .builder()
