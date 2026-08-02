@@ -23,6 +23,14 @@ class UploadMediaServiceTest {
             lastContentType = contentType
             return "https://cdn.example.com/$key"
         }
+
+        // アップロード単体では確定・差し戻しは起きない（呼ばれたら分かるよう記録だけする）。
+        var committed: MutableList<String> = mutableListOf()
+        var released: MutableList<String> = mutableListOf()
+
+        override fun commit(imageUrl: String): Boolean = committed.add(imageUrl)
+
+        override fun release(imageUrl: String): Boolean = released.add(imageUrl)
     }
 
     private val maxBytes = 5L * 1024 * 1024
@@ -99,5 +107,13 @@ class UploadMediaServiceTest {
         assertFailsWith<IllegalArgumentException> {
             service.upload(ByteArray((maxBytes + 1).toInt()), "image/jpeg")
         }
+    }
+
+    @Test
+    fun `アップロードしただけでは確定しない（staging のまま清理対象に残す）`() {
+        service.upload(jpeg(), "image/jpeg")
+
+        assertTrue(storage.committed.isEmpty())
+        assertTrue(storage.released.isEmpty())
     }
 }
