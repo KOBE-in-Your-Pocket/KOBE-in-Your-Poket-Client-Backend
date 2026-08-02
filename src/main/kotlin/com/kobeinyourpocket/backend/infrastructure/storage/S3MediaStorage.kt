@@ -23,9 +23,17 @@ import java.time.Duration
  * 同期 putObject が S3 遅延時にワーカースレッドを長時間占有しないよう API 呼び出しに上限を設ける。
  *
  * **未確定メディアの清理**: [store] は `status=staging` タグ付きで保存し、バケットの
- * ライフサイクル規則（同タグで絞り込み・1 日で失効）が回収する。[commit] はそのタグを外して
- * 回収対象から除外する。規則の作成は infrastructure リポジトリの
- * `aws/scripts/provision-media-upload-s3.sh` が行う（タグ名は本クラスの定数と一致させること）。
+ * ライフサイクル規則が回収する。[commit] はそのタグを外して回収対象から除外する。
+ *
+ * 対になるバケット側の設定（AWS CLI で適用済み・コード管理外）:
+ * ```
+ * ID     : expire-staging-media
+ * Filter : Prefix "uploads/" AND Tag status=staging
+ * Expire : 1 日（S3 の評価は 1 日 1 回 UTC 0 時なので削除は最大 2 日ほど遅れる）
+ * IAM    : 実行ロールに s3:PutObject / s3:PutObjectTagging / s3:DeleteObjectTagging
+ * ```
+ * [STAGING_TAG_KEY] / [STAGING_TAG_VALUE] を変えると規則に一致しなくなり、未確定の画像が
+ * 消えなくなる。変更する場合はバケットのライフサイクル規則も同時に更新すること。
  */
 @Component
 class S3MediaStorage(
