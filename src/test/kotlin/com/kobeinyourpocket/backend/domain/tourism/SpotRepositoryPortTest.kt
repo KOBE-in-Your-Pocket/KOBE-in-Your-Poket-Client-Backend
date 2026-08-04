@@ -20,6 +20,9 @@ class SpotRepositoryPortTest {
 
         override fun findSpotById(id: SpotId): Spot? = store[id]?.spot
 
+        // Fake に同時実行は無いので、ロック付き取得も同じものを返す。
+        override fun findSpotByIdForUpdate(id: SpotId): Spot? = findSpotById(id)
+
         override fun save(spot: SpotWithLocalizations): SpotWithLocalizations {
             store[spot.spot.id] = spot
             return spot

@@ -11,6 +11,9 @@ import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 
 /**
  * ピン編集ユースケース（write / #152）。domain 集約と [SpotRepository] / [MediaStorage] port に依存する。
@@ -18,9 +21,13 @@ import org.springframework.stereotype.Service
  * 更新対象は genre / coordinates / media / 全言語ローカライズ。id と rating は不変（rating は
  * review の平均から read 時に算出されるため引き継ぐ）。該当 id が無ければ [SpotNotFoundException]（404）。
  *
- * 画像の扱いは [RegisterSpotService] と同じく「保存の前に確定、保存が失敗したら差し戻す」。
- * 加えて、**画像が差し替わった場合は旧画像を staging へ戻して清理対象にする**（放置すると
- * 誰からも参照されない画像が残り続ける）。
+ * **同時更新**: 読み取りと保存を 1 トランザクションにまとめ、[SpotRepository.findSpotByIdForUpdate]
+ * の行ロックで同じスポットへの同時更新を直列化する。ロックが無いと後勝ちで先行変更が消えるうえ、
+ * 古い読み取りを基準に「差し替えられた」と誤判定して**まだ参照されている画像を削除**しうる。
+ *
+ * **画像**: 保存の前に新画像を確定し（[RegisterSpotService] と同じ順序）、差し替えた場合のみ
+ * トランザクションの決着後に片方を清理対象へ戻す。コミットされたら旧画像、ロールバックしたら新画像。
+ * 差し戻しをコミット前に行うと、その後ロールバックしたときに現役の画像を消してしまう。
  */
 @Service
 class UpdateSpotService(
@@ -29,6 +36,7 @@ class UpdateSpotService(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    @Transactional
     fun updateSpot(
         id: SpotId,
         genre: Genre,
@@ -36,7 +44,8 @@ class UpdateSpotService(
         media: SpotMedia,
         localizations: SpotLocalizations,
     ): SpotWithLocalizations {
-        val existing = spotRepository.findSpotById(id) ?: throw SpotNotFoundException(id)
+        // 行ロック。以降この id への更新は本トランザクションの決着まで待たされる。
+        val existing = spotRepository.findSpotByIdForUpdate(id) ?: throw SpotNotFoundException(id)
         val previousImageUrl = existing.media.imageUrl
         val imageReplaced = previousImageUrl != media.imageUrl
 
@@ -47,35 +56,47 @@ class UpdateSpotService(
                 media = media,
             )
 
-        // 確定は保存の前。失敗したら保存せず、新画像は staging のまま期限切れで消える。
+        // 確定は保存の前。失敗すればロールバックし、新画像は staging のまま期限切れで消える。
         mediaStorage.commit(media.imageUrl)
-        val saved =
-            try {
-                spotRepository.save(SpotWithLocalizations(spot = updated, localizations = localizations))
-            } catch (e: Exception) {
-                // 差し替えていないなら、その画像は依然このスポットから参照されている。戻すと消えてしまう。
-                if (imageReplaced) {
-                    releaseQuietly(media.imageUrl, "rollback after save failure")
-                }
-                throw e
-            }
-
-        // 保存できた時点で旧画像は参照されなくなる。ライフサイクル規則に回収させる。
         if (imageReplaced) {
-            releaseQuietly(previousImageUrl, "previous image of spot ${id.value}")
+            // save より前に登録する（save が投げるとロールバック用のフックを張れなくなるため）。
+            releaseAfterCompletion(onCommit = previousImageUrl, onRollback = media.imageUrl)
         }
-        return saved
+        return spotRepository.save(SpotWithLocalizations(spot = updated, localizations = localizations))
     }
 
     /**
-     * 差し戻しの失敗でユースケースを壊さない（ロールバック時は元の例外、成功時は更新結果を優先する）。
-     * 取りこぼした画像は 1 件で、ストレージ側の突合で回収できる。
+     * トランザクションの決着後に、不要になった方の画像を staging へ戻す。
+     *
+     * @param onCommit コミットされた場合に戻す URL（＝もう参照されない旧画像）
+     * @param onRollback ロールバックされた場合に戻す URL（＝保存されなかった新画像）
      */
-    private fun releaseQuietly(
-        imageUrl: String,
-        reason: String,
+    private fun releaseAfterCompletion(
+        onCommit: String,
+        onRollback: String,
     ) {
+        TransactionSynchronizationManager.registerSynchronization(
+            object : TransactionSynchronization {
+                override fun afterCompletion(status: Int) {
+                    val target =
+                        when (status) {
+                            TransactionSynchronization.STATUS_COMMITTED -> onCommit
+                            TransactionSynchronization.STATUS_ROLLED_BACK -> onRollback
+                            // 決着不明。どちらを戻しても現役を消す恐れがあるため何もしない。
+                            else -> return
+                        }
+                    releaseQuietly(target)
+                }
+            },
+        )
+    }
+
+    /**
+     * 差し戻しの失敗でユースケースを壊さない（この時点でトランザクションは決着済み）。
+     * 取りこぼしても画像 1 件で、ストレージ側の突合で回収できる。
+     */
+    private fun releaseQuietly(imageUrl: String) {
         runCatching { mediaStorage.release(imageUrl) }
-            .onFailure { logger.error("failed to release media ({}): {}", reason, imageUrl, it) }
+            .onFailure { logger.error("failed to release media: {}", imageUrl, it) }
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -65,6 +66,46 @@ class SpotApiIntegrationTest {
               "categoryLabel": "랜드마크",
               "description": "고베의 상징.",
               "businessHours": "9:00-23:00",
+              "address": "고베시 주오구 하토바초 5-5"
+            }
+          }
+        }
+        """.trimIndent()
+
+    /** PUT は [registerBody] と同じ形（全項目・4 言語必須の全置換）。genre / 画像 / 名称を変えている。 */
+    private val updateBody =
+        """
+        {
+          "genre": "gourmet",
+          "coordinates": { "latitude": 34.7000, "longitude": 135.2000 },
+          "imageUrl": "https://example.com/renewed.webp",
+          "localizations": {
+            "ja": {
+              "name": "神戸ポートタワー（改）",
+              "categoryLabel": "展望",
+              "description": "リニューアル後の説明。",
+              "businessHours": "10:00-22:00",
+              "address": "神戸市中央区波止場町5-5"
+            },
+            "en": {
+              "name": "Kobe Port Tower (renewed)",
+              "categoryLabel": "Observation",
+              "description": "Description after renewal.",
+              "businessHours": "10:00-22:00",
+              "address": "5-5 Hatobacho, Chuo-ku, Kobe"
+            },
+            "zh": {
+              "name": "神户港塔（改）",
+              "categoryLabel": "观景",
+              "description": "翻新后的说明。",
+              "businessHours": "10:00-22:00",
+              "address": "神户市中央区波止场町5-5"
+            },
+            "ko": {
+              "name": "고베 포트 타워(개)",
+              "categoryLabel": "전망",
+              "description": "리뉴얼 후 설명.",
+              "businessHours": "10:00-22:00",
               "address": "고베시 주오구 하토바초 5-5"
             }
           }
@@ -208,6 +249,47 @@ class SpotApiIntegrationTest {
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
+    }
+
+    /**
+     * PUT を実 Bean で通し、行ロック取得（`SELECT ... FOR UPDATE` / propagation=MANDATORY）と
+     * 更新ユースケースのトランザクション境界が実際に成立することを end-to-end で確認する。
+     */
+    @Test
+    fun `PUT で更新し 200 と更新後の Spot JSON を返す`() {
+        val id = registerPortTowerAndGetId()
+
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/$id?lang=ja")
+                    .with(withRole(Role.OPERATOR))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updateBody),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(id))
+            .andExpect(jsonPath("$.genre").value("gourmet"))
+            .andExpect(jsonPath("$.name").value("神戸ポートタワー（改）"))
+            .andExpect(jsonPath("$.media.imageUrl").value("https://example.com/renewed.webp"))
+
+        // 更新後の状態が永続化されている（別リクエストで読み直す）
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$id?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.genre").value("gourmet"))
+            .andExpect(jsonPath("$.media.imageUrl").value("https://example.com/renewed.webp"))
+    }
+
+    @Test
+    fun `PUT で未登録の id なら 404 と統一エラー JSON を返す`() {
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/unknown-spot")
+                    .with(withRole(Role.OPERATOR))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updateBody),
+            ).andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
     }
 }
