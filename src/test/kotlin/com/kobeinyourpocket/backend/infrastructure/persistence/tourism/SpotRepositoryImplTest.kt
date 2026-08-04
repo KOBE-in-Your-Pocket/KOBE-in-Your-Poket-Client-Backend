@@ -80,4 +80,21 @@ class SpotRepositoryImplTest {
         val entity = spotJpa.findById("no-rating").orElseThrow()
         assertNull(entity.ratingValue)
     }
+
+    @Test
+    fun `findSpotByIdForUpdate は行ロック付きで取得できる`() {
+        // SELECT ... FOR UPDATE のクエリが実際に発行できることの確認（@DataJpaTest はトランザクション内）。
+        repository.save(portTower)
+
+        val found = repository.findSpotByIdForUpdate(SpotId.of("kobe-port-tower"))
+
+        assertEquals(SpotId.of("kobe-port-tower"), found?.id)
+        assertEquals(Genre.LANDMARK, found?.genre)
+        assertEquals("https://example.com/kobe-port-tower.webp", found?.media?.imageUrl)
+    }
+
+    @Test
+    fun `findSpotByIdForUpdate は該当なしで null`() {
+        assertNull(repository.findSpotByIdForUpdate(SpotId.of("missing")))
+    }
 }
