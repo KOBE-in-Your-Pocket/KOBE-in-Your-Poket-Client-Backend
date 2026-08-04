@@ -4,6 +4,7 @@ import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotServic
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
+import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
@@ -52,6 +53,7 @@ class LanguageResolutionContractTest {
 
     @MockitoBean
     private lateinit var deleteSpotService: DeleteSpotService
+    private lateinit var updateSpotService: UpdateSpotService
 
     @MockitoBean
     private lateinit var listReviewsService: ListReviewsService

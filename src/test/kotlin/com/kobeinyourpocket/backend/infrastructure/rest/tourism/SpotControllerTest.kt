@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
+import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
 import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
@@ -15,6 +16,7 @@ import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalization
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
+import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotRating
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.hamcrest.Matchers.containsString
 import org.mockito.BDDMockito.given
@@ -31,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -54,6 +57,7 @@ class SpotControllerTest {
 
     @MockitoBean
     private lateinit var deleteSpotService: DeleteSpotService
+    private lateinit var updateSpotService: UpdateSpotService
 
     private val localizations =
         SpotLocalizations.of(
@@ -162,6 +166,19 @@ class SpotControllerTest {
 
     private val noRating = portTower.copy(id = "no-rating", rating = null)
 
+    private val updatedSpot =
+        SpotWithLocalizations(
+            spot =
+                Spot(
+                    id = SpotId.of("kobe-port-tower"),
+                    genre = Genre.LANDMARK,
+                    coordinates = Coordinates.of(34.6826, 135.1863),
+                    media = SpotMedia("https://example.com/kobe-port-tower.webp"),
+                    rating = SpotRating(4.5),
+                ),
+            localizations = localizations,
+        )
+
     @Test
     fun `lang=ja でモック互換 JSON を返す`() {
         given(listSpotsService.listSpots(Language.JA)).willReturn(listOf(portTower, noRating))
@@ -266,6 +283,95 @@ class SpotControllerTest {
             SpotMedia("https://example.com/kobe-port-tower.webp"),
             localizations,
         )
+    }
+
+    @Test
+    fun `PUT でピン編集し 200 と要求言語で解決した Spot JSON を返す`() {
+        given(
+            updateSpotService.updateSpot(
+                SpotId.of("kobe-port-tower"),
+                Genre.LANDMARK,
+                Coordinates.of(34.6826, 135.1863),
+                SpotMedia("https://example.com/kobe-port-tower.webp"),
+                localizations,
+            ),
+        ).willReturn(updatedSpot)
+
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/kobe-port-tower?lang=ja")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registerBody),
+            ).andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith("application/json"))
+            .andExpect(jsonPath("$.id").value("kobe-port-tower"))
+            .andExpect(jsonPath("$.name").value("神戸ポートタワー"))
+            .andExpect(jsonPath("$.genre").value("landmark"))
+            .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
+            .andExpect(jsonPath("$.media.imageUrl").value("https://example.com/kobe-port-tower.webp"))
+            .andExpect(jsonPath("$.rating.value").value(4.5))
+
+        verify(updateSpotService).updateSpot(
+            SpotId.of("kobe-port-tower"),
+            Genre.LANDMARK,
+            Coordinates.of(34.6826, 135.1863),
+            SpotMedia("https://example.com/kobe-port-tower.webp"),
+            localizations,
+        )
+    }
+
+    @Test
+    fun `PUT id が未収録なら 404 と統一エラー JSON を返す`() {
+        given(
+            updateSpotService.updateSpot(
+                SpotId.of("unknown-spot"),
+                Genre.LANDMARK,
+                Coordinates.of(34.6826, 135.1863),
+                SpotMedia("https://example.com/kobe-port-tower.webp"),
+                localizations,
+            ),
+        ).willThrow(SpotNotFoundException(SpotId.of("unknown-spot")))
+
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/unknown-spot?lang=ja")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registerBody),
+            ).andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
+    }
+
+    @Test
+    fun `PUT に4言語揃っていなければ 400 を返し service を呼ばない`() {
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/kobe-port-tower")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "genre": "landmark",
+                          "coordinates": { "latitude": 34.6826, "longitude": 135.1863 },
+                          "imageUrl": "https://example.com/x.webp",
+                          "localizations": {
+                            "en": {
+                              "name": "Tower",
+                              "categoryLabel": "Landmark",
+                              "description": "Desc",
+                              "businessHours": "9:00-17:00",
+                              "address": "1-1 Chuo-ku, Kobe"
+                            }
+                          }
+                        }
+                        """.trimIndent(),
+                    ),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value(containsString("localizations")))
+
+        verifyNoInteractions(updateSpotService)
     }
 
     @Test

@@ -29,6 +29,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
 
+    // 画像アップロード（S3）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）に委ねる。
+    // sync HTTP クライアント（apache-client）は s3 が transitive で持つため明示追加しない。
+    implementation(platform("software.amazon.awssdk:bom:2.28.0"))
+    implementation("software.amazon.awssdk:s3")
+
     // DB スキーマ管理 (Spring Boot 4 は starter が必要)
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")

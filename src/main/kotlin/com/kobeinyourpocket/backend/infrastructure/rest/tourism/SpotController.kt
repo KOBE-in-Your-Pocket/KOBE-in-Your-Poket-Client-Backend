@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
+import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
@@ -34,6 +36,7 @@ class SpotController(
     private val getSpotService: GetSpotService,
     private val registerSpotService: RegisterSpotService,
     private val deleteSpotService: DeleteSpotService,
+    private val updateSpotService: UpdateSpotService,
 ) {
     @GetMapping
     fun listSpots(
@@ -77,5 +80,23 @@ class SpotController(
     ): ResponseEntity<Void> {
         deleteSpotService.execute(SpotId.of(id))
         return ResponseEntity.noContent().build()
+        
+    @PutMapping("/{id}")
+    fun updateSpot(
+        @PathVariable id: String,
+        @Valid @RequestBody request: RegisterSpotRequest,
+        @RequestParam(name = "lang", required = false) lang: String?,
+        @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
+    ): SpotResponse {
+        val language = LanguageResolver.resolve(lang, acceptLanguage)
+        val updated =
+            updateSpotService.updateSpot(
+                id = SpotId.of(id),
+                genre = Genre.of(request.genre),
+                coordinates = Coordinates.of(request.coordinates.latitude, request.coordinates.longitude),
+                media = SpotMedia(imageUrl = request.imageUrl),
+                localizations = request.toLocalizations(),
+            )
+        return SpotResponse.fromRegistered(updated, language)
     }
 }
