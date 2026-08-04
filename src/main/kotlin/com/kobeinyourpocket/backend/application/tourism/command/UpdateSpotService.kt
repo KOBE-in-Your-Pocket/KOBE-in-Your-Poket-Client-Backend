@@ -1,7 +1,7 @@
 package com.kobeinyourpocket.backend.application.tourism.command
 
 import com.kobeinyourpocket.backend.application.media.MediaStorage
-import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
+import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.repository.SpotRepository
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.Coordinates

@@ -1,11 +1,11 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
-import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
@@ -57,6 +57,8 @@ class SpotControllerTest {
 
     @MockitoBean
     private lateinit var deleteSpotService: DeleteSpotService
+
+    @MockitoBean
     private lateinit var updateSpotService: UpdateSpotService
 
     private val localizations =

@@ -282,6 +282,9 @@ class SpotApiIntegrationTest {
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
+    }
+
     /**
      * PUT を実 Bean で通し、行ロック取得（`SELECT ... FOR UPDATE` / propagation=MANDATORY）と
      * 更新ユースケースのトランザクション境界が実際に成立することを end-to-end で確認する。

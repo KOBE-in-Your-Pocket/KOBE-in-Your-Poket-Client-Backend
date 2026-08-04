@@ -53,6 +53,8 @@ class LanguageResolutionContractTest {
 
     @MockitoBean
     private lateinit var deleteSpotService: DeleteSpotService
+
+    @MockitoBean
     private lateinit var updateSpotService: UpdateSpotService
 
     @MockitoBean

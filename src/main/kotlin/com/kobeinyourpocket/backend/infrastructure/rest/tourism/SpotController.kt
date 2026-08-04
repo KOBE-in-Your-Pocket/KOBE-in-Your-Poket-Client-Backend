@@ -80,7 +80,8 @@ class SpotController(
     ): ResponseEntity<Void> {
         deleteSpotService.execute(SpotId.of(id))
         return ResponseEntity.noContent().build()
-        
+    }
+
     @PutMapping("/{id}")
     fun updateSpot(
         @PathVariable id: String,

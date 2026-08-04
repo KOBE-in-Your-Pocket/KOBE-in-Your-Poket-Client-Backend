@@ -1,7 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.security
 
-import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
@@ -80,6 +80,8 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var deleteSpotService: DeleteSpotService
+
+    @MockitoBean
     private lateinit var updateSpotService: UpdateSpotService
 
     @MockitoBean
@@ -263,6 +265,29 @@ class WriteAuthorizationTest {
             .perform(
                 delete("/api/v1/tourism/spots/kobe-port-tower")
                     .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `スポット削除は運営ロールでも 403（ADMIN 専用）`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `スポット削除は管理者ロールで 204`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.ADMIN)}"),
+            ).andExpect(status().isNoContent)
+
+        verify(deleteSpotService).execute(SpotId.of("kobe-port-tower"))
+    }
+
     // ---- PUT /api/v1/tourism/spots/{id}: 運営ロール必須 ----
 
     @Test
@@ -287,23 +312,6 @@ class WriteAuthorizationTest {
     }
 
     @Test
-    fun `スポット削除は運営ロールでも 403（ADMIN 専用）`() {
-        mockMvc
-            .perform(
-                delete("/api/v1/tourism/spots/kobe-port-tower")
-                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
-            ).andExpectForbiddenApiError()
-    }
-
-    @Test
-    fun `スポット削除は管理者ロールで 204`() {
-        mockMvc
-            .perform(
-                delete("/api/v1/tourism/spots/kobe-port-tower")
-                    .header("Authorization", "Bearer ${jwt(Role.ADMIN)}"),
-            ).andExpect(status().isNoContent)
-
-        verify(deleteSpotService).execute(SpotId.of("kobe-port-tower"))
     fun `スポット編集は運営ロールで 200`() {
         stubUpdateSpot()
         mockMvc
