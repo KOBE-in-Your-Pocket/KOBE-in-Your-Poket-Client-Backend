@@ -32,4 +32,12 @@ class SpotRepositoryImpl(
         )
         return spot
     }
+
+    override fun existsById(id: SpotId): Boolean = spotJpa.existsById(id.value)
+
+    /** spot_localization・review は `ON DELETE CASCADE`（V1 / V2）で DB 側が連動削除する。 */
+    @Transactional
+    override fun deleteById(id: SpotId) {
+        spotJpa.deleteById(id.value)
+    }
 }

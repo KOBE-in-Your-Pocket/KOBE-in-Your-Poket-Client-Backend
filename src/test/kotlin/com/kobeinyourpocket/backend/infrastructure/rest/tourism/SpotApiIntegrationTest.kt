@@ -9,6 +9,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
@@ -246,6 +247,38 @@ class SpotApiIntegrationTest {
     fun `GET id が未登録なら 404 と統一エラー JSON を返す`() {
         mockMvc
             .perform(get("/api/v1/tourism/spots/unknown-spot?lang=ja"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
+    }
+
+    @Test
+    fun `DELETE id で ADMIN が削除すると 204 になり以後 GET は 404`() {
+        val spotId = registerPortTowerAndGetId()
+
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/$spotId").with(withRole(Role.ADMIN)))
+            .andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId?lang=ja"))
+            .andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun `DELETE id は運営ロールだと 403（ADMIN 専用）`() {
+        val spotId = registerPortTowerAndGetId()
+
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/$spotId").with(withRole(Role.OPERATOR)))
+            .andExpect(status().isForbidden)
+    }
+
+    @Test
+    fun `DELETE id が未登録なら 404 と統一エラー JSON を返す`() {
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/unknown-spot").with(withRole(Role.ADMIN)))
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.error").value("Not Found"))

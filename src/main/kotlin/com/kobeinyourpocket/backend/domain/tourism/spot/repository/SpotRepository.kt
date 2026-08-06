@@ -22,4 +22,9 @@ interface SpotRepository {
     fun findSpotByIdForUpdate(id: SpotId): Spot?
 
     fun save(spot: SpotWithLocalizations): SpotWithLocalizations
+
+    fun existsById(id: SpotId): Boolean
+
+    /** spot_localization・review は ON DELETE CASCADE で連動削除される（V1 / V2）。 */
+    fun deleteById(id: SpotId)
 }

@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.security
 
 import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
@@ -76,6 +77,9 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var registerSpotService: RegisterSpotService
+
+    @MockitoBean
+    private lateinit var deleteSpotService: DeleteSpotService
 
     @MockitoBean
     private lateinit var updateSpotService: UpdateSpotService
@@ -244,6 +248,44 @@ class WriteAuthorizationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(registerSpotBody),
             ).andExpect(status().isCreated)
+    }
+
+    // ---- DELETE /api/v1/tourism/spots/{id}: ADMIN 専用（@PreAuthorize） ----
+
+    @Test
+    fun `スポット削除は未認証だと 401 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/kobe-port-tower"))
+            .andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `スポット削除は一般ユーザーだと 403`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `スポット削除は運営ロールでも 403（ADMIN 専用）`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `スポット削除は管理者ロールで 204`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/kobe-port-tower")
+                    .header("Authorization", "Bearer ${jwt(Role.ADMIN)}"),
+            ).andExpect(status().isNoContent)
+
+        verify(deleteSpotService).execute(SpotId.of("kobe-port-tower"))
     }
 
     // ---- PUT /api/v1/tourism/spots/{id}: 運営ロール必須 ----

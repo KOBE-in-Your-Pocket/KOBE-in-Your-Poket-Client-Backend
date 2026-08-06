@@ -1,6 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.common
 
-import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
+import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
 import com.kobeinyourpocket.backend.application.user.command.UserNotFoundException
 import org.springframework.http.HttpStatus

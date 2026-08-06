@@ -1,10 +1,11 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
-import com.kobeinyourpocket.backend.application.tourism.query.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
@@ -19,6 +20,7 @@ import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotRating
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.hamcrest.Matchers.containsString
 import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.willThrow
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,6 +30,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
@@ -51,6 +54,9 @@ class SpotControllerTest {
 
     @MockitoBean
     private lateinit var registerSpotService: RegisterSpotService
+
+    @MockitoBean
+    private lateinit var deleteSpotService: DeleteSpotService
 
     @MockitoBean
     private lateinit var updateSpotService: UpdateSpotService
@@ -446,5 +452,28 @@ class SpotControllerTest {
             .andExpect(jsonPath("$.message").value(containsString("localizations")))
 
         verifyNoInteractions(registerSpotService)
+    }
+
+    @Test
+    fun `DELETE id で削除し 204 を返す`() {
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/kobe-port-tower"))
+            .andExpect(status().isNoContent)
+
+        verify(deleteSpotService).execute(SpotId.of("kobe-port-tower"))
+    }
+
+    @Test
+    fun `DELETE id が未収録なら 404 と統一エラー JSON を返す`() {
+        willThrow(SpotNotFoundException(SpotId.of("unknown-spot")))
+            .given(deleteSpotService)
+            .execute(SpotId.of("unknown-spot"))
+
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/unknown-spot"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Spot not found: unknown-spot"))
     }
 }
