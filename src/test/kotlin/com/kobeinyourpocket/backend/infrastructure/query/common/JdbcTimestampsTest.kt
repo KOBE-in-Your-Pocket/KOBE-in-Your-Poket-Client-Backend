@@ -56,4 +56,9 @@ class JdbcTimestampsTest {
     fun `toLocalDate は未対応の型を握り潰さず失敗する`() {
         assertFailsWith<IllegalStateException> { JdbcTimestamps.toLocalDate("2025-04-02") }
     }
+
+    @Test
+    fun `toLocalDate は null を握り潰さず失敗する`() {
+        assertFailsWith<IllegalStateException> { JdbcTimestamps.toLocalDate(null) }
+    }
 }
