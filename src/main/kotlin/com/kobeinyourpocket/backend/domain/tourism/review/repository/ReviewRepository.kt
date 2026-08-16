@@ -8,4 +8,9 @@ interface ReviewRepository {
     fun save(review: Review): Review
 
     fun findById(id: ReviewId): Review?
+
+    fun existsById(id: ReviewId): Boolean
+
+    /** レビューを削除する。集約に子は無いため単独で消える（#165）。 */
+    fun deleteById(id: ReviewId)
 }

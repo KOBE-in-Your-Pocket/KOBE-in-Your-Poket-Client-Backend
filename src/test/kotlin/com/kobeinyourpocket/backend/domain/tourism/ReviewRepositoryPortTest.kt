@@ -10,6 +10,9 @@ import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /** ReviewRepository write port の契約を Fake で検証する。 */
 class ReviewRepositoryPortTest {
@@ -23,8 +26,24 @@ class ReviewRepositoryPortTest {
 
         override fun findById(id: ReviewId): Review? = store[id]
 
+        override fun existsById(id: ReviewId): Boolean = store.containsKey(id)
+
+        override fun deleteById(id: ReviewId) {
+            store.remove(id)
+        }
+
         fun get(id: ReviewId): Review? = store[id]
     }
+
+    private fun review(comment: String = "Great spot!"): Review =
+        Review.create(
+            spotId = SpotId.of("kobe-port-tower"),
+            rating = ReviewRating.of(5),
+            comment = comment,
+            author = ReviewAuthor(name = "Alice"),
+            language = Language.EN,
+            createdAt = Instant.parse("2025-11-03T10:24:00Z"),
+        )
 
     @Test
     fun `save した Review を取得できる`() {
@@ -71,5 +90,27 @@ class ReviewRepositoryPortTest {
 
         assertEquals(review1, repository.get(review1.id))
         assertEquals(review2, repository.get(review2.id))
+    }
+
+    @Test
+    fun `existsById は save 済みかどうかを返す`() {
+        val repository = FakeReviewRepository()
+        val saved = review()
+        repository.save(saved)
+
+        assertTrue(repository.existsById(saved.id))
+        assertFalse(repository.existsById(review("別のレビュー").id))
+    }
+
+    @Test
+    fun `deleteById した Review は取得できなくなる`() {
+        val repository = FakeReviewRepository()
+        val saved = review()
+        repository.save(saved)
+
+        repository.deleteById(saved.id)
+
+        assertNull(repository.get(saved.id))
+        assertFalse(repository.existsById(saved.id))
     }
 }
