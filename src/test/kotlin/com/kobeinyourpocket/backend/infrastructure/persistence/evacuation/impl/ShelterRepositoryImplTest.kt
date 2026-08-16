@@ -63,7 +63,7 @@ class ShelterRepositoryImplTest {
         val entity = shelterJpa.findById("kobe-city-hall").orElseThrow()
         assertEquals(34.6826, entity.latitude)
         assertEquals(135.1863, entity.longitude)
-        assertEquals("dual-use", entity.type)
+        assertEquals("both", entity.type)
         assertEquals("government", entity.facilityCategory)
         assertEquals("https://example.com/kobe-city-hall.webp", entity.imageUrl)
         assertEquals(true, entity.accessible)

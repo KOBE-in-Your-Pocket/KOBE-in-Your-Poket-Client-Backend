@@ -17,7 +17,7 @@ class GetShelterListServiceTest {
             address = "兵庫県神戸市中央区加納町6丁目5-1",
             latitude = 34.6826,
             longitude = 135.1863,
-            type = "dual-use",
+            type = "both",
             facilityCategory = "government",
             imageUrl = "https://example.com/kobe-city-hall.webp",
             capacity = 500,
