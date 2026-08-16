@@ -119,7 +119,7 @@ class ShelterApiIntegrationTest {
             .andExpect(jsonPath("$.data[0].name").value("神戸市役所"))
             .andExpect(jsonPath("$.data[0].address").value("兵庫県神戸市中央区加納町6丁目5-1"))
             .andExpect(jsonPath("$.data[0].coordinates.latitude").value(34.6826))
-            .andExpect(jsonPath("$.data[0].type").value("dual-use"))
+            .andExpect(jsonPath("$.data[0].type").value("both"))
             .andExpect(jsonPath("$.data[0].facilityCategory").value("government"))
             .andExpect(jsonPath("$.data[0].media.imageUrl").value("https://example.com/kobe-city-hall.webp"))
             .andExpect(jsonPath("$.data[0].capacity").value(500))

@@ -72,7 +72,7 @@ class ShelterQueryJpaTest {
         assertEquals("兵庫県神戸市中央区加納町6丁目5-1", result.address)
         assertEquals(34.6826, result.latitude)
         assertEquals(135.1863, result.longitude)
-        assertEquals("dual-use", result.type)
+        assertEquals("both", result.type)
         assertEquals("government", result.facilityCategory)
         assertEquals("https://example.com/kobe-city-hall.webp", result.imageUrl)
         assertEquals(500, result.capacity)

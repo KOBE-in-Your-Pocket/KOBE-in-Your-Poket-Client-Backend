@@ -72,36 +72,45 @@ class ShelterTypeTest {
     @Test
     fun `災害対策基本法の区分に沿った wireValue を持つ`() {
         assertEquals(
-            "designated-emergency-evacuation-site",
+            "emergency",
             ShelterType.DESIGNATED_EMERGENCY_EVACUATION_SITE.wireValue,
         )
         assertEquals(
-            "designated-evacuation-shelter",
+            "designated",
             ShelterType.DESIGNATED_EVACUATION_SHELTER.wireValue,
         )
-        assertEquals("dual-use", ShelterType.DUAL_USE.wireValue)
+        assertEquals("both", ShelterType.DUAL_USE.wireValue)
     }
 
     @Test
     fun `wireValue から解決でき trim と lowercase を正規化する`() {
         assertEquals(
             ShelterType.DESIGNATED_EMERGENCY_EVACUATION_SITE,
-            ShelterType.of("designated-emergency-evacuation-site"),
+            ShelterType.of("emergency"),
         )
         assertEquals(
             ShelterType.DESIGNATED_EVACUATION_SHELTER,
-            ShelterType.of("  DESIGNATED-EVACUATION-SHELTER  "),
+            ShelterType.of("  DESIGNATED  "),
         )
-        assertEquals(ShelterType.DUAL_USE, ShelterType.of("dual-use"))
+        assertEquals(ShelterType.DUAL_USE, ShelterType.of("both"))
     }
 
     @Test
     fun `未対応値は null を返す`() {
         assertNull(ShelterType.of("unknown"))
         assertNull(ShelterType.of(""))
-        assertNull(ShelterType.of("emergency"))
-        assertNull(ShelterType.of("designated"))
-        assertNull(ShelterType.of("both"))
+    }
+
+    /**
+     * #162 以前の wire 値（災対法の用語をそのまま slug 化した長い形）は受け付けない。
+     *
+     * V12 で DB の値も移行済みのため、これらが解決できてしまうと移行漏れを見逃す。
+     */
+    @Test
+    fun `移行前の旧 wireValue は解決しない`() {
+        assertNull(ShelterType.of("designated-emergency-evacuation-site"))
+        assertNull(ShelterType.of("designated-evacuation-shelter"))
+        assertNull(ShelterType.of("dual-use"))
     }
 }
 

@@ -6,7 +6,7 @@ import com.kobeinyourpocket.backend.application.evacuation.query.ShelterView
 /**
  * `GET /api/v1/evacuation/shelters` のレスポンス（Client `EvacuationShelter` 形に一致 / 要件定義 D1）。
  *
- * type は `designated-emergency-evacuation-site|designated-evacuation-shelter|dual-use` のリテラル。
+ * type は `emergency|designated|both` のリテラル（Client `ShelterType` と同値 / #162）。
  * facilityCategory は施設種別 code（運営側で拡張されうる開いた集合）。
  * capacity / externalUrl は任意のため未設定時は JSON から除外する。
  */
