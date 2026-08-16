@@ -10,14 +10,18 @@ import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.Shelt
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
 import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
+import com.kobeinyourpocket.backend.domain.user.vo.Role
 import com.kobeinyourpocket.backend.infrastructure.persistence.evacuation.entity.ShelterDatasetMetadataEntity
 import com.kobeinyourpocket.backend.infrastructure.persistence.evacuation.repository.ShelterDatasetMetadataJpaRepository
+import com.kobeinyourpocket.backend.infrastructure.persistence.evacuation.repository.ShelterLocalizationJpaRepository
+import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -26,12 +30,13 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /**
  * 避難所一覧の統合テスト（#67）。controller → application → JPA → DB を実 Bean で通し、
  * `?lang=` 主・`Accept-Language` 従・en フォールバック（D1）と Client `EvacuationShelter` 形を end-to-end で検証する。
  *
- * 書き込み API は無いため、データ投入は [ShelterRepository]（write port）で行う。
+ * データ投入は [ShelterRepository]（write port）で行う。削除 API（#144）の契約もここで検証する。
  * テスト環境は H2（`application-test.yml`、Hibernate create-drop / Flyway 無効）。
  * 各テストは [Transactional] でロールバックし相互に独立させる。
  */
@@ -48,6 +53,9 @@ class ShelterApiIntegrationTest {
 
     @Autowired
     private lateinit var shelterDatasetMetadataJpaRepository: ShelterDatasetMetadataJpaRepository
+
+    @Autowired
+    private lateinit var shelterLocalizationJpaRepository: ShelterLocalizationJpaRepository
 
     private val metadata =
         ShelterDatasetMetadataEntity(
@@ -190,5 +198,73 @@ class ShelterApiIntegrationTest {
             .andExpect(status().isOk)
             .andExpect(content().json("""{"data":[]}"""))
             .andExpect(jsonPath("$.meta.source").value(metadata.source))
+    }
+
+    @Test
+    fun `DELETE は未認証だと 401`() {
+        seedShelters()
+
+        mockMvc
+            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall"))
+            .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `DELETE は一般ロールだと 403`() {
+        seedShelters()
+
+        mockMvc
+            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.GENERAL)))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.status").value(403))
+    }
+
+    @Test
+    fun `DELETE を運営ロールで実行すると 204 になり一覧から消える`() {
+        seedShelters()
+        seedMetadata()
+
+        mockMvc
+            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.OPERATOR)))
+            .andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].id").value("minimal-shelter"))
+    }
+
+    @Test
+    fun `DELETE は admin でも実行できる（ロール階層）`() {
+        seedShelters()
+
+        mockMvc
+            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.ADMIN)))
+            .andExpect(status().isNoContent)
+    }
+
+    @Test
+    fun `DELETE が未登録なら 404 と統一エラー JSON を返す`() {
+        seedShelters()
+
+        mockMvc
+            .perform(delete("/api/v1/evacuation/shelters/unknown-shelter").with(withRole(Role.OPERATOR)))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+    }
+
+    @Test
+    fun `DELETE はローカライズも消し孤児行を残さない`() {
+        seedShelters()
+        // kobe-city-hall は ja/en/zh の 3 件、minimal-shelter は en の 1 件
+        assertEquals(4, shelterLocalizationJpaRepository.count())
+
+        mockMvc
+            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.OPERATOR)))
+            .andExpect(status().isNoContent)
+
+        assertEquals(1, shelterLocalizationJpaRepository.count())
     }
 }

@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.common
 
+import com.kobeinyourpocket.backend.application.evacuation.ShelterNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
 import com.kobeinyourpocket.backend.application.user.command.UserNotFoundException
@@ -18,6 +19,10 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException::class)
     fun handleUserNotFound(ex: UserNotFoundException): ResponseEntity<ApiErrorResponse> = notFound(message = ex.message ?: "User not found")
+
+    @ExceptionHandler(ShelterNotFoundException::class)
+    fun handleShelterNotFound(ex: ShelterNotFoundException): ResponseEntity<ApiErrorResponse> =
+        notFound(message = ex.message ?: "Shelter not found")
 
     @ExceptionHandler(AuthGatewayException::class)
     fun handleAuthGateway(ex: AuthGatewayException): ResponseEntity<ApiErrorResponse> {

@@ -9,4 +9,9 @@ import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.Ev
  */
 interface ShelterRepository {
     fun save(shelter: EvacuationShelter): EvacuationShelter
+
+    fun existsById(id: EvacuationShelter.Id): Boolean
+
+    /** 集約ごと削除する。ローカライズは集約の子のため実装側で併せて消える（#144）。 */
+    fun deleteById(id: EvacuationShelter.Id)
 }

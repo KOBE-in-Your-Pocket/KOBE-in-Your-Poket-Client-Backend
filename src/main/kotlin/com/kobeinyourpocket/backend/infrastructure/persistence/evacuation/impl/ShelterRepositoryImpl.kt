@@ -34,4 +34,21 @@ class ShelterRepositoryImpl(
 
         return shelter
     }
+
+    override fun existsById(id: EvacuationShelter.Id): Boolean = shelterJpa.existsById(id.value)
+
+    /**
+     * 子テーブルを明示的に消してから集約ルートを消す（[save] と対称）。
+     *
+     * DB 側にも `ON DELETE CASCADE` はある（V7）が、それは Flyway が張る制約である。
+     * `ShelterLocalizationEntity` は集約ルートへの JPA 関連を持たない（`@EmbeddedId` の ID 参照のみ）ため、
+     * Hibernate の DDL 生成では FK 自体が作られない。DB のカスケードだけに頼ると、
+     * Flyway を使わない環境（テストの H2 / `ddl-auto=create-drop`）で孤児行が残り、
+     * 本番とテストで挙動が割れる。明示削除で両環境の結果をそろえる。
+     */
+    @Transactional
+    override fun deleteById(id: EvacuationShelter.Id) {
+        localizationJpa.deleteByIdShelterId(id.value)
+        shelterJpa.deleteById(id.value)
+    }
 }
