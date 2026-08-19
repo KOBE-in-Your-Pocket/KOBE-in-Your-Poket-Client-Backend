@@ -18,4 +18,11 @@ class ReviewRepositoryImpl(
     }
 
     override fun findById(id: ReviewId): Review? = reviewJpa.findById(id.value).map { it.toDomain() }.orElse(null)
+
+    override fun existsById(id: ReviewId): Boolean = reviewJpa.existsById(id.value)
+
+    @Transactional
+    override fun deleteById(id: ReviewId) {
+        reviewJpa.deleteById(id.value)
+    }
 }
