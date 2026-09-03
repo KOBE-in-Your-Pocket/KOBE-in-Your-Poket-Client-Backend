@@ -1,0 +1,72 @@
+name: ec2-power
+
+# 開発環境の EC2 を手動で起動 / 停止する。
+#
+# EC2 は EventBridge Scheduler で平日 9:00 起動 / 18:00 停止（Asia/Tokyo）。
+# 時間外にデモや動作確認をしたいときの起動手段として用意している。
+# ローカルの AWS 認証が切れていても、GitHub の画面から実行できるのが利点
+# （CD と同じ OIDC ロールを使うため、追加の権限設定は不要）。
+#
+# 注意: 停止スケジュールは平日 18:00 のみ。金曜夜や土日に起動したままにすると
+# 月曜 18:00 まで動き続けるため、用が済んだら action=stop で止めること。
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: EC2 を起動するか停止するか
+        required: true
+        type: choice
+        default: start
+        options:
+          - start
+          - stop
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: ec2-power
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-northeast-1
+  EC2_INSTANCE_ID: i-033fbb6ce4e9f49ae
+  EC2_HOST: 18.181.34.28
+  APP_PORT: "9090"
+
+jobs:
+  power:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::515966496540:role/kobe-backend-github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Start EC2
+        if: inputs.action == 'start'
+        run: |
+          aws ec2 start-instances --instance-ids "${EC2_INSTANCE_ID}"
+          aws ec2 wait instance-running --instance-ids "${EC2_INSTANCE_ID}"
+          # コンテナは restart: unless-stopped + docker の自動起動で復帰するため、
+          # デプロイし直す必要は無い。アプリが応答するまで待つ。
+          for i in $(seq 1 36); do
+            if curl -fsS "http://${EC2_HOST}:${APP_PORT}/actuator/health"; then
+              echo ""
+              echo "起動しました（JST $(TZ=Asia/Tokyo date '+%F %H:%M')）"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "EC2 は起動したがアプリが応答しない" >&2
+          exit 1
+
+      - name: Stop EC2
+        if: inputs.action == 'stop'
+        run: |
+          aws ec2 stop-instances --instance-ids "${EC2_INSTANCE_ID}"
+          echo "停止しました（JST $(TZ=Asia/Tokyo date '+%F %H:%M')）"
