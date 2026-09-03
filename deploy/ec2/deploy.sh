@@ -42,6 +42,18 @@ export APP_IMAGE SERVER_PORT
 SERVER_PORT="$(grep -E '^SERVER_PORT=' "${APP_ENV_FILE}" | cut -d= -f2- || echo 9090)"
 export SERVER_PORT
 
+# compose が Caddyfile をファイルとして bind mount するため、存在しないと docker が
+# 同名のディレクトリを作ってしまい、Caddy が設定を読めないまま起動する。
+# 静かに壊れるより、ここで落として原因を明示する。
+if [[ ! -f "${APP_DIR}/Caddyfile" ]]; then
+  cat >&2 <<EOM
+Caddyfile がありません（${APP_DIR}/Caddyfile）。
+通常は CD の "Sync EC2 config from repo" ステップが deploy/ec2/ の内容を配置します。
+手動で流す場合は、リポジトリの deploy/ec2/Caddyfile を同じパスへ置いてください。
+EOM
+  exit 1
+fi
+
 docker compose -f "${APP_DIR}/compose.yaml" up -d --force-recreate --remove-orphans
 
 # Secrets 由来の平文は compose がコンテナに取り込んだ直後に消す（再起動はコンテナ内 env を再利用）
