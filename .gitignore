@@ -33,3 +33,6 @@ out/
 
 # OS / editor
 *.swp
+
+# インフラ構築スクリプトが書き出すローカル状態（秘密鍵・インスタンス ID・イメージ tar）
+deploy/state/
