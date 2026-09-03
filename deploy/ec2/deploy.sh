@@ -46,7 +46,11 @@ export SERVER_PORT
 # 同名のディレクトリを作ってしまい、Caddy が設定を読めないまま起動する。
 # 静かに壊れるより、ここで落として原因を明示する。
 if [[ ! -f "${APP_DIR}/Caddyfile" ]]; then
-  echo "Caddyfile がありません（${APP_DIR}/Caddyfile）。03-bootstrap-ec2.sh で配置してください。" >&2
+  cat >&2 <<EOM
+Caddyfile がありません（${APP_DIR}/Caddyfile）。
+通常は CD の "Sync EC2 config from repo" ステップが deploy/ec2/ の内容を配置します。
+手動で流す場合は、リポジトリの deploy/ec2/Caddyfile を同じパスへ置いてください。
+EOM
   exit 1
 fi
 
