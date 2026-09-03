@@ -56,6 +56,10 @@ jobs:
               stopped)
                 echo "EC2 is stopped. Starting..."
                 if aws ec2 start-instances --instance-ids "${EC2_INSTANCE_ID}"; then
+                  # この run が起動したという印。後段の Stop EC2 ステップが見る。
+                  # 人が手動で起動して作業している最中に CD が走っても落とさないよう、
+                  # 「自分が起動したものだけ片付ける」形にしている。
+                  echo "STARTED_BY_CD=true" >> "${GITHUB_ENV}"
                   aws ec2 wait instance-running --instance-ids "${EC2_INSTANCE_ID}"
                   break
                 fi
@@ -172,3 +176,23 @@ jobs:
           done
           echo "health check failed" >&2
           exit 1
+
+      # 開発環境の EC2 は EventBridge Scheduler で平日 9:00 起動 / 18:00 停止。
+      # 時間外の push で CD が起動すると、次の停止（平日 18:00）まで動き続ける。
+      # 金曜夜の push なら月曜 18:00 まで ≒ 3 日ぶん課金されるため、CD が起動した
+      # 分は CD が片付ける。
+      #
+      # 停止するのは STARTED_BY_CD=true のときだけ。人が手動で起動して作業して
+      # いる場合は EC2 が running で、この印が立たないので落とさない。
+      # デプロイが失敗しても止めたいので always()（失敗時ほど消し忘れる）。
+      - name: Stop EC2 if this run started it
+        if: always() && env.STARTED_BY_CD == 'true'
+        run: |
+          HOUR=$(TZ=Asia/Tokyo date +%-H)
+          DOW=$(TZ=Asia/Tokyo date +%u)   # 1=月 … 7=日
+          if [[ "${DOW}" -le 5 && "${HOUR}" -ge 9 && "${HOUR}" -lt 18 ]]; then
+            echo "稼働時間帯（平日 9:00-18:00 JST）のため停止しない。18:00 のスケジュールに任せる。"
+            exit 0
+          fi
+          echo "稼働時間外のため停止する（JST $(TZ=Asia/Tokyo date '+%F %H:%M')）"
+          aws ec2 stop-instances --instance-ids "${EC2_INSTANCE_ID}"
