@@ -42,6 +42,14 @@ export APP_IMAGE SERVER_PORT
 SERVER_PORT="$(grep -E '^SERVER_PORT=' "${APP_ENV_FILE}" | cut -d= -f2- || echo 9090)"
 export SERVER_PORT
 
+# compose が Caddyfile をファイルとして bind mount するため、存在しないと docker が
+# 同名のディレクトリを作ってしまい、Caddy が設定を読めないまま起動する。
+# 静かに壊れるより、ここで落として原因を明示する。
+if [[ ! -f "${APP_DIR}/Caddyfile" ]]; then
+  echo "Caddyfile がありません（${APP_DIR}/Caddyfile）。03-bootstrap-ec2.sh で配置してください。" >&2
+  exit 1
+fi
+
 docker compose -f "${APP_DIR}/compose.yaml" up -d --force-recreate --remove-orphans
 
 # Secrets 由来の平文は compose がコンテナに取り込んだ直後に消す（再起動はコンテナ内 env を再利用）

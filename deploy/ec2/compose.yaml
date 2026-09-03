@@ -10,3 +10,31 @@ services:
     env_file:
       - /opt/kobe-backend/app.env
     # DB はコンテナ内ではなく Supabase（Session pooler :5432）
+
+  # TLS 終端（Backend #120 / #121）。
+  #
+  # アプリ自身に証明書を持たせず手前で終端するのは、更新のたびに PEM を keystore へ
+  # 変換してアプリを再起動する必要が無くなるため。Caddy は証明書の取得・更新を
+  # 自動で行い、無停止で入れ替える。
+  #
+  # app へは compose のネットワーク内（app:9090）で繋ぐ。この区間は EC2 の内部で
+  # 完結し、インスタンスの外へ出ないため平文でよい。
+  caddy:
+    image: caddy:2-alpine
+    container_name: kobe-caddy
+    restart: unless-stopped
+    ports:
+      # 443: 本来の入り口。80: Let's Encrypt の HTTP-01 チャレンジに必要
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/kobe-backend/Caddyfile:/etc/caddy/Caddyfile:ro
+      # 取得した証明書の保存先。消すと再取得になりレート制限に当たりうる
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
+  caddy_config:
