@@ -1,8 +1,11 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.common
 
 import com.kobeinyourpocket.backend.application.evacuation.ShelterNotFoundException
+import com.kobeinyourpocket.backend.application.tourism.GenreInUseException
+import com.kobeinyourpocket.backend.application.tourism.GenreNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
+import com.kobeinyourpocket.backend.application.tourism.command.InvalidGenreLabelException
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
 import com.kobeinyourpocket.backend.application.user.command.UserNotFoundException
 import org.springframework.http.HttpStatus
@@ -28,6 +31,24 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ShelterNotFoundException::class)
     fun handleShelterNotFound(ex: ShelterNotFoundException): ResponseEntity<ApiErrorResponse> =
         notFound(message = ex.message ?: "Shelter not found")
+
+    @ExceptionHandler(GenreNotFoundException::class)
+    fun handleGenreNotFound(ex: GenreNotFoundException): ResponseEntity<ApiErrorResponse> =
+        notFound(message = ex.message ?: "Genre not found")
+
+    /**
+     * 使用中のジャンルを削除しようとした（#153）。
+     *
+     * 400 でも 404 でもなく 409 にするのは、リクエスト自体は正しく、**サーバー側の状態**が
+     * 削除を許さないため。運営がスポットのジャンルを付け替えれば同じ操作が成功する。
+     */
+    @ExceptionHandler(GenreInUseException::class)
+    fun handleGenreInUse(ex: GenreInUseException): ResponseEntity<ApiErrorResponse> = conflict(message = ex.message ?: "Genre is in use")
+
+    /** 英語ラベルから code を生成できない（記号のみ等）。入力を直してもらう。 */
+    @ExceptionHandler(InvalidGenreLabelException::class)
+    fun handleInvalidGenreLabel(ex: InvalidGenreLabelException): ResponseEntity<ApiErrorResponse> =
+        badRequest(message = ex.message ?: "Invalid genre label")
 
     @ExceptionHandler(AuthGatewayException::class)
     fun handleAuthGateway(ex: AuthGatewayException): ResponseEntity<ApiErrorResponse> {
@@ -82,6 +103,17 @@ class GlobalExceptionHandler {
                     error = HttpStatus.BAD_REQUEST.reasonPhrase,
                     message = message,
                     violations = violations,
+                ),
+            )
+
+    private fun conflict(message: String): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(
+                ApiErrorResponse(
+                    status = HttpStatus.CONFLICT.value(),
+                    error = HttpStatus.CONFLICT.reasonPhrase,
+                    message = message,
                 ),
             )
 
