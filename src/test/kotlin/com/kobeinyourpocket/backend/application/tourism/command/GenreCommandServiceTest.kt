@@ -9,6 +9,7 @@ import com.kobeinyourpocket.backend.domain.tourism.genre.model.Genre
 import com.kobeinyourpocket.backend.domain.tourism.genre.repository.GenreRepository
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreCode
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreLocalizations
+import org.springframework.dao.DataIntegrityViolationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -87,6 +88,20 @@ class GenreCommandServiceTest {
     }
 
     @Test
+    fun `上限長ちょうどの code と衝突しても採番できる`() {
+        // 単純に連結すると 64 文字を超えて GenreCode.of が弾き、採番できるはずの候補を作れない。
+        val longLabel = "a".repeat(GenreCode.MAX_LENGTH)
+        val existing = GenreCode.of(longLabel)
+        val repository = FakeGenreRepository(listOf(Genre(existing, 1, labels(longLabel))))
+        val service = RegisterGenreService(repository)
+
+        val created = service.registerGenre(displayOrder = 1, localizations = labels(longLabel))
+
+        assertTrue(created.code.value.length <= GenreCode.MAX_LENGTH)
+        assertTrue(created.code.value.endsWith("-2"))
+    }
+
+    @Test
     fun `英語ラベルから code を作れなければ登録を拒否する`() {
         val service = RegisterGenreService(FakeGenreRepository())
 
@@ -141,6 +156,22 @@ class GenreCommandServiceTest {
 
         assertEquals(3, ex.spotCount)
         assertTrue(repository.existsByCode(GenreCode.of("onsen")))
+    }
+
+    @Test
+    fun `削除直前にスポットが登録されて FK 違反になっても 409 相当に収束する`() {
+        // 事前確認では 0 件でも、確認後・削除前に別トランザクションが登録しうる。
+        // DB の外部キー違反（500）ではなく、事前確認と同じ 409 に寄せる。
+        val repository =
+            object : GenreRepository by FakeGenreRepository(listOf(genre("onsen"))) {
+                override fun deleteByCode(code: GenreCode): Unit = throw DataIntegrityViolationException("fk_spot_genre")
+            }
+        val service = DeleteGenreService(repository, FakeGenreQuery())
+
+        val ex = assertFailsWith<GenreInUseException> { service.deleteGenre(GenreCode.of("onsen")) }
+
+        // 中断したトランザクションでは件数を数え直せないため不明として返す
+        assertEquals(null, ex.spotCount)
     }
 
     @Test

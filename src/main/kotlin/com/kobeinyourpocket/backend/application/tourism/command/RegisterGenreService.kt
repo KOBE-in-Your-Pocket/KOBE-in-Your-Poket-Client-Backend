@@ -46,10 +46,26 @@ class RegisterGenreService(
         if (!genreRepository.existsByCode(base)) return base
 
         for (suffix in 2..MAX_CODE_SUFFIX) {
-            val candidate = GenreCode.of("${base.value}-$suffix")
+            val candidate = GenreCode.of(withSuffix(base, suffix))
             if (!genreRepository.existsByCode(candidate)) return candidate
         }
         throw InvalidGenreLabelException(base.value)
+    }
+
+    /**
+     * `base-2` を組み立てる。上限長を超えないよう、**base 側を先に削る**。
+     *
+     * 単純に連結すると、base が上限長ちょうど（64 文字）のときに [GenreCode.of] が
+     * 弾いてしまい、採番できるはずの候補が作れない。末尾がハイフンで終わる位置で
+     * 切れた場合は取り除く（`night-view--2` のような形を作らない）。
+     */
+    private fun withSuffix(
+        base: GenreCode,
+        suffix: Int,
+    ): String {
+        val tail = "-$suffix"
+        val head = base.value.take(GenreCode.MAX_LENGTH - tail.length).trimEnd('-')
+        return "$head$tail"
     }
 
     private companion object {

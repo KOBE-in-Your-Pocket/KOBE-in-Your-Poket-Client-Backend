@@ -1,14 +1,20 @@
 package com.kobeinyourpocket.backend.infrastructure.security
 
 import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteGenreService
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
+import com.kobeinyourpocket.backend.application.tourism.command.RegisterGenreService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
+import com.kobeinyourpocket.backend.application.tourism.command.UpdateGenreService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
+import com.kobeinyourpocket.backend.application.tourism.query.ListGenresService
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.domain.common.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreCode
+import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
@@ -52,6 +58,7 @@ import java.time.Instant
 import java.util.Date
 import java.util.UUID
 import kotlin.test.Test
+import com.kobeinyourpocket.backend.domain.tourism.genre.model.Genre as GenreMaster
 
 /**
  * 書き込み系エンドポイントの認可（#90）を 未認証 / 一般 / 運営 / 管理 で検証する。
@@ -92,6 +99,18 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var uploadMediaService: UploadMediaService
+
+    @MockitoBean
+    private lateinit var listGenresService: ListGenresService
+
+    @MockitoBean
+    private lateinit var registerGenreService: RegisterGenreService
+
+    @MockitoBean
+    private lateinit var updateGenreService: UpdateGenreService
+
+    @MockitoBean
+    private lateinit var deleteGenreService: DeleteGenreService
 
     // ---- GET 系は公開のまま ----
 
@@ -605,6 +624,149 @@ class WriteAuthorizationTest {
             }
           }
         }
+        """.trimIndent()
+
+    // ---- ジャンルマスタ（#153）。一覧は公開、書き込みは運営限定 ----
+
+    @Test
+    fun `GET ジャンル一覧は未認証でも 200`() {
+        given(listGenresService.listGenres()).willReturn(emptyList())
+        mockMvc
+            .perform(get("/api/v1/tourism/genres"))
+            .andExpect(status().isOk)
+    }
+
+    @Test
+    fun `ジャンル登録は未認証だと 401 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/genres")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(genreBody),
+            ).andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `ジャンル登録は一般ユーザーだと 403 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/genres")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(genreBody),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `ジャンル登録は運営ロールで 201`() {
+        stubRegisterGenre()
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/genres")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(genreBody),
+            ).andExpect(status().isCreated)
+    }
+
+    @Test
+    fun `ジャンル登録は管理者ロールでも 201（階層 ADMIN 大なり OPERATOR）`() {
+        stubRegisterGenre()
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/genres")
+                    .header("Authorization", "Bearer ${jwt(Role.ADMIN)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(genreBody),
+            ).andExpect(status().isCreated)
+    }
+
+    @Test
+    fun `ジャンル更新は未認証だと 401 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/genres/night-view")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(genreBody),
+            ).andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `ジャンル更新は一般ユーザーだと 403`() {
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/genres/night-view")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(genreBody),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `ジャンル更新は運営ロールで 200`() {
+        given(
+            updateGenreService.updateGenre(
+                GenreCode.of("night-view"),
+                6,
+                nightViewLabels,
+            ),
+        ).willReturn(nightViewGenre)
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/genres/night-view")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(genreBody),
+            ).andExpect(status().isOk)
+    }
+
+    @Test
+    fun `ジャンル削除は未認証だと 401 を統一エラー形式で返す`() {
+        mockMvc
+            .perform(delete("/api/v1/tourism/genres/night-view"))
+            .andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `ジャンル削除は一般ユーザーだと 403`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/genres/night-view")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpectForbiddenApiError()
+    }
+
+    @Test
+    fun `ジャンル削除は運営ロールで 204`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/genres/night-view")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
+            ).andExpect(status().isNoContent)
+
+        verify(deleteGenreService).deleteGenre(GenreCode.of("night-view"))
+    }
+
+    private fun stubRegisterGenre() {
+        given(registerGenreService.registerGenre(6, nightViewLabels)).willReturn(nightViewGenre)
+    }
+
+    private val nightViewLabels =
+        GenreLocalizations.of(
+            mapOf(
+                Language.JA to "夜景",
+                Language.EN to "Night View",
+                Language.KO to "야경",
+                Language.ZH to "夜景",
+            ),
+        )
+
+    private val nightViewGenre =
+        GenreMaster(code = GenreCode.of("night-view"), displayOrder = 6, localizations = nightViewLabels)
+
+    private val genreBody =
+        """
+        {"displayOrder":6,"labels":{"ja":"夜景","en":"Night View","ko":"야경","zh":"夜景"}}
         """.trimIndent()
 
     companion object {

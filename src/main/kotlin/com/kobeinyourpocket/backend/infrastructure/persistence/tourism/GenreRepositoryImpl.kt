@@ -42,9 +42,16 @@ class GenreRepositoryImpl(
         return genre
     }
 
-    /** `genre_localization` は `ON DELETE CASCADE`（V13）で DB 側が連動削除する。 */
+    /**
+     * `genre_localization` は `ON DELETE CASCADE`（V13）で DB 側が連動削除する。
+     *
+     * `flush` するのは、`spot.genre` の外部キー違反（V15）を**このメソッドの中で**
+     * 起こすため。既定ではコミット時まで遅延し、呼び出し側の try/catch を素通りして
+     * 500 になる（[com.kobeinyourpocket.backend.application.tourism.command.DeleteGenreService] が 409 へ変換する）。
+     */
     @Transactional
     override fun deleteByCode(code: GenreCode) {
         genreJpa.deleteById(code.value)
+        genreJpa.flush()
     }
 }
