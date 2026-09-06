@@ -23,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -198,6 +199,101 @@ class ShelterApiIntegrationTest {
             .andExpect(status().isOk)
             .andExpect(content().json("""{"data":[]}"""))
             .andExpect(jsonPath("$.meta.source").value(metadata.source))
+    }
+
+    /** ja/en/zh/ko の 4 件そろったリクエストボディ。[omitLanguage] を渡すとその言語だけ落とす。 */
+    private fun registerBody(omitLanguage: String? = null): String {
+        val localizations =
+            listOf("ja" to "六甲小学校", "en" to "Rokko Elementary School", "zh" to "六甲小学", "ko" to "롯코 초등학교")
+                .filterNot { (code, _) -> code == omitLanguage }
+                .joinToString(",") { (code, name) ->
+                    """"$code":{"name":"$name","address":"神戸市灘区六甲町1-1-1"}"""
+                }
+        return """
+            {
+              "coordinates": {"latitude": 34.7255, "longitude": 135.2381},
+              "type": "emergency",
+              "facilityCategory": "school",
+              "imageUrl": "https://example.com/shelters/rokko/main.webp",
+              "accessible": true,
+              "capacity": 300,
+              "localizations": {$localizations}
+            }
+            """.trimIndent()
+    }
+
+    private fun postShelter(
+        body: String = registerBody(),
+        role: Role? = Role.OPERATOR,
+    ) = mockMvc.perform(
+        post("/api/v1/evacuation/shelters")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body)
+            .apply { role?.let { with(withRole(it)) } },
+    )
+
+    @Test
+    fun `POST は未認証だと 401`() {
+        postShelter(role = null).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `POST は一般ロールだと 403`() {
+        postShelter(role = Role.GENERAL)
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.status").value(403))
+    }
+
+    @Test
+    fun `POST を運営ロールで実行すると 201 で登録内容を返す`() {
+        postShelter()
+            .andExpect(status().isCreated)
+            .andExpect(jsonPath("$.id").isNotEmpty)
+            .andExpect(jsonPath("$.name").value("Rokko Elementary School"))
+            .andExpect(jsonPath("$.type").value("emergency"))
+            .andExpect(jsonPath("$.facilityCategory").value("school"))
+            .andExpect(jsonPath("$.coordinates.latitude").value(34.7255))
+            .andExpect(jsonPath("$.capacity").value(300))
+            .andExpect(jsonPath("$.accessible").value(true))
+            .andExpect(jsonPath("$.externalUrl").doesNotExist())
+    }
+
+    @Test
+    fun `POST の lang でレスポンスの解決言語が変わる`() {
+        mockMvc
+            .perform(
+                post("/api/v1/evacuation/shelters?lang=ja")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registerBody())
+                    .with(withRole(Role.OPERATOR)),
+            ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.name").value("六甲小学校"))
+    }
+
+    @Test
+    fun `POST で登録した避難所は一覧に出る`() {
+        seedMetadata()
+
+        postShelter().andExpect(status().isCreated)
+
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].name").value("六甲小学校"))
+    }
+
+    @Test
+    fun `POST は対応言語が欠けていると 400`() {
+        postShelter(body = registerBody(omitLanguage = "ko"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.status").value(400))
+    }
+
+    @Test
+    fun `POST は未対応の type だと 400`() {
+        postShelter(body = registerBody().replace("\"emergency\"", "\"dual-use\""))
+            .andExpect(status().isBadRequest)
     }
 
     @Test

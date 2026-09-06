@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.evacuation
 
 import com.kobeinyourpocket.backend.application.evacuation.command.DeleteShelterService
+import com.kobeinyourpocket.backend.application.evacuation.command.RegisterShelterService
 import com.kobeinyourpocket.backend.application.evacuation.query.GetShelterListService
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterDatasetMetadataView
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterListView
@@ -37,6 +38,9 @@ class ShelterControllerTest {
 
     @MockitoBean
     private lateinit var deleteShelterService: DeleteShelterService
+
+    @MockitoBean
+    private lateinit var registerShelterService: RegisterShelterService
 
     private val metadata =
         ShelterDatasetMetadataView(
