@@ -14,9 +14,15 @@ class ListMannerItemsServiceTest {
             title = "有馬温泉の入浴マナー",
             description = "湯船に入る前にかけ湯で体を流しましょう。",
             icon = "hot-spring",
+            iconUrl = null,
             kind = "manner",
             scope = "local",
             relatedSpotIds = listOf("arima-onsen"),
+            localizations =
+                mapOf(
+                    "ja" to MannerLocalizationView("有馬温泉の入浴マナー", "湯船に入る前にかけ湯で体を流しましょう。"),
+                    "en" to MannerLocalizationView("Arima Onsen bathing etiquette", "Rinse your body before entering the bath."),
+                ),
         )
 
     private val enView =

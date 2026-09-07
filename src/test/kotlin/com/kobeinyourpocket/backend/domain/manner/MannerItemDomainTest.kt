@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.domain.manner
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.manner.manneritem.model.MannerItem
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerIcon
+import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerIconUrl
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerKind
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalization
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizations
@@ -11,6 +12,7 @@ import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.RelatedSpotId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 private fun localizationsOf(vararg languages: Language) =
@@ -68,6 +70,23 @@ class MannerIconTest {
     @Test
     fun `空文字は拒否する`() {
         assertFailsWith<IllegalArgumentException> { MannerIcon.of("  ") }
+    }
+}
+
+/** アイコン画像 URL の VO。運営がアップロードした画像を指す。 */
+class MannerIconUrlTest {
+    @Test
+    fun `アイコン画像 URL は http か https で始まる必要がある`() {
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("example.com/trash.png") }
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("  ") }
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("ftp://example.com/trash.png") }
+    }
+
+    @Test
+    fun `ホストの無い URL は拒否する`() {
+        // 接頭辞だけを見ていると通ってしまうが、画像としては読めない
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("https://") }
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("https:///trash.png") }
     }
 }
 
@@ -179,5 +198,56 @@ class MannerItemTest {
         source.add(RelatedSpotId.of("mount-rokko"))
 
         assertEquals(1, item.relatedSpotIds.size)
+    }
+
+    @Test
+    fun `英語タイトルから slug の id を生成する`() {
+        assertEquals("no-littering", MannerItem.Id.fromTitle("No littering")?.value)
+        assertEquals("arima-onsen-bathing", MannerItem.Id.fromTitle("  Arima Onsen bathing  ")?.value)
+        // 英数字以外は区切りとして扱い、前後・連続は 1 つに畳む
+        assertEquals("cafe-bar", MannerItem.Id.fromTitle("Cafe & Bar!!")?.value)
+    }
+
+    @Test
+    fun `英数字を含まないタイトルからは id を作れない`() {
+        assertNull(MannerItem.Id.fromTitle("---"))
+        assertNull(MannerItem.Id.fromTitle("マナー"))
+        assertNull(MannerItem.Id.fromTitle(""))
+    }
+
+    @Test
+    fun `アイコンはキーか画像 URL のどちらかがあればよい`() {
+        val withKey =
+            MannerItem.create(
+                id = MannerItem.Id.of("no-littering"),
+                icon = MannerIcon.of("trash"),
+                kind = MannerKind.RULE,
+                scope = MannerScope.JAPAN,
+                localizations = localizationsOf(Language.EN),
+            )
+        val withUrl =
+            MannerItem.create(
+                id = MannerItem.Id.of("no-littering"),
+                iconUrl = MannerIconUrl.of("https://example.com/trash.png"),
+                kind = MannerKind.RULE,
+                scope = MannerScope.JAPAN,
+                localizations = localizationsOf(Language.EN),
+            )
+
+        assertNull(withKey.iconUrl)
+        assertNull(withUrl.icon)
+    }
+
+    @Test
+    fun `アイコンのキーも画像 URL も無い項目は作れない`() {
+        // どちらも欠けると Client がアイコンを描けない（汎用アイコンにすら解決できない）
+        assertFailsWith<IllegalArgumentException> {
+            MannerItem.create(
+                id = MannerItem.Id.of("no-littering"),
+                kind = MannerKind.RULE,
+                scope = MannerScope.JAPAN,
+                localizations = localizationsOf(Language.EN),
+            )
+        }
     }
 }
