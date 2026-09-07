@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.application.manner.command
 
+import com.kobeinyourpocket.backend.application.media.MediaStorage
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.manner.manneritem.model.MannerItem
 import com.kobeinyourpocket.backend.domain.manner.manneritem.repository.MannerRepository
@@ -10,6 +11,9 @@ import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizati
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizations
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerScope
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.RelatedSpotId
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -32,12 +36,21 @@ class MannerItemCommandServiceTest {
 
         override fun findById(id: MannerItem.Id): MannerItem? = stored[id]
 
+        override fun findByIdForUpdate(id: MannerItem.Id): MannerItem? = stored[id]
+
         override fun existsById(id: MannerItem.Id): Boolean = stored.containsKey(id)
 
         override fun deleteById(id: MannerItem.Id) {
             stored.remove(id)
         }
     }
+
+    /** 確定・差し戻しとも「呼ばれた」ことだけ分かれば良いので既定は true を返す。 */
+    private fun mediaStorage(): MediaStorage =
+        mockk<MediaStorage>().also {
+            every { it.commit(any()) } returns true
+            every { it.release(any()) } returns true
+        }
 
     private fun localizations(
         en: String = "No littering",
@@ -67,7 +80,8 @@ class MannerItemCommandServiceTest {
         iconUrl: MannerIconUrl? = null,
         relatedSpotIds: List<RelatedSpotId> = emptyList(),
         languages: List<Language> = Language.entries,
-    ) = RegisterMannerItemService(repository).registerMannerItem(
+        media: MediaStorage = mediaStorage(),
+    ) = RegisterMannerItemService(repository, media).registerMannerItem(
         icon = icon,
         iconUrl = iconUrl,
         kind = MannerKind.RULE,
@@ -140,7 +154,7 @@ class MannerItemCommandServiceTest {
         val repository = FakeMannerRepository(listOf(item("no-littering")))
 
         val updated =
-            UpdateMannerItemService(repository).updateMannerItem(
+            UpdateMannerItemService(repository, mediaStorage()).updateMannerItem(
                 id = MannerItem.Id.of("no-littering"),
                 icon = MannerIcon.of("trash"),
                 iconUrl = null,
@@ -161,7 +175,7 @@ class MannerItemCommandServiceTest {
         val repository = FakeMannerRepository()
 
         assertFailsWith<MannerItemNotFoundException> {
-            UpdateMannerItemService(repository).updateMannerItem(
+            UpdateMannerItemService(repository, mediaStorage()).updateMannerItem(
                 id = MannerItem.Id.of("missing"),
                 icon = MannerIcon.of("trash"),
                 iconUrl = null,
@@ -178,7 +192,7 @@ class MannerItemCommandServiceTest {
         val repository = FakeMannerRepository(listOf(item("no-littering")))
 
         assertFailsWith<IncompleteMannerLocalizationsException> {
-            UpdateMannerItemService(repository).updateMannerItem(
+            UpdateMannerItemService(repository, mediaStorage()).updateMannerItem(
                 id = MannerItem.Id.of("no-littering"),
                 icon = MannerIcon.of("trash"),
                 iconUrl = null,
@@ -206,5 +220,41 @@ class MannerItemCommandServiceTest {
         assertFailsWith<MannerItemNotFoundException> {
             DeleteMannerItemService(repository).deleteMannerItem(MannerItem.Id.of("missing"))
         }
+    }
+
+    @Test
+    fun `登録に成功したらアイコン画像を確定する`() {
+        // 確定しないと staging のまま期限切れで消え、「登録できたのに画像が翌日消える」状態になる
+        val media = mediaStorage()
+
+        register(
+            FakeMannerRepository(),
+            icon = null,
+            iconUrl = MannerIconUrl.of("https://example.com/icon.png"),
+            media = media,
+        )
+
+        verify(exactly = 1) { media.commit("https://example.com/icon.png") }
+        verify(exactly = 0) { media.release(any()) }
+    }
+
+    @Test
+    fun `保存に失敗したらアイコン画像を staging へ戻す`() {
+        val media = mediaStorage()
+        val failing =
+            object : MannerRepository by FakeMannerRepository() {
+                override fun save(item: MannerItem): MannerItem = throw IllegalStateException("boom")
+            }
+
+        assertFailsWith<IllegalStateException> {
+            register(
+                failing,
+                icon = null,
+                iconUrl = MannerIconUrl.of("https://example.com/icon.png"),
+                media = media,
+            )
+        }
+
+        verify(exactly = 1) { media.release("https://example.com/icon.png") }
     }
 }

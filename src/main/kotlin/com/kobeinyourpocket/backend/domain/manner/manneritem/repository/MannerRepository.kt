@@ -15,6 +15,13 @@ interface MannerRepository {
     /** 更新対象の取得。存在しなければ null。 */
     fun findById(id: MannerItem.Id): MannerItem?
 
+    /**
+     * 更新用に行ロックを取って取得する。存在しなければ null。
+     *
+     * 同じ項目への同時更新を直列化するため、更新ユースケースはこちらを使う。
+     */
+    fun findByIdForUpdate(id: MannerItem.Id): MannerItem?
+
     fun existsById(id: MannerItem.Id): Boolean
 
     /** 子テーブル（localization / spot）は DB の ON DELETE CASCADE で連動削除される。 */

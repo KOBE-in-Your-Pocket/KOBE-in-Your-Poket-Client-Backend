@@ -51,13 +51,19 @@ class MannerRepositoryImpl(
      * 1 件ぶんなので子テーブルはそれぞれ 1 クエリで足りる（一覧は read 側の query が担う）。
      */
     @Transactional(readOnly = true)
-    override fun findById(id: MannerItem.Id): MannerItem? {
-        val entity = itemJpa.findById(id.value).orElse(null) ?: return null
-        return entity.toDomain(
+    override fun findById(id: MannerItem.Id): MannerItem? = toDomain(id, itemJpa.findById(id.value).orElse(null))
+
+    @Transactional
+    override fun findByIdForUpdate(id: MannerItem.Id): MannerItem? = toDomain(id, itemJpa.findByIdForUpdate(id.value).orElse(null))
+
+    private fun toDomain(
+        id: MannerItem.Id,
+        entity: MannerItemEntity?,
+    ): MannerItem? =
+        entity?.toDomain(
             localizations = localizationJpa.findByIdMannerItemId(id.value),
             relatedSpots = spotJpa.findByIdMannerItemId(id.value),
         )
-    }
 
     override fun existsById(id: MannerItem.Id): Boolean = itemJpa.existsById(id.value)
 

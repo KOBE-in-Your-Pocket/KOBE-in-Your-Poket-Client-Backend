@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.application.manner.command
 
+import com.kobeinyourpocket.backend.application.media.MediaStorage
 import com.kobeinyourpocket.backend.domain.manner.manneritem.model.MannerItem
 import com.kobeinyourpocket.backend.domain.manner.manneritem.repository.MannerRepository
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerIcon
@@ -8,6 +9,7 @@ import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerKind
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerLocalizations
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerScope
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.RelatedSpotId
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
@@ -16,11 +18,19 @@ import org.springframework.stereotype.Service
  * **ID は運営に入力させず、英語タイトルから生成する。** ID の命名は運営の関心事ではなく、
  * 手入力にすると表記ゆれ・typo・重複が運用の負担になる（ジャンルマスタと同じ判断）。
  * 生成後は変更しない（Client の項目詳細の遷移先になるため）。
+ *
+ * **アイコン画像**: 先に [MediaStorage.commit] で確定させてから保存する（スポット登録と同じ順序）。
+ * アップロードしただけの画像は staging として一定期間で自動削除されるため、確定を忘れると
+ * 「登録できたのに画像が翌日消える」状態になる。逆に保存が失敗したときは
+ * [MediaStorage.release] で staging に戻し、参照されない画像を残さない。
  */
 @Service
 class RegisterMannerItemService(
     private val mannerRepository: MannerRepository,
+    private val mediaStorage: MediaStorage,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     fun registerMannerItem(
         icon: MannerIcon?,
         iconUrl: MannerIconUrl?,
@@ -44,7 +54,23 @@ class RegisterMannerItemService(
                 localizations = localizations,
                 relatedSpotIds = relatedSpotIds,
             )
-        return mannerRepository.save(item)
+
+        iconUrl?.let { mediaStorage.commit(it.value) }
+        return try {
+            mannerRepository.save(item)
+        } catch (e: Exception) {
+            iconUrl?.let { releaseQuietly(it.value) }
+            throw e
+        }
+    }
+
+    /**
+     * 保存失敗時の巻き戻し。差し戻し自体が失敗しても元の例外を握りつぶさないよう、ログのみ残す
+     * （残っても画像 1 件で、ストレージ側の突合で回収できる）。
+     */
+    private fun releaseQuietly(imageUrl: String) {
+        runCatching { mediaStorage.release(imageUrl) }
+            .onFailure { logger.error("failed to release media after save failure: {}", imageUrl, it) }
     }
 
     /**
