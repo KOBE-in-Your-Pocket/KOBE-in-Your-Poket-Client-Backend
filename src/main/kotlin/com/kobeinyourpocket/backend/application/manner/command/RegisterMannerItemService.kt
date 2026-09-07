@@ -79,6 +79,12 @@ class RegisterMannerItemService(
      * 衝突を 409 で弾かず採番するのは、運営から見ると「似た名前の別項目」を作ること自体は
      * 正当な操作で、ID の衝突は内部事情でしかないため（ジャンルマスタと同じ）。
      * 上限を設けているのは、想定外の状態で無限ループさせないため。
+     *
+     * **採番と保存は原子的ではない**（`RegisterGenreService` と同じ）。同じ英語タイトルの
+     * 同時 POST が同じ ID を選ぶと、後続の保存が主キー制約で落ちて 500 になる。リトライを
+     * 入れていないのは、運営アカウントが数名で「同一タイトルを同時刻に登録する」状況が
+     * 現実的に起きないため。**起きたら運営が再送すれば済む**（採番し直される）。
+     * 対処するならジャンル側と揃えて別途入れる。
      */
     private fun resolveUniqueId(base: MannerItem.Id): MannerItem.Id {
         if (!mannerRepository.existsById(base)) return base
