@@ -8,6 +8,7 @@ import com.kobeinyourpocket.backend.infrastructure.persistence.manner.entity.Man
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.util.Optional
@@ -25,6 +26,21 @@ interface MannerItemJpaRepository : JpaRepository<MannerItemEntity, String> {
     fun findByIdForUpdate(
         @Param("id") id: String,
     ): Optional<MannerItemEntity>
+
+    /**
+     * 削除して**消した件数を返す**。存在しなければ 0。
+     *
+     * 継承した `deleteById` は対象が無くても黙って何もしないため、事前に存在確認すると
+     * 確認と削除の間に別リクエストが消した場合を取りこぼす（両方が 204 を返す）。
+     * 1 文で削除し、その結果で存在を判定する。
+     *
+     * 子行（localization / spot）は V5 の ON DELETE CASCADE で DB 側が連動削除する。
+     */
+    @Modifying
+    @Query("delete from MannerItemEntity m where m.id = :id")
+    fun deleteByIdReturningCount(
+        @Param("id") id: String,
+    ): Int
 }
 
 interface MannerItemLocalizationJpaRepository : JpaRepository<MannerItemLocalizationEntity, MannerItemLocalizationId> {

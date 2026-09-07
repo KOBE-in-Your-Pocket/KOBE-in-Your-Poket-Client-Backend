@@ -40,9 +40,7 @@ class MannerItemCommandServiceTest {
 
         override fun existsById(id: MannerItem.Id): Boolean = stored.containsKey(id)
 
-        override fun deleteById(id: MannerItem.Id) {
-            stored.remove(id)
-        }
+        override fun deleteById(id: MannerItem.Id): Boolean = stored.remove(id) != null
     }
 
     /** 確定・差し戻しとも「呼ばれた」ことだけ分かれば良いので既定は true を返す。 */

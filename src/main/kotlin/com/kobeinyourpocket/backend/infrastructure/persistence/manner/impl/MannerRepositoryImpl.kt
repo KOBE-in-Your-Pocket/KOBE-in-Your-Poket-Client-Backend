@@ -72,9 +72,9 @@ class MannerRepositoryImpl(
      *
      * 子を明示的に消さないのは、削除経路を DB の制約と二重に持つと片方の変更が
      * もう片方に伝わらないため。制約は V5 で張られている。
+     *
+     * 消した件数で存在を判定する（事前確認との間の競合を残さない）。
      */
     @Transactional
-    override fun deleteById(id: MannerItem.Id) {
-        itemJpa.deleteById(id.value)
-    }
+    override fun deleteById(id: MannerItem.Id): Boolean = itemJpa.deleteByIdReturningCount(id.value) > 0
 }

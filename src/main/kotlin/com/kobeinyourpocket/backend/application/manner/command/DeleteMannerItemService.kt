@@ -13,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional
  * 外部キーは無く、Spot は自分に紐づくマナーを知らない）。ローカライズとともに
  * ON DELETE CASCADE で連動削除される。
  *
- * 存在確認と削除を同一トランザクションに入れて、確認後に別トランザクションが
- * 消した場合でも「見つからない」を 1 度だけ返すようにする。
+ * **存在確認は別に行わない。** 確認と削除を分けると、その間に別リクエストが消した場合を
+ * 取りこぼし、両方が 204 を返す。1 文で削除し、消せたかどうかで判定する。
  */
 @Service
 class DeleteMannerItemService(
@@ -22,7 +22,6 @@ class DeleteMannerItemService(
 ) {
     @Transactional
     fun deleteMannerItem(id: MannerItem.Id) {
-        if (!mannerRepository.existsById(id)) throw MannerItemNotFoundException(id.value)
-        mannerRepository.deleteById(id)
+        if (!mannerRepository.deleteById(id)) throw MannerItemNotFoundException(id.value)
     }
 }

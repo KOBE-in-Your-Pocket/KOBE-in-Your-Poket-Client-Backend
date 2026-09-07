@@ -79,6 +79,14 @@ class MannerIconUrlTest {
     fun `アイコン画像 URL は http か https で始まる必要がある`() {
         assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("example.com/trash.png") }
         assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("  ") }
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("ftp://example.com/trash.png") }
+    }
+
+    @Test
+    fun `ホストの無い URL は拒否する`() {
+        // 接頭辞だけを見ていると通ってしまうが、画像としては読めない
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("https://") }
+        assertFailsWith<IllegalArgumentException> { MannerIconUrl.of("https:///trash.png") }
     }
 }
 

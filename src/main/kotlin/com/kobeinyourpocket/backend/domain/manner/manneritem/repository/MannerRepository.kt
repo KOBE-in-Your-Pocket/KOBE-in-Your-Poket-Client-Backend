@@ -24,6 +24,12 @@ interface MannerRepository {
 
     fun existsById(id: MannerItem.Id): Boolean
 
-    /** 子テーブル（localization / spot）は DB の ON DELETE CASCADE で連動削除される。 */
-    fun deleteById(id: MannerItem.Id)
+    /**
+     * 削除する。**実際に消したら true、対象が無ければ false**。
+     *
+     * 存在確認と削除を分けると、その間に別リクエストが消した場合を取りこぼす。
+     * 呼び出し側は戻り値で「見つからなかった」を判定する。
+     * 子テーブル（localization / spot）は DB の ON DELETE CASCADE で連動削除される。
+     */
+    fun deleteById(id: MannerItem.Id): Boolean
 }
