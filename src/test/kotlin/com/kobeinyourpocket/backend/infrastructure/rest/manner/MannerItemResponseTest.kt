@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.manner
 
 import com.kobeinyourpocket.backend.application.manner.query.MannerItemView
+import com.kobeinyourpocket.backend.application.manner.query.MannerLocalizationView
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -18,9 +19,15 @@ class MannerItemResponseTest {
             title = "有馬温泉の入浴マナー",
             description = "湯船に入る前にかけ湯で体を流しましょう。",
             icon = "hot-spring",
+            iconUrl = null,
             kind = "manner",
             scope = "local",
             relatedSpotIds = listOf("arima-onsen", "kobe-port-tower"),
+            localizations =
+                mapOf(
+                    "ja" to MannerLocalizationView("有馬温泉の入浴マナー", "湯船に入る前にかけ湯で体を流しましょう。"),
+                    "en" to MannerLocalizationView("Arima Onsen bathing etiquette", "Rinse your body before entering the bath."),
+                ),
         )
 
     @Test
@@ -40,6 +47,22 @@ class MannerItemResponseTest {
         assertEquals(view.title, response.title)
         assertEquals(view.description, response.description)
         assertEquals(view.icon, response.icon)
+    }
+
+    @Test
+    fun `全言語の localizations をそのまま引き継ぐ`() {
+        val response = MannerItemResponse.from(view)
+
+        assertEquals(setOf("ja", "en"), response.localizations.keys)
+        assertEquals("Arima Onsen bathing etiquette", response.localizations.getValue("en").title)
+    }
+
+    @Test
+    fun `画像 URL を持つ項目は iconUrl を引き継ぐ`() {
+        val response = MannerItemResponse.from(view.copy(icon = null, iconUrl = "https://example.com/a.png"))
+
+        assertEquals(null, response.icon)
+        assertEquals("https://example.com/a.png", response.iconUrl)
     }
 
     @Test

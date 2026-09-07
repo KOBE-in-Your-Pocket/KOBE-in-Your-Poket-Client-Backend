@@ -10,9 +10,13 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface MannerItemJpaRepository : JpaRepository<MannerItemEntity, String>
 
 interface MannerItemLocalizationJpaRepository : JpaRepository<MannerItemLocalizationEntity, MannerItemLocalizationId> {
+    fun findByIdMannerItemId(mannerItemId: String): List<MannerItemLocalizationEntity>
+
     fun deleteByIdMannerItemId(mannerItemId: String)
 }
 
 interface MannerItemSpotJpaRepository : JpaRepository<MannerItemSpotEntity, MannerItemSpotId> {
+    fun findByIdMannerItemId(mannerItemId: String): List<MannerItemSpotEntity>
+
     fun deleteByIdMannerItemId(mannerItemId: String)
 }

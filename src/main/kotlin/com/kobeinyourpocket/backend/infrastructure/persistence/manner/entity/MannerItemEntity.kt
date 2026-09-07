@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.persistence.manner.entity
 
 import com.kobeinyourpocket.backend.domain.manner.manneritem.model.MannerItem
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerIcon
+import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerIconUrl
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerKind
 import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.MannerScope
 import jakarta.persistence.Column
@@ -19,8 +20,11 @@ class MannerItemEntity(
     @Id
     @Column(name = "id")
     var id: String,
-    @Column(name = "icon", nullable = false)
-    var icon: String,
+    // icon / icon_url はどちらか一方があればよい（V16 の CHECK 制約と集約の不変条件）。
+    @Column(name = "icon")
+    var icon: String?,
+    @Column(name = "icon_url")
+    var iconUrl: String?,
     @Column(name = "kind", nullable = false)
     var kind: String,
     @Column(name = "scope", nullable = false)
@@ -42,7 +46,8 @@ class MannerItemEntity(
     ): MannerItem =
         MannerItem.create(
             id = MannerItem.Id.of(id),
-            icon = MannerIcon.of(icon),
+            icon = icon?.let { MannerIcon.of(it) },
+            iconUrl = iconUrl?.let { MannerIconUrl.of(it) },
             kind = MannerKind.of(kind),
             scope = MannerScope.of(scope),
             localizations = localizations.toDomainLocalizations(),
@@ -53,7 +58,8 @@ class MannerItemEntity(
         fun fromDomain(item: MannerItem): MannerItemEntity =
             MannerItemEntity(
                 id = item.id.value,
-                icon = item.icon.value,
+                icon = item.icon?.value,
+                iconUrl = item.iconUrl?.value,
                 kind = item.kind.code,
                 scope = item.scope.code,
             )

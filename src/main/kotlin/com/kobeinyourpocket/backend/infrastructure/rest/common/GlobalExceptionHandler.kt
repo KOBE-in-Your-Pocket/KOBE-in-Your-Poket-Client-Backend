@@ -1,6 +1,9 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.common
 
 import com.kobeinyourpocket.backend.application.evacuation.ShelterNotFoundException
+import com.kobeinyourpocket.backend.application.manner.command.IncompleteMannerLocalizationsException
+import com.kobeinyourpocket.backend.application.manner.command.InvalidMannerTitleException
+import com.kobeinyourpocket.backend.application.manner.command.MannerItemNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.GenreInUseException
 import com.kobeinyourpocket.backend.application.tourism.GenreNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
@@ -49,6 +52,20 @@ class GlobalExceptionHandler {
     @ExceptionHandler(InvalidGenreLabelException::class)
     fun handleInvalidGenreLabel(ex: InvalidGenreLabelException): ResponseEntity<ApiErrorResponse> =
         badRequest(message = ex.message ?: "Invalid genre label")
+
+    @ExceptionHandler(MannerItemNotFoundException::class)
+    fun handleMannerItemNotFound(ex: MannerItemNotFoundException): ResponseEntity<ApiErrorResponse> =
+        notFound(message = ex.message ?: "Manner item not found")
+
+    /** 英語タイトルから id を生成できない（記号のみ等）。入力を直してもらう。 */
+    @ExceptionHandler(InvalidMannerTitleException::class)
+    fun handleInvalidMannerTitle(ex: InvalidMannerTitleException): ResponseEntity<ApiErrorResponse> =
+        badRequest(message = ex.message ?: "Invalid manner item title")
+
+    /** 対応言語の文言が欠けている。欠けた言語のアプリで項目が出せなくなるため入口で弾く。 */
+    @ExceptionHandler(IncompleteMannerLocalizationsException::class)
+    fun handleIncompleteMannerLocalizations(ex: IncompleteMannerLocalizationsException): ResponseEntity<ApiErrorResponse> =
+        badRequest(message = ex.message ?: "Manner item localizations are incomplete")
 
     @ExceptionHandler(AuthGatewayException::class)
     fun handleAuthGateway(ex: AuthGatewayException): ResponseEntity<ApiErrorResponse> {

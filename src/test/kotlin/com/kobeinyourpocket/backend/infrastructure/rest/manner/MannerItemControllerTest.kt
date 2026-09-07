@@ -1,7 +1,11 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.manner
 
+import com.kobeinyourpocket.backend.application.manner.command.DeleteMannerItemService
+import com.kobeinyourpocket.backend.application.manner.command.RegisterMannerItemService
+import com.kobeinyourpocket.backend.application.manner.command.UpdateMannerItemService
 import com.kobeinyourpocket.backend.application.manner.query.ListMannerItemsService
 import com.kobeinyourpocket.backend.application.manner.query.MannerItemView
+import com.kobeinyourpocket.backend.application.manner.query.MannerLocalizationView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.mockito.BDDMockito.given
@@ -28,15 +32,31 @@ class MannerItemControllerTest {
     @MockitoBean
     private lateinit var listMannerItemsService: ListMannerItemsService
 
+    // 書き込み側はこのテストの対象外だが、コントローラの依存なので context を組むために要る。
+    @MockitoBean
+    private lateinit var registerMannerItemService: RegisterMannerItemService
+
+    @MockitoBean
+    private lateinit var updateMannerItemService: UpdateMannerItemService
+
+    @MockitoBean
+    private lateinit var deleteMannerItemService: DeleteMannerItemService
+
     private val arimaOnsen =
         MannerItemView(
             id = "arima-onsen-bathing",
             title = "有馬温泉の入浴マナー",
             description = "湯船に入る前にかけ湯で体を流しましょう。",
             icon = "hot-spring",
+            iconUrl = null,
             kind = "manner",
             scope = "local",
             relatedSpotIds = listOf("arima-onsen"),
+            localizations =
+                mapOf(
+                    "ja" to MannerLocalizationView("有馬温泉の入浴マナー", "湯船に入る前にかけ湯で体を流しましょう。"),
+                    "en" to MannerLocalizationView("Arima Onsen bathing etiquette", "Rinse your body before entering the bath."),
+                ),
         )
 
     private val noLittering =
@@ -45,9 +65,15 @@ class MannerItemControllerTest {
             title = "ゴミのポイ捨て禁止",
             description = "ゴミは持ち帰るのが基本です。",
             icon = "trash",
+            iconUrl = null,
             kind = "rule",
             scope = "japan",
             relatedSpotIds = emptyList(),
+            localizations =
+                mapOf(
+                    "ja" to MannerLocalizationView("ゴミのポイ捨て禁止", "ゴミは持ち帰るのが基本です。"),
+                    "en" to MannerLocalizationView("No littering", "Please carry your trash with you."),
+                ),
         )
 
     @Test
