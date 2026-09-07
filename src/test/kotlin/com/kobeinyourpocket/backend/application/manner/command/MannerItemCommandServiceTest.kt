@@ -14,6 +14,10 @@ import com.kobeinyourpocket.backend.domain.manner.manneritem.vo.RelatedSpotId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -43,6 +47,31 @@ class MannerItemCommandServiceTest {
         override fun deleteById(id: MannerItem.Id): Boolean = stored.remove(id) != null
     }
 
+    /**
+     * 本番では Spring がトランザクション同期を張る。単体テストでは同期だけ有効化し、
+     * コミット / ロールバックの決着は [completeTransaction] で再現する
+     * （スポットの `UpdateSpotServiceTest` と同じ形）。
+     */
+    @BeforeTest
+    fun beginTransaction() {
+        TransactionSynchronizationManager.initSynchronization()
+    }
+
+    @AfterTest
+    fun endTransaction() {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clearSynchronization()
+        }
+    }
+
+    private fun completeTransaction(status: Int) {
+        TransactionSynchronizationManager.getSynchronizations().forEach { it.afterCompletion(status) }
+    }
+
+    private fun commitTransaction() = completeTransaction(TransactionSynchronization.STATUS_COMMITTED)
+
+    private fun rollbackTransaction() = completeTransaction(TransactionSynchronization.STATUS_ROLLED_BACK)
+
     /** 確定・差し戻しとも「呼ばれた」ことだけ分かれば良いので既定は true を返す。 */
     private fun mediaStorage(): MediaStorage =
         mockk<MediaStorage>().also {
@@ -62,14 +91,17 @@ class MannerItemCommandServiceTest {
         },
     )
 
-    private fun item(id: String) =
-        MannerItem.create(
-            id = MannerItem.Id.of(id),
-            icon = MannerIcon.of("trash"),
-            kind = MannerKind.RULE,
-            scope = MannerScope.JAPAN,
-            localizations = localizations(),
-        )
+    private fun item(
+        id: String,
+        iconUrl: MannerIconUrl? = null,
+    ) = MannerItem.create(
+        id = MannerItem.Id.of(id),
+        icon = MannerIcon.of("trash"),
+        iconUrl = iconUrl,
+        kind = MannerKind.RULE,
+        scope = MannerScope.JAPAN,
+        localizations = localizations(),
+    )
 
     private fun register(
         repository: MannerRepository,
@@ -206,7 +238,7 @@ class MannerItemCommandServiceTest {
     fun `削除すると取得できなくなる`() {
         val repository = FakeMannerRepository(listOf(item("no-littering")))
 
-        DeleteMannerItemService(repository).deleteMannerItem(MannerItem.Id.of("no-littering"))
+        DeleteMannerItemService(repository, mediaStorage()).deleteMannerItem(MannerItem.Id.of("no-littering"))
 
         assertFalse(repository.existsById(MannerItem.Id.of("no-littering")))
     }
@@ -216,8 +248,47 @@ class MannerItemCommandServiceTest {
         val repository = FakeMannerRepository()
 
         assertFailsWith<MannerItemNotFoundException> {
-            DeleteMannerItemService(repository).deleteMannerItem(MannerItem.Id.of("missing"))
+            DeleteMannerItemService(repository, mediaStorage()).deleteMannerItem(MannerItem.Id.of("missing"))
         }
+    }
+
+    @Test
+    fun `削除したらアイコン画像を staging へ戻す`() {
+        // 戻さないと確定済み（タグ無し）のまま残り、ライフサイクル規則の対象外なので永久に消えない
+        val media = mediaStorage()
+        val repository = FakeMannerRepository(listOf(item("no-littering", iconUrl = ICON_URL)))
+
+        DeleteMannerItemService(repository, media).deleteMannerItem(MannerItem.Id.of("no-littering"))
+
+        // コミット前に戻すと、その後ロールバックしたとき現役の画像を消してしまう。
+        verify(exactly = 0) { media.release(any()) }
+
+        commitTransaction()
+
+        verify(exactly = 1) { media.release(ICON_URL.value) }
+    }
+
+    @Test
+    fun `削除がロールバックしたらアイコン画像を戻さない`() {
+        val media = mediaStorage()
+        val repository = FakeMannerRepository(listOf(item("no-littering", iconUrl = ICON_URL)))
+
+        DeleteMannerItemService(repository, media).deleteMannerItem(MannerItem.Id.of("no-littering"))
+        rollbackTransaction()
+
+        // 項目が残る＝画像も現役のまま。戻すと表示中の画像が消える。
+        verify(exactly = 0) { media.release(any()) }
+    }
+
+    @Test
+    fun `画像を持たない項目の削除では差し戻さない`() {
+        val media = mediaStorage()
+        val repository = FakeMannerRepository(listOf(item("no-littering")))
+
+        DeleteMannerItemService(repository, media).deleteMannerItem(MannerItem.Id.of("no-littering"))
+        commitTransaction()
+
+        verify(exactly = 0) { media.release(any()) }
     }
 
     @Test
@@ -254,5 +325,10 @@ class MannerItemCommandServiceTest {
         }
 
         verify(exactly = 1) { media.release("https://example.com/icon.png") }
+    }
+
+    private companion object {
+        /** 削除で staging へ戻す対象のアイコン画像。 */
+        val ICON_URL = MannerIconUrl.of("https://example.com/icon.png")
     }
 }
