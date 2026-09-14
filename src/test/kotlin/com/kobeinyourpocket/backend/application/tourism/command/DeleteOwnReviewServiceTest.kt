@@ -12,16 +12,14 @@ import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import java.time.Instant
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class UpdateReviewServiceTest {
-    private val repository = mockk<ReviewRepository>()
-    private val service = UpdateReviewService(repository)
+class DeleteOwnReviewServiceTest {
+    private val repository = mockk<ReviewRepository>(relaxUnitFun = true)
+    private val service = DeleteOwnReviewService(repository)
 
     private val reviewId = ReviewId.of("00000000-0000-0000-0000-000000000001")
     private val author = ReviewAuthorId.of("11111111-1111-1111-1111-111111111111")
@@ -39,50 +37,46 @@ class UpdateReviewServiceTest {
         )
 
     @Test
-    fun `updateReview は rating と comment を差し替えて保存し返す`() {
-        val saved = slot<Review>()
+    fun `投稿者本人は自分のレビューを削除できる`() {
         every { repository.findById(reviewId) } returns existing
-        every { repository.save(capture(saved)) } answers { saved.captured }
 
-        val result = service.updateReview(reviewId, ReviewRating.of(5), "最高でした", author)
+        service.execute(reviewId, author)
 
-        assertEquals(5, result.rating.value)
-        assertEquals("最高でした", result.comment)
-        assertEquals(existing.id, result.id)
-        assertEquals(existing.author, result.author)
-        verify(exactly = 1) { repository.save(saved.captured) }
+        verify(exactly = 1) { repository.deleteById(reviewId) }
     }
 
     @Test
-    fun `存在しない reviewId を渡すと ReviewNotFoundException をスローする`() {
-        every { repository.findById(reviewId) } returns null
-
-        assertFailsWith<ReviewNotFoundException> {
-            service.updateReview(reviewId, ReviewRating.of(4), "更新", author)
-        }
-    }
-
-    @Test
-    fun `他人のレビューは編集できない`() {
+    fun `他人のレビューは削除できない`() {
         every { repository.findById(reviewId) } returns existing
 
         assertFailsWith<ReviewNotOwnedException> {
-            service.updateReview(reviewId, ReviewRating.of(1), "改竄", otherUser)
+            service.execute(reviewId, otherUser)
         }
 
-        verify(exactly = 0) { repository.save(any()) }
+        verify(exactly = 0) { repository.deleteById(any()) }
     }
 
     @Test
-    fun `投稿者不明の古いレビューは誰にも編集できない`() {
-        // V17 以前の投稿は author_user_id が NULL。本人を確定できないので編集させない。
+    fun `存在しない reviewId は ReviewNotFoundException`() {
+        every { repository.findById(reviewId) } returns null
+
+        assertFailsWith<ReviewNotFoundException> {
+            service.execute(reviewId, author)
+        }
+
+        verify(exactly = 0) { repository.deleteById(any()) }
+    }
+
+    @Test
+    fun `投稿者不明の古いレビューは本人削除の対象外`() {
+        // V17 以前の投稿。運営のモデレーション削除でのみ消せる。
         every { repository.findById(reviewId) } returns
             existing.copy(author = ReviewAuthor(name = "Alice", userId = null))
 
         assertFailsWith<ReviewNotOwnedException> {
-            service.updateReview(reviewId, ReviewRating.of(5), "更新", author)
+            service.execute(reviewId, author)
         }
 
-        verify(exactly = 0) { repository.save(any()) }
+        verify(exactly = 0) { repository.deleteById(any()) }
     }
 }

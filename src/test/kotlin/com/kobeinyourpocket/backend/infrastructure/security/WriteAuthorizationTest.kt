@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.security
 
 import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteGenreService
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteOwnReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterGenreService
@@ -17,6 +18,7 @@ import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreCode
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
@@ -56,7 +58,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Instant
 import java.util.Date
-import java.util.UUID
 import kotlin.test.Test
 import com.kobeinyourpocket.backend.domain.tourism.genre.model.Genre as GenreMaster
 
@@ -81,6 +82,9 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var updateReviewService: UpdateReviewService
+
+    @MockitoBean
+    private lateinit var deleteOwnReviewService: DeleteOwnReviewService
 
     @MockitoBean
     private lateinit var registerSpotService: RegisterSpotService
@@ -210,6 +214,7 @@ class WriteAuthorizationTest {
                 reviewId = ReviewId.of(REVIEW_ID),
                 rating = ReviewRating.of(5),
                 comment = "最高でした",
+                requesterId = ReviewAuthorId.of(REQUESTER_ID),
             ),
         ).willReturn(savedReview)
 
@@ -220,6 +225,27 @@ class WriteAuthorizationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(reviewUpdateBody),
             ).andExpect(status().isOk)
+    }
+
+    // ---- DELETE /api/v1/tourism/spots/{spotId}/reviews/{reviewId}: 本人削除（#86）----
+
+    @Test
+    fun `レビュー本人削除は未認証で 401`() {
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/kobe-port-tower/reviews/$REVIEW_ID"))
+            .andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `レビュー本人削除は一般ユーザーで 204`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/kobe-port-tower/reviews/$REVIEW_ID")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpect(status().isNoContent)
+
+        // 本人かどうかの判定は application 層の責務。ここは JWT の sub が渡ることまで見る。
+        verify(deleteOwnReviewService).execute(ReviewId.of(REVIEW_ID), ReviewAuthorId.of(REQUESTER_ID))
     }
 
     // ---- POST /api/v1/tourism/spots: 運営ロール必須 ----
@@ -456,11 +482,18 @@ class WriteAuthorizationTest {
     /** ByteArray 用の any マッチャ（mockito-kotlin 非導入のため薄いラッパ）。 */
     private fun anyByteArray(): ByteArray = ArgumentMatchers.any(ByteArray::class.java) ?: ByteArray(0)
 
-    private fun jwt(role: Role): String {
+    /**
+     * [subject] は既定で [REQUESTER_ID]。レビュー系はサービス呼び出しに JWT の `sub` が
+     * そのまま渡るため、固定値でないとスタブの引数一致が取れない。
+     */
+    private fun jwt(
+        role: Role,
+        subject: String = REQUESTER_ID,
+    ): String {
         val claims =
             JWTClaimsSet
                 .Builder()
-                .subject(UUID.randomUUID().toString())
+                .subject(subject)
                 .issueTime(Date.from(Instant.now()))
                 .expirationTime(Date.from(Instant.now().plusSeconds(3600)))
                 .claim(
@@ -479,6 +512,7 @@ class WriteAuthorizationTest {
                 rating = ReviewRating.of(4),
                 comment = "素晴らしい",
                 authorName = "Alice",
+                authorUserId = ReviewAuthorId.of(REQUESTER_ID),
                 language = Language.JA,
             ),
         ).willReturn(savedReview)
@@ -771,6 +805,9 @@ class WriteAuthorizationTest {
 
     companion object {
         private const val REVIEW_ID = "00000000-0000-0000-0000-000000000001"
+
+        /** [jwt] が既定で載せる `sub`。レビュー系サービスへ requesterId として渡る。 */
+        private const val REQUESTER_ID = "00000000-0000-0000-0000-0000000000b1"
         private const val TARGET_USER_ID = "00000000-0000-0000-0000-0000000000aa"
     }
 }

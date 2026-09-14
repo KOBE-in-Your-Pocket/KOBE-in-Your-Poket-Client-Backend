@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
@@ -30,6 +31,9 @@ class ReviewEntity(
     var authorName: String,
     @Column(name = "author_icon_url", nullable = false)
     var authorIconUrl: String = "",
+    /** V17 以前の投稿は投稿者を特定できないため null（本人操作の対象外 / #86）。 */
+    @Column(name = "author_user_id", columnDefinition = "uuid")
+    var authorUserId: UUID? = null,
     @Column(name = "language", nullable = false)
     var language: String,
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -42,7 +46,12 @@ class ReviewEntity(
             spotId = SpotId.of(spotId),
             rating = ReviewRating.of(rating.toInt()),
             comment = comment,
-            author = ReviewAuthor(name = authorName, iconUrl = authorIconUrl.ifEmpty { null }),
+            author =
+                ReviewAuthor(
+                    name = authorName,
+                    iconUrl = authorIconUrl.ifEmpty { null },
+                    userId = authorUserId?.let(ReviewAuthorId::of),
+                ),
             createdAt = createdAt,
             language = lang,
         )
@@ -57,6 +66,7 @@ class ReviewEntity(
                 comment = review.comment,
                 authorName = review.author.name,
                 authorIconUrl = review.author.iconUrl.orEmpty(),
+                authorUserId = review.author.userId?.value,
                 language = review.language.code,
                 createdAt = review.createdAt,
             )

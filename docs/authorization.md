@@ -10,7 +10,7 @@
 | --- | --- |
 | `POST /api/v1/auth/signup` `login` `google` `refresh` | 公開（認証の入り口） |
 | `POST /api/v1/auth/logout` | 認証必須 |
-| `POST /api/v1/tourism/spots/{spotId}/reviews`・`PUT .../reviews/{reviewId}` | 認証済みユーザー（一般ロール可） |
+| `POST /api/v1/tourism/spots/{spotId}/reviews`・`PUT .../reviews/{reviewId}`・`DELETE .../reviews/{reviewId}` | 認証済みユーザー（一般ロール可）。**投稿者本人かどうかは application 層で判定**し、他人の投稿なら 403（#86） |
 | `DELETE /api/v1/auth/users/{userId}` | ADMIN のみ（`@PreAuthorize` / #137） |
 | `DELETE /api/v1/tourism/spots/{spotId}` | ADMIN のみ（`@PreAuthorize`） |
 | 上記以外の書き込み全て（`POST /api/v1/tourism/spots` 等、今後追加分も含む） | **運営（OPERATOR）ロール必須** |
@@ -23,6 +23,16 @@
 - ADMIN は運営系書き込み（スポット登録等）も実行できる
 - OPERATOR は一般ユーザー操作（レビュー投稿等）も実行できる
 - ADMIN 専用操作（ユーザー削除）は OPERATOR では 403
+
+## 本人操作（レビュー編集・削除 / #86）
+
+`authenticated()` は「ログイン済みか」しか見ない。**誰の投稿かの判定はロールでは表現できない**ため、
+`UpdateReviewService` / `DeleteOwnReviewService` が JWT の `sub`（= `ReviewAuthorId`）と
+`review.author_user_id` を突き合わせる。一致しなければ `ReviewNotOwnedException` → 403。
+
+- 投稿者不明（`author_user_id` が NULL = V17 より前の投稿）は誰の本人操作も受け付けない
+- 運営のモデレーション削除は別経路（`DELETE /api/v1/tourism/reviews/{reviewId}`・OPERATOR 必須）
+  で、投稿者を問わず削除できる
 
 ロールの正は Supabase JWT の `app_metadata.role` クレーム（#15 / [`supabase-jwt.md`](./supabase-jwt.md)）。
 未設定・未対応の値は一般（GENERAL）として扱う。
