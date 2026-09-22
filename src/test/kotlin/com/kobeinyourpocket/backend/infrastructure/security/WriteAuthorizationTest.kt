@@ -443,6 +443,38 @@ class WriteAuthorizationTest {
         verify(deleteUserService).execute(User.Id.of(TARGET_USER_ID))
     }
 
+    // ---- DELETE /api/v1/users/me: 本人による退会（#528）----
+
+    @Test
+    fun `退会は未認証で 401`() {
+        mockMvc
+            .perform(delete("/api/v1/users/me"))
+            .andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `退会は一般ユーザーで 204`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpect(status().isNoContent)
+
+        // 削除対象は JWT の sub で決まる。パスに id を取らないため他人は指定できない。
+        verify(deleteUserService).execute(User.Id.of(REQUESTER_ID))
+    }
+
+    @Test
+    fun `退会は運営ロールでも自分自身が対象になる`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
+            ).andExpect(status().isNoContent)
+
+        verify(deleteUserService).execute(User.Id.of(REQUESTER_ID))
+    }
+
     // ---- 未分類の書き込みは deny-by-default ----
 
     @Test

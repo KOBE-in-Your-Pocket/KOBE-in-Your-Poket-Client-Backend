@@ -6,7 +6,13 @@ import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
 import org.springframework.stereotype.Service
 
 /**
- * admin ロール専用のユーザー完全削除ユースケース。
+ * ユーザーを完全削除するユースケース。
+ *
+ * 呼び出し口は 2 つあり、どちらも同じ削除を行う。
+ * - 運営による削除: `DELETE /api/v1/auth/users/{userId}`（ADMIN 限定）
+ * - 本人による退会: `DELETE /api/v1/users/me`（対象は JWT の subject。#528）
+ *
+ * 「誰を消してよいか」は呼び出し側（認可と subject の解決）の責務で、ここでは判定しない。
  *
  * 外部 HTTP（Supabase Admin API）は DB トランザクション外で実行する。
  * `@Transactional` で包むと Auth 削除成功後に `deleteById` が失敗・ロールバックしたとき、
