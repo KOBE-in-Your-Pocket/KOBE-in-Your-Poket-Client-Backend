@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.application.tourism.command
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import java.util.UUID
 import kotlin.test.Test
@@ -31,6 +32,9 @@ class DeleteReviewServiceTest {
         override fun deleteById(id: ReviewId) {
             deletedId = id
         }
+
+        /** 退会処理専用（#528）。運営のモデレーション削除では使わない。 */
+        override fun deleteByAuthorId(authorId: ReviewAuthorId): Int = 0
     }
 
     private val id = ReviewId.of(UUID.randomUUID())

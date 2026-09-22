@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.persistence.tourism
 
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
@@ -25,4 +26,7 @@ class ReviewRepositoryImpl(
     override fun deleteById(id: ReviewId) {
         reviewJpa.deleteById(id.value)
     }
+
+    @Transactional
+    override fun deleteByAuthorId(authorId: ReviewAuthorId): Int = reviewJpa.deleteByAuthorUserId(authorId.value)
 }

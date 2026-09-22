@@ -4,10 +4,12 @@ import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import java.time.Instant
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -32,15 +34,24 @@ class ReviewRepositoryPortTest {
             store.remove(id)
         }
 
+        override fun deleteByAuthorId(authorId: ReviewAuthorId): Int {
+            val targets = store.values.filter { it.author.isOwnedBy(authorId) }.map { it.id }
+            targets.forEach { store.remove(it) }
+            return targets.size
+        }
+
         fun get(id: ReviewId): Review? = store[id]
     }
 
-    private fun review(comment: String = "Great spot!"): Review =
+    private fun review(
+        comment: String = "Great spot!",
+        author: ReviewAuthor = ReviewAuthor(name = "Alice"),
+    ): Review =
         Review.create(
             spotId = SpotId.of("kobe-port-tower"),
             rating = ReviewRating.of(5),
             comment = comment,
-            author = ReviewAuthor(name = "Alice"),
+            author = author,
             language = Language.EN,
             createdAt = Instant.parse("2025-11-03T10:24:00Z"),
         )
@@ -112,5 +123,32 @@ class ReviewRepositoryPortTest {
 
         assertNull(repository.get(saved.id))
         assertFalse(repository.existsById(saved.id))
+    }
+
+    @Test
+    fun `deleteByAuthorId は投稿者本人のレビューだけを消し、件数を返す`() {
+        val repository = FakeReviewRepository()
+        val alice = ReviewAuthorId.of(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
+        val bob = ReviewAuthorId.of(UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"))
+        val aliceReview = repository.save(review(author = ReviewAuthor(name = "Alice", userId = alice)))
+        val bobReview = repository.save(review(author = ReviewAuthor(name = "Bob", userId = bob)))
+        // 投稿者不明（V17 以前）の投稿は誰の退会でも消えない。
+        val legacyReview = repository.save(review(author = ReviewAuthor(name = "Legacy")))
+
+        assertEquals(1, repository.deleteByAuthorId(alice))
+
+        assertNull(repository.get(aliceReview.id))
+        assertEquals(bobReview, repository.get(bobReview.id))
+        assertEquals(legacyReview, repository.get(legacyReview.id))
+    }
+
+    @Test
+    fun `deleteByAuthorId は該当が無ければ 0 を返す`() {
+        val repository = FakeReviewRepository()
+        repository.save(review())
+
+        val stranger = ReviewAuthorId.of(UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc"))
+
+        assertEquals(0, repository.deleteByAuthorId(stranger))
     }
 }
