@@ -7,6 +7,7 @@ import com.kobeinyourpocket.backend.application.manner.command.MannerItemNotFoun
 import com.kobeinyourpocket.backend.application.tourism.GenreInUseException
 import com.kobeinyourpocket.backend.application.tourism.GenreNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
+import com.kobeinyourpocket.backend.application.tourism.ReviewNotOwnedException
 import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.command.InvalidGenreLabelException
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
@@ -30,6 +31,15 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ReviewNotFoundException::class)
     fun handleReviewNotFound(ex: ReviewNotFoundException): ResponseEntity<ApiErrorResponse> =
         notFound(message = ex.message ?: "Review not found")
+
+    /**
+     * 他人のレビューを本人向け操作で変更しようとした（#86）。
+     *
+     * 認証は通っているが権限が無いので 403。レビューは公開情報のため 404 で隠す意味は無い。
+     */
+    @ExceptionHandler(ReviewNotOwnedException::class)
+    fun handleReviewNotOwned(ex: ReviewNotOwnedException): ResponseEntity<ApiErrorResponse> =
+        forbidden(message = ex.message ?: "Review is not owned by the requester")
 
     @ExceptionHandler(ShelterNotFoundException::class)
     fun handleShelterNotFound(ex: ShelterNotFoundException): ResponseEntity<ApiErrorResponse> =
@@ -130,6 +140,17 @@ class GlobalExceptionHandler {
                 ApiErrorResponse(
                     status = HttpStatus.CONFLICT.value(),
                     error = HttpStatus.CONFLICT.reasonPhrase,
+                    message = message,
+                ),
+            )
+
+    private fun forbidden(message: String): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(
+                ApiErrorResponse(
+                    status = HttpStatus.FORBIDDEN.value(),
+                    error = HttpStatus.FORBIDDEN.reasonPhrase,
                     message = message,
                 ),
             )

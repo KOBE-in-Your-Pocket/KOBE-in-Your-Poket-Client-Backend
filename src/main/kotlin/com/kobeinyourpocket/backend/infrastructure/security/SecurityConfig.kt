@@ -80,6 +80,11 @@ class SecurityConfig(
                     .authenticated()
                     .requestMatchers(HttpMethod.PUT, "/api/v1/tourism/spots/*/reviews/*")
                     .authenticated()
+                    // 本人によるレビュー削除（#86）。本人判定は DeleteOwnReviewService 側。
+                    // 運営のモデレーション削除は DELETE /api/v1/tourism/reviews/* で、
+                    // パスが違うため下の anyRequest（OPERATOR 必須）に落ちる。
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/tourism/spots/*/reviews/*")
+                    .authenticated()
                     // 上記以外（GET 以外の未分類リクエスト全て）は運営ロール必須。
                     // ADMIN 専用の DELETE /api/v1/auth/users/{id} もここを通過し、
                     // メソッドセキュリティ（@PreAuthorize）で ADMIN に絞る。

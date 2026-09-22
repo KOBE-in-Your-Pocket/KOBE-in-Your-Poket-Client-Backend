@@ -7,6 +7,7 @@ import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import com.kobeinyourpocket.backend.infrastructure.query.common.JdbcTimestamps
+import com.kobeinyourpocket.backend.infrastructure.query.common.JdbcUuids
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
 
@@ -24,7 +25,7 @@ class ReviewQueryJpa(
             entityManager
                 .createNativeQuery(
                     """
-                    SELECT id, spot_id, rating, comment, author_name, author_icon_url, created_at, language
+                    SELECT id, spot_id, rating, comment, author_name, author_icon_url, author_user_id, created_at, language
                     FROM review
                     WHERE spot_id = :spotId AND language = :language
                     ORDER BY created_at DESC
@@ -66,7 +67,7 @@ class ReviewQueryJpa(
     /** スポット名だけ要求言語で解決する。レビュー本文・投稿者名は投稿時の言語のまま返す（#165）。 */
     private fun toSummaryView(row: Array<Any?>): ReviewSummaryView =
         ReviewSummaryView(
-            id = row[0].toString(),
+            id = JdbcUuids.toUuidString(row[0]),
             spotId = row[1] as String,
             spotName = row[2] as String,
             rating = (row[3] as Number).toInt(),
@@ -79,14 +80,15 @@ class ReviewQueryJpa(
 
     private fun toReviewView(row: Array<Any?>): ReviewView =
         ReviewView(
-            id = row[0].toString(),
+            id = JdbcUuids.toUuidString(row[0]),
             spotId = row[1] as String,
             rating = (row[2] as Number).toInt(),
             comment = row[3] as String,
             authorName = row[4] as String,
             authorIconUrl = (row[5] as String).ifEmpty { null },
-            createdAt = JdbcTimestamps.toInstant(row[6]),
-            language = row[7] as String,
+            authorUserId = JdbcUuids.toUuidStringOrNull(row[6]),
+            createdAt = JdbcTimestamps.toInstant(row[7]),
+            language = row[8] as String,
         )
 
     private companion object {
