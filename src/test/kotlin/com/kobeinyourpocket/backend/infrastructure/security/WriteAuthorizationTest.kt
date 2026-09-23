@@ -13,6 +13,7 @@ import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotServic
 import com.kobeinyourpocket.backend.application.tourism.query.ListGenresService
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
+import com.kobeinyourpocket.backend.application.user.command.UpdateOwnProfileService
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreCode
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreLocalizations
@@ -52,6 +53,7 @@ import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -100,6 +102,9 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var deleteUserService: DeleteUserService
+
+    @MockitoBean
+    private lateinit var updateOwnProfileService: UpdateOwnProfileService
 
     @MockitoBean
     private lateinit var uploadMediaService: UploadMediaService
@@ -443,6 +448,38 @@ class WriteAuthorizationTest {
         verify(deleteUserService).execute(User.Id.of(TARGET_USER_ID))
     }
 
+    // ---- PATCH /api/v1/users/me: 本人のプロフィール更新（#179）----
+
+    @Test
+    fun `プロフィール更新は未認証だと 401`() {
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updateMeBody),
+            ).andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `プロフィール更新は一般ユーザーで 200`() {
+        given(
+            updateOwnProfileService.execute(
+                userId = User.Id.of(REQUESTER_ID),
+                name = "Alice Updated",
+                icon = UpdateOwnProfileService.IconUpdate.Unchanged,
+            ),
+        ).willReturn(User.create(id = User.Id.of(REQUESTER_ID), name = "Alice Updated"))
+
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updateMeBody),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.name").value("Alice Updated"))
+    }
+
     // ---- 未分類の書き込みは deny-by-default ----
 
     @Test
@@ -559,6 +596,14 @@ class WriteAuthorizationTest {
           "comment": "素晴らしい",
           "author": { "name": "Alice" },
           "language": "ja"
+        }
+        """.trimIndent()
+
+    /** アイコンのキーを持たない = 変更しない（UpdateMeRequest の取り決め）。 */
+    private val updateMeBody =
+        """
+        {
+          "name": "Alice Updated"
         }
         """.trimIndent()
 
