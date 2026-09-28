@@ -14,6 +14,8 @@ data class ReviewView(
     val comment: String,
     val authorName: String,
     val authorIconUrl: String?,
+    /** 投稿者の user id。V17 以前の投稿は特定できないため null（#86）。 */
+    val authorUserId: String?,
     val createdAt: Instant,
     val language: String,
 )

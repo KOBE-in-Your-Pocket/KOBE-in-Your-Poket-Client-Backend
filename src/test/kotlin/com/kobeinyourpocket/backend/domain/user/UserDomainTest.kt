@@ -75,6 +75,33 @@ class UserIconTest {
             UserIcon.of("   ")
         }
     }
+
+    // 以下は #184。このアイコンはレビュー欄で他の利用者にも表示されるため、
+    // 画像として読めない値や画像以外を指す値を保存させない。
+
+    @Test
+    fun `スキームの無い値は拒否する`() {
+        assertFailsWith<IllegalArgumentException> { UserIcon.of("example.com/a.png") }
+    }
+
+    @Test
+    fun `ホストの無い値は拒否する`() {
+        assertFailsWith<IllegalArgumentException> { UserIcon.of("https://") }
+    }
+
+    @Test
+    fun `http_https 以外のスキームは拒否する`() {
+        assertFailsWith<IllegalArgumentException> { UserIcon.of("javascript:alert(1)") }
+        assertFailsWith<IllegalArgumentException> { UserIcon.of("data:image/png;base64,AAAA") }
+        assertFailsWith<IllegalArgumentException> { UserIcon.of("file:///etc/passwd") }
+    }
+
+    @Test
+    fun `長すぎる URL は拒否する`() {
+        val tooLong = "https://example.com/" + "a".repeat(UserIcon.MAX_LENGTH)
+
+        assertFailsWith<IllegalArgumentException> { UserIcon.of(tooLong) }
+    }
 }
 
 class PublicUserTest {

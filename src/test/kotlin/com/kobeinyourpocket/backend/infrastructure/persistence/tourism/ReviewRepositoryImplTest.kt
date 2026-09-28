@@ -4,6 +4,7 @@ import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
@@ -19,8 +20,11 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import java.time.Instant
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -105,4 +109,47 @@ class ReviewRepositoryImplTest {
         val entity = reviewJpa.findById(review.id.value).orElseThrow()
         assertEquals("", entity.authorIconUrl)
     }
+
+    @Test
+    fun `deleteByAuthorId は指定した投稿者のレビューだけを消す`() {
+        insertSpot()
+        val alice = ReviewAuthorId.of(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
+        val bob = ReviewAuthorId.of(UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"))
+
+        val aliceFirst = saveReview(ReviewAuthor(name = "Alice", userId = alice))
+        val aliceSecond = saveReview(ReviewAuthor(name = "Alice", userId = alice))
+        val bobReview = saveReview(ReviewAuthor(name = "Bob", userId = bob))
+        // V17 以前の投稿は author_user_id が NULL で投稿者を特定できないため、退会削除の対象外。
+        val legacyReview = saveReview(ReviewAuthor(name = "Legacy"))
+
+        val deleted = repository.deleteByAuthorId(alice)
+
+        assertEquals(2, deleted)
+        assertFalse(reviewJpa.existsById(aliceFirst.id.value))
+        assertFalse(reviewJpa.existsById(aliceSecond.id.value))
+        assertTrue(reviewJpa.existsById(bobReview.id.value))
+        assertTrue(reviewJpa.existsById(legacyReview.id.value))
+    }
+
+    @Test
+    fun `deleteByAuthorId は該当が無ければ 0 を返す`() {
+        insertSpot()
+        saveReview(ReviewAuthor(name = "Bob", userId = ReviewAuthorId.of(UUID.randomUUID())))
+
+        val other = ReviewAuthorId.of(UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc"))
+
+        assertEquals(0, repository.deleteByAuthorId(other))
+    }
+
+    private fun saveReview(author: ReviewAuthor): Review =
+        repository.save(
+            Review.create(
+                spotId = spotId,
+                rating = ReviewRating.of(4),
+                comment = "comment",
+                author = author,
+                language = Language.EN,
+                createdAt = now,
+            ),
+        )
 }

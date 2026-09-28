@@ -54,7 +54,14 @@ data class ReviewSummaryResponse(
                 spotName = view.spotName,
                 rating = ReviewResponse.RatingResponse(view.rating),
                 comment = view.comment,
-                author = ReviewResponse.AuthorResponse(view.authorName, view.authorIconUrl),
+                // 運営一覧では投稿者 id を返さない。id は Client が「自分の投稿か」を
+                // 判定するためのもの（#86）で、モデレーションは reviewId で操作するため不要。
+                author =
+                    ReviewResponse.AuthorResponse(
+                        id = null,
+                        name = view.authorName,
+                        iconUrl = view.authorIconUrl,
+                    ),
                 postedAt = view.createdAt,
                 language = view.language,
             )

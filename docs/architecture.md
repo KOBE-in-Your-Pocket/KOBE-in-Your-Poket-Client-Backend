@@ -294,7 +294,7 @@ body → { genre, coordinates:{latitude,longitude}, imageUrl,
 | 順 | 機能 | backend で作るもの | 認証 |
 |---|---|---|---|
 | ① | **ピン登録**（tourism） | `Spot` 集約 + `spot_localization`。`POST /tourism/spots`（登録）/ `GET …/spots?lang=`（一覧） | なしで先行 |
-| ② | **レビュー**（Client #129） | `Review`（rating 1-5・comment・authorName/icon・createdAt・language）。`POST /spots/{id}/reviews`・`GET ?lang=`（言語絞り込み）・`PUT`（自分の編集）。`Spot.rating` はレビュー平均を集計で返す | 仮（authorName を受ける） |
+| ② | **レビュー**（Client #129） | `Review`（rating 1-5・comment・authorName/icon・createdAt・language）。`POST /spots/{id}/reviews`・`GET ?lang=`（言語絞り込み）・`PUT`（自分の編集）・`DELETE`（自分の削除 / #86）。`Spot.rating` はレビュー平均を集計で返す | 投稿者は JWT の `sub` を `author_user_id` に記録（本人判定の根拠） |
 | ③ | **ログイン** | `User` コンテキスト。②の投稿者を本人性で担保。方式は別 issue（#129 メモ：投稿時のみ認証） | 本実装 |
 
 ---

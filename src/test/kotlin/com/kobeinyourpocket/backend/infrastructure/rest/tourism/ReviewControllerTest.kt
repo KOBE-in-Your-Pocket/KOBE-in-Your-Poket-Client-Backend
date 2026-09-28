@@ -1,14 +1,13 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteOwnReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateReviewService
 import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
-import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
-import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
-import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.mockito.BDDMockito.given
@@ -22,13 +21,20 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Instant
 import java.util.UUID
 import kotlin.test.Test
 
+/**
+ * ReviewController の GET と入力バリデーションのスライステスト。
+ *
+ * 書き込み系（POST / PUT / DELETE）の正常系と 403 は [ReviewApiIntegrationTest] が持つ。
+ * このスライスは `addFilters = false` で Security を外しており、`@AuthenticationPrincipal`
+ * が解決されない（#86 で投稿者 id を JWT から取るようにしたため）。認証が絡む経路は
+ * 実フィルタを通す統合テストで見るのが正しい。
+ */
 @AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(ReviewController::class)
 @Import(GlobalExceptionHandler::class)
@@ -45,9 +51,15 @@ class ReviewControllerTest {
     @MockitoBean
     private lateinit var updateReviewService: UpdateReviewService
 
+    @MockitoBean
+    private lateinit var deleteOwnReviewService: DeleteOwnReviewService
+
     private val spotId = SpotId.of("kobe-port-tower")
     private val reviewId = ReviewId.of(UUID.fromString("00000000-0000-0000-0000-000000000001"))
     private val now = Instant.parse("2025-11-03T10:00:00Z")
+
+    /** リクエストの JWT `sub`。投稿者 id としてサービスに渡る（#86）。 */
+    private val requesterId = ReviewAuthorId.of("11111111-1111-1111-1111-111111111111")
 
     private val reviewView =
         ReviewView(
@@ -57,19 +69,9 @@ class ReviewControllerTest {
             comment = "素晴らしい",
             authorName = "Alice",
             authorIconUrl = "https://example.com/alice.png",
+            authorUserId = requesterId.toString(),
             createdAt = now,
             language = "ja",
-        )
-
-    private val savedReview =
-        Review(
-            id = reviewId,
-            spotId = spotId,
-            rating = ReviewRating.of(4),
-            comment = "素晴らしい",
-            author = ReviewAuthor(name = "Alice", iconUrl = "https://example.com/alice.png"),
-            createdAt = now,
-            language = Language.JA,
         )
 
     @Test
@@ -98,40 +100,6 @@ class ReviewControllerTest {
             .andExpect(status().isOk)
 
         verify(listReviewsService).listReviews(spotId, Language.EN)
-    }
-
-    @Test
-    fun `POST でレビューを投稿し 201 を返す`() {
-        given(
-            postReviewService.postReview(
-                spotId = spotId,
-                rating = ReviewRating.of(4),
-                comment = "素晴らしい",
-                authorName = "Alice",
-                language = Language.JA,
-            ),
-        ).willReturn(savedReview)
-
-        mockMvc
-            .perform(
-                post("/api/v1/tourism/spots/kobe-port-tower/reviews")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        """
-                        {
-                          "rating": 4,
-                          "comment": "素晴らしい",
-                          "author": { "name": "Alice", "iconUrl": "https://example.com/alice.png" },
-                          "language": "ja"
-                        }
-                        """.trimIndent(),
-                    ),
-            ).andExpect(status().isCreated)
-            .andExpect(jsonPath("$.id").value(reviewId.toString()))
-            .andExpect(jsonPath("$.rating.value").value(4))
-            .andExpect(jsonPath("$.comment").value("素晴らしい"))
-            .andExpect(jsonPath("$.author.name").value("Alice"))
-            .andExpect(jsonPath("$.language").value("ja"))
     }
 
     @Test
@@ -173,37 +141,5 @@ class ReviewControllerTest {
                     ),
             ).andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.violations[0].field").value("comment"))
-    }
-
-    @Test
-    fun `PUT で rating と comment を更新する`() {
-        given(
-            updateReviewService.updateReview(
-                reviewId = reviewId,
-                rating = ReviewRating.of(5),
-                comment = "最高でした",
-            ),
-        ).willReturn(savedReview.copy(rating = ReviewRating.of(5), comment = "最高でした"))
-
-        mockMvc
-            .perform(
-                put("/api/v1/tourism/spots/kobe-port-tower/reviews/$reviewId")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{ "rating": 5, "comment": "最高でした" }"""),
-            ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.rating.value").value(5))
-            .andExpect(jsonPath("$.comment").value("最高でした"))
-
-        verify(updateReviewService).updateReview(reviewId, ReviewRating.of(5), "最高でした")
-    }
-
-    @Test
-    fun `PUT reviewId が UUID 形式でなければ 400`() {
-        mockMvc
-            .perform(
-                put("/api/v1/tourism/spots/kobe-port-tower/reviews/not-a-uuid")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{ "rating": 3, "comment": "test" }"""),
-            ).andExpect(status().isBadRequest)
     }
 }

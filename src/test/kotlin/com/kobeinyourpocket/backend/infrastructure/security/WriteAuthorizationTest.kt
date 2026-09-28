@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.security
 
 import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteGenreService
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteOwnReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterGenreService
@@ -12,11 +13,14 @@ import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotServic
 import com.kobeinyourpocket.backend.application.tourism.query.ListGenresService
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
+import com.kobeinyourpocket.backend.application.user.command.UpdateOwnIconService
+import com.kobeinyourpocket.backend.application.user.command.UpdateOwnProfileService
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreCode
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.review.model.Review
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthor
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
@@ -29,6 +33,7 @@ import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
 import com.kobeinyourpocket.backend.domain.user.model.User
 import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.domain.user.vo.UserIcon
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.MACSigner
@@ -50,6 +55,7 @@ import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -83,6 +89,9 @@ class WriteAuthorizationTest {
     private lateinit var updateReviewService: UpdateReviewService
 
     @MockitoBean
+    private lateinit var deleteOwnReviewService: DeleteOwnReviewService
+
+    @MockitoBean
     private lateinit var registerSpotService: RegisterSpotService
 
     @MockitoBean
@@ -96,6 +105,12 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var deleteUserService: DeleteUserService
+
+    @MockitoBean
+    private lateinit var updateOwnProfileService: UpdateOwnProfileService
+
+    @MockitoBean
+    private lateinit var updateOwnIconService: UpdateOwnIconService
 
     @MockitoBean
     private lateinit var uploadMediaService: UploadMediaService
@@ -210,6 +225,7 @@ class WriteAuthorizationTest {
                 reviewId = ReviewId.of(REVIEW_ID),
                 rating = ReviewRating.of(5),
                 comment = "最高でした",
+                requesterId = ReviewAuthorId.of(REQUESTER_ID),
             ),
         ).willReturn(savedReview)
 
@@ -220,6 +236,27 @@ class WriteAuthorizationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(reviewUpdateBody),
             ).andExpect(status().isOk)
+    }
+
+    // ---- DELETE /api/v1/tourism/spots/{spotId}/reviews/{reviewId}: 本人削除（#86）----
+
+    @Test
+    fun `レビュー本人削除は未認証で 401`() {
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/kobe-port-tower/reviews/$REVIEW_ID"))
+            .andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `レビュー本人削除は一般ユーザーで 204`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/kobe-port-tower/reviews/$REVIEW_ID")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpect(status().isNoContent)
+
+        // 本人かどうかの判定は application 層の責務。ここは JWT の sub が渡ることまで見る。
+        verify(deleteOwnReviewService).execute(ReviewId.of(REVIEW_ID), ReviewAuthorId.of(REQUESTER_ID))
     }
 
     // ---- POST /api/v1/tourism/spots: 運営ロール必須 ----
@@ -417,6 +454,119 @@ class WriteAuthorizationTest {
         verify(deleteUserService).execute(User.Id.of(TARGET_USER_ID))
     }
 
+    // ---- PATCH /api/v1/users/me: 本人のプロフィール更新（#179）----
+
+    @Test
+    fun `プロフィール更新は未認証だと 401`() {
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updateMeBody),
+            ).andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `プロフィール更新は一般ユーザーで 200`() {
+        given(
+            updateOwnProfileService.execute(
+                userId = User.Id.of(REQUESTER_ID),
+                name = "Alice Updated",
+                icon = UpdateOwnProfileService.IconUpdate.Unchanged,
+            ),
+        ).willReturn(User.create(id = User.Id.of(REQUESTER_ID), name = "Alice Updated"))
+
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updateMeBody),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.name").value("Alice Updated"))
+    }
+
+    // ---- POST /api/v1/users/me/icon: 本人によるアイコン差し替え（#184）----
+
+    @Test
+    fun `アイコンアップロードは未認証だと 401`() {
+        mockMvc
+            .perform(
+                multipart("/api/v1/users/me/icon")
+                    .file(MockMultipartFile("file", "icon.jpg", "image/jpeg", byteArrayOf(1, 2, 3))),
+            ).andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `アイコンアップロードは一般ユーザーで 200`() {
+        // 運営向けの POST /api/v1/media/uploads と違い、一般ロールで通る必要がある。
+        given(updateOwnIconService.execute(anyUserId(), anyByteArray()))
+            .willReturn(
+                User.create(
+                    id = User.Id.of(REQUESTER_ID),
+                    name = "Alice",
+                    icon = UserIcon.of("https://cdn.example.com/uploads/new.jpg"),
+                ),
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/v1/users/me/icon")
+                    .file(MockMultipartFile("file", "icon.jpg", "image/jpeg", byteArrayOf(1, 2, 3)))
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.iconUrl").value("https://cdn.example.com/uploads/new.jpg"))
+    }
+
+    @Test
+    fun `プロフィール更新の iconUrl に URL を渡すと 400（差し替えはアップロード経路）`() {
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "iconUrl": "https://evil.example.com/tracker.gif"
+                        }
+                        """.trimIndent(),
+                    ),
+            ).andExpect(status().isBadRequest)
+    }
+
+    // ---- DELETE /api/v1/users/me: 本人による退会（#528）----
+
+    @Test
+    fun `退会は未認証で 401`() {
+        mockMvc
+            .perform(delete("/api/v1/users/me"))
+            .andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `退会は一般ユーザーで 204`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpect(status().isNoContent)
+
+        // 削除対象は JWT の sub で決まる。パスに id を取らないため他人は指定できない。
+        verify(deleteUserService).execute(User.Id.of(REQUESTER_ID))
+    }
+
+    @Test
+    fun `退会は運営ロールでも自分自身が対象になる`() {
+        mockMvc
+            .perform(
+                delete("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.OPERATOR)}"),
+            ).andExpect(status().isNoContent)
+
+        verify(deleteUserService).execute(User.Id.of(REQUESTER_ID))
+    }
+
     // ---- 未分類の書き込みは deny-by-default ----
 
     @Test
@@ -456,11 +606,26 @@ class WriteAuthorizationTest {
     /** ByteArray 用の any マッチャ（mockito-kotlin 非導入のため薄いラッパ）。 */
     private fun anyByteArray(): ByteArray = ArgumentMatchers.any(ByteArray::class.java) ?: ByteArray(0)
 
-    private fun jwt(role: Role): String {
+    /**
+     * [User.Id] 用の any マッチャ。
+     *
+     * value class なので JVM シグネチャは UUID。matcher も UUID で登録し、
+     * Kotlin 側の非 null 要求を満たすためだけにフォールバック値を返す。
+     */
+    private fun anyUserId(): User.Id = ArgumentMatchers.any(UUID::class.java)?.let(User.Id::of) ?: User.Id.of(REQUESTER_ID)
+
+    /**
+     * [subject] は既定で [REQUESTER_ID]。レビュー系はサービス呼び出しに JWT の `sub` が
+     * そのまま渡るため、固定値でないとスタブの引数一致が取れない。
+     */
+    private fun jwt(
+        role: Role,
+        subject: String = REQUESTER_ID,
+    ): String {
         val claims =
             JWTClaimsSet
                 .Builder()
-                .subject(UUID.randomUUID().toString())
+                .subject(subject)
                 .issueTime(Date.from(Instant.now()))
                 .expirationTime(Date.from(Instant.now().plusSeconds(3600)))
                 .claim(
@@ -479,6 +644,7 @@ class WriteAuthorizationTest {
                 rating = ReviewRating.of(4),
                 comment = "素晴らしい",
                 authorName = "Alice",
+                authorUserId = ReviewAuthorId.of(REQUESTER_ID),
                 language = Language.JA,
             ),
         ).willReturn(savedReview)
@@ -525,6 +691,14 @@ class WriteAuthorizationTest {
           "comment": "素晴らしい",
           "author": { "name": "Alice" },
           "language": "ja"
+        }
+        """.trimIndent()
+
+    /** アイコンのキーを持たない = 変更しない（UpdateMeRequest の取り決め）。 */
+    private val updateMeBody =
+        """
+        {
+          "name": "Alice Updated"
         }
         """.trimIndent()
 
@@ -771,6 +945,9 @@ class WriteAuthorizationTest {
 
     companion object {
         private const val REVIEW_ID = "00000000-0000-0000-0000-000000000001"
+
+        /** [jwt] が既定で載せる `sub`。レビュー系サービスへ requesterId として渡る。 */
+        private const val REQUESTER_ID = "00000000-0000-0000-0000-0000000000b1"
         private const val TARGET_USER_ID = "00000000-0000-0000-0000-0000000000aa"
     }
 }

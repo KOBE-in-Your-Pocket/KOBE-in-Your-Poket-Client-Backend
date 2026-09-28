@@ -80,6 +80,24 @@ class SecurityConfig(
                     .authenticated()
                     .requestMatchers(HttpMethod.PUT, "/api/v1/tourism/spots/*/reviews/*")
                     .authenticated()
+                    // 本人によるレビュー削除（#86）。本人判定は DeleteOwnReviewService 側。
+                    // 運営のモデレーション削除は DELETE /api/v1/tourism/reviews/* で、
+                    // パスが違うため下の anyRequest（OPERATOR 必須）に落ちる。
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/tourism/spots/*/reviews/*")
+                    .authenticated()
+                    // 本人によるプロフィール更新（#179）。対象は JWT の subject から決まり、
+                    // 他人を指定する余地が無いため一般ロールで許可する。
+                    .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me")
+                    .authenticated()
+                    // 本人によるアイコン画像の差し替え（#184）。運営向けの
+                    // POST /api/v1/media/uploads は別パスで OPERATOR 必須のまま。
+                    .requestMatchers(HttpMethod.POST, "/api/v1/users/me/icon")
+                    .authenticated()
+                    // 本人によるアカウント削除（退会）。削除対象は JWT の subject から決まり
+                    // 他人を指定する余地が無いため、一般ロールのまま許可する。
+                    // 運営による削除は DELETE /api/v1/auth/users/{id} と別パスで ADMIN 限定のまま。
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me")
+                    .authenticated()
                     // 上記以外（GET 以外の未分類リクエスト全て）は運営ロール必須。
                     // ADMIN 専用の DELETE /api/v1/auth/users/{id} もここを通過し、
                     // メソッドセキュリティ（@PreAuthorize）で ADMIN に絞る。

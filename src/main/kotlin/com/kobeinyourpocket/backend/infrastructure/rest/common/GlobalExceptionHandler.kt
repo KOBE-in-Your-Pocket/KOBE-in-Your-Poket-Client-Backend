@@ -7,6 +7,7 @@ import com.kobeinyourpocket.backend.application.manner.command.MannerItemNotFoun
 import com.kobeinyourpocket.backend.application.tourism.GenreInUseException
 import com.kobeinyourpocket.backend.application.tourism.GenreNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
+import com.kobeinyourpocket.backend.application.tourism.ReviewNotOwnedException
 import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.command.InvalidGenreLabelException
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
@@ -17,6 +18,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 /** バリデーション・不正リクエストの統一エラー応答（§3.3 / #24）。 */
 @RestControllerAdvice
@@ -30,6 +32,15 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ReviewNotFoundException::class)
     fun handleReviewNotFound(ex: ReviewNotFoundException): ResponseEntity<ApiErrorResponse> =
         notFound(message = ex.message ?: "Review not found")
+
+    /**
+     * 他人のレビューを本人向け操作で変更しようとした（#86）。
+     *
+     * 認証は通っているが権限が無いので 403。レビューは公開情報のため 404 で隠す意味は無い。
+     */
+    @ExceptionHandler(ReviewNotOwnedException::class)
+    fun handleReviewNotOwned(ex: ReviewNotOwnedException): ResponseEntity<ApiErrorResponse> =
+        forbidden(message = ex.message ?: "Review is not owned by the requester")
 
     @ExceptionHandler(ShelterNotFoundException::class)
     fun handleShelterNotFound(ex: ShelterNotFoundException): ResponseEntity<ApiErrorResponse> =
@@ -108,6 +119,25 @@ class GlobalExceptionHandler {
     fun handleIllegalArgument(ex: IllegalArgumentException): ResponseEntity<ApiErrorResponse> =
         badRequest(message = ex.message ?: "Invalid request")
 
+    /**
+     * multipart の上限（`spring.servlet.multipart.max-file-size`）超過。
+     *
+     * ハンドラを置かないと 500 になり、Client からは不具合と区別できない。
+     * 上限より小さいアイコン用の上限（`media.icon.max-file-size`）超過は
+     * ユースケース側の検証で 400 になる。
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleMaxUploadSizeExceeded(ex: MaxUploadSizeExceededException): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.PAYLOAD_TOO_LARGE)
+            .body(
+                ApiErrorResponse(
+                    status = HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                    error = HttpStatus.PAYLOAD_TOO_LARGE.reasonPhrase,
+                    message = "uploaded file is too large",
+                ),
+            )
+
     private fun badRequest(
         message: String,
         violations: List<ApiErrorResponse.FieldViolation> = emptyList(),
@@ -130,6 +160,17 @@ class GlobalExceptionHandler {
                 ApiErrorResponse(
                     status = HttpStatus.CONFLICT.value(),
                     error = HttpStatus.CONFLICT.reasonPhrase,
+                    message = message,
+                ),
+            )
+
+    private fun forbidden(message: String): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(
+                ApiErrorResponse(
+                    status = HttpStatus.FORBIDDEN.value(),
+                    error = HttpStatus.FORBIDDEN.reasonPhrase,
                     message = message,
                 ),
             )

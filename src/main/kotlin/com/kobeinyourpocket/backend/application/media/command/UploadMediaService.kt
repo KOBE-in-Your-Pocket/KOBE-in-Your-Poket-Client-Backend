@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.application.media.command
 
+import com.kobeinyourpocket.backend.application.media.MediaKeyPrefix
 import com.kobeinyourpocket.backend.application.media.MediaStorage
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -46,7 +47,7 @@ class UploadMediaService(
             )
         }
 
-        val key = "$KEY_PREFIX/${UUID.randomUUID()}.${detected.extension}"
+        val key = MediaKeyPrefix.UPLOADS.keyFor("${UUID.randomUUID()}.${detected.extension}")
         return mediaStorage.store(key = key, bytes = bytes, contentType = detected.contentType)
     }
 
@@ -56,8 +57,6 @@ class UploadMediaService(
     )
 
     companion object {
-        const val KEY_PREFIX: String = "uploads"
-
         private val IMAGE_CONTENT_TYPES =
             setOf("image/jpeg", "image/png", "image/webp", "image/gif")
 

@@ -9,6 +9,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
@@ -96,6 +97,25 @@ class ReviewApiIntegrationTest {
           "language": "$language"
         }
         """.trimIndent()
+
+    /** レビューを投稿して採番された reviewId を返す。既定は [OWNER] の投稿。 */
+    private fun postReview(
+        spotId: String,
+        subject: String = OWNER,
+        rating: Int = 3,
+        comment: String = "普通",
+    ): String {
+        val result =
+            mockMvc
+                .perform(
+                    post("/api/v1/tourism/spots/$spotId/reviews")
+                        .with(withRole(Role.GENERAL, subject))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reviewBody(rating, comment)),
+                ).andExpect(status().isCreated)
+                .andReturn()
+        return JsonPath.read(result.response.contentAsString, "$.id")
+    }
 
     @Test
     fun `POST でレビューを投稿し 201 とレビュー JSON を返す`() {
@@ -209,5 +229,125 @@ class ReviewApiIntegrationTest {
             .perform(get("/api/v1/tourism/spots?lang=ja"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].rating.value").value(3.0))
+    }
+
+    // ---- 投稿者本人による削除・編集（#86）----
+
+    @Test
+    fun `POST のレスポンスと GET 一覧に投稿者 id が入る`() {
+        val spotId = registerSpot()
+        postReview(spotId)
+
+        // Client はこの id で「自分の投稿か」を判定し、削除・編集メニューを出す。
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].author.id").value(OWNER))
+    }
+
+    @Test
+    fun `DELETE で自分のレビューを削除すると 204 になり一覧から消える`() {
+        val spotId = registerSpot()
+        val reviewId = postReview(spotId)
+
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/$spotId/reviews/$reviewId")
+                    .with(withRole(Role.GENERAL, OWNER)),
+            ).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(0))
+    }
+
+    @Test
+    fun `DELETE は他人のレビューだと 403 でレビューは残る`() {
+        val spotId = registerSpot()
+        val reviewId = postReview(spotId)
+
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/$spotId/reviews/$reviewId")
+                    .with(withRole(Role.GENERAL, OTHER_USER)),
+            ).andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.status").value(403))
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(1))
+    }
+
+    @Test
+    fun `DELETE は未認証だと 401`() {
+        val spotId = registerSpot()
+        val reviewId = postReview(spotId)
+
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/$spotId/reviews/$reviewId"))
+            .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `DELETE は存在しない reviewId だと 404`() {
+        val spotId = registerSpot()
+
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/$spotId/reviews/00000000-0000-0000-0000-0000000000ee")
+                    .with(withRole(Role.GENERAL, OWNER)),
+            ).andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun `DELETE は reviewId が UUID 形式でなければ 400`() {
+        val spotId = registerSpot()
+
+        mockMvc
+            .perform(
+                delete("/api/v1/tourism/spots/$spotId/reviews/not-a-uuid")
+                    .with(withRole(Role.GENERAL, OWNER)),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `PUT は他人のレビューだと 403 で内容が変わらない`() {
+        val spotId = registerSpot()
+        val reviewId = postReview(spotId, comment = "普通")
+
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/$spotId/reviews/$reviewId")
+                    .with(withRole(Role.GENERAL, OTHER_USER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{ "rating": 1, "comment": "改竄" }"""),
+            ).andExpect(status().isForbidden)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(jsonPath("$[0].comment").value("普通"))
+    }
+
+    @Test
+    fun `PUT は reviewId が UUID 形式でなければ 400`() {
+        val spotId = registerSpot()
+
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/$spotId/reviews/not-a-uuid")
+                    .with(withRole(Role.GENERAL, OWNER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{ "rating": 3, "comment": "test" }"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    private companion object {
+        /** 投稿者本人の Supabase user id（JWT `sub`）。 */
+        const val OWNER = "00000000-0000-0000-0000-0000000000a1"
+
+        /** 投稿者ではない別ユーザー。 */
+        const val OTHER_USER = "00000000-0000-0000-0000-0000000000a2"
     }
 }

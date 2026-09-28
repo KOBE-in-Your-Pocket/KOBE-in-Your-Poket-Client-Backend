@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
+import com.kobeinyourpocket.backend.application.tourism.command.DeleteOwnReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteSpotService
 import com.kobeinyourpocket.backend.application.tourism.command.PostReviewService
 import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotService
@@ -65,6 +66,9 @@ class LanguageResolutionContractTest {
 
     @MockitoBean
     private lateinit var updateReviewService: UpdateReviewService
+
+    @MockitoBean
+    private lateinit var deleteOwnReviewService: DeleteOwnReviewService
 
     private val spotId = SpotId.of("kobe-port-tower")
 

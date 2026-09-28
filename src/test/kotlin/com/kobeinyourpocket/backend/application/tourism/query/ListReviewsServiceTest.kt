@@ -24,6 +24,7 @@ class ListReviewsServiceTest {
             comment = "素晴らしい",
             authorName = "Alice",
             authorIconUrl = null,
+            authorUserId = "11111111-1111-1111-1111-111111111111",
             createdAt = now,
             language = "ja",
         )
