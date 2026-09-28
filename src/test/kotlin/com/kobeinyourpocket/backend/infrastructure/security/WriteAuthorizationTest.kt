@@ -13,6 +13,7 @@ import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotServic
 import com.kobeinyourpocket.backend.application.tourism.query.ListGenresService
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
+import com.kobeinyourpocket.backend.application.user.command.UpdateOwnIconService
 import com.kobeinyourpocket.backend.application.user.command.UpdateOwnProfileService
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.genre.vo.GenreCode
@@ -32,6 +33,7 @@ import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotLocalizations
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotMedia
 import com.kobeinyourpocket.backend.domain.user.model.User
 import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.domain.user.vo.UserIcon
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.MACSigner
@@ -60,6 +62,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Instant
 import java.util.Date
+import java.util.UUID
 import kotlin.test.Test
 import com.kobeinyourpocket.backend.domain.tourism.genre.model.Genre as GenreMaster
 
@@ -105,6 +108,9 @@ class WriteAuthorizationTest {
 
     @MockitoBean
     private lateinit var updateOwnProfileService: UpdateOwnProfileService
+
+    @MockitoBean
+    private lateinit var updateOwnIconService: UpdateOwnIconService
 
     @MockitoBean
     private lateinit var uploadMediaService: UploadMediaService
@@ -480,6 +486,55 @@ class WriteAuthorizationTest {
             .andExpect(jsonPath("$.name").value("Alice Updated"))
     }
 
+    // ---- POST /api/v1/users/me/icon: 本人によるアイコン差し替え（#184）----
+
+    @Test
+    fun `アイコンアップロードは未認証だと 401`() {
+        mockMvc
+            .perform(
+                multipart("/api/v1/users/me/icon")
+                    .file(MockMultipartFile("file", "icon.jpg", "image/jpeg", byteArrayOf(1, 2, 3))),
+            ).andExpectUnauthorizedApiError()
+    }
+
+    @Test
+    fun `アイコンアップロードは一般ユーザーで 200`() {
+        // 運営向けの POST /api/v1/media/uploads と違い、一般ロールで通る必要がある。
+        given(updateOwnIconService.execute(anyUserId(), anyByteArray()))
+            .willReturn(
+                User.create(
+                    id = User.Id.of(REQUESTER_ID),
+                    name = "Alice",
+                    icon = UserIcon.of("https://cdn.example.com/uploads/new.jpg"),
+                ),
+            )
+
+        mockMvc
+            .perform(
+                multipart("/api/v1/users/me/icon")
+                    .file(MockMultipartFile("file", "icon.jpg", "image/jpeg", byteArrayOf(1, 2, 3)))
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}"),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.iconUrl").value("https://cdn.example.com/uploads/new.jpg"))
+    }
+
+    @Test
+    fun `プロフィール更新の iconUrl に URL を渡すと 400（差し替えはアップロード経路）`() {
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .header("Authorization", "Bearer ${jwt(Role.GENERAL)}")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "iconUrl": "https://evil.example.com/tracker.gif"
+                        }
+                        """.trimIndent(),
+                    ),
+            ).andExpect(status().isBadRequest)
+    }
+
     // ---- DELETE /api/v1/users/me: 本人による退会（#528）----
 
     @Test
@@ -550,6 +605,14 @@ class WriteAuthorizationTest {
 
     /** ByteArray 用の any マッチャ（mockito-kotlin 非導入のため薄いラッパ）。 */
     private fun anyByteArray(): ByteArray = ArgumentMatchers.any(ByteArray::class.java) ?: ByteArray(0)
+
+    /**
+     * [User.Id] 用の any マッチャ。
+     *
+     * value class なので JVM シグネチャは UUID。matcher も UUID で登録し、
+     * Kotlin 側の非 null 要求を満たすためだけにフォールバック値を返す。
+     */
+    private fun anyUserId(): User.Id = ArgumentMatchers.any(UUID::class.java)?.let(User.Id::of) ?: User.Id.of(REQUESTER_ID)
 
     /**
      * [subject] は既定で [REQUESTER_ID]。レビュー系はサービス呼び出しに JWT の `sub` が

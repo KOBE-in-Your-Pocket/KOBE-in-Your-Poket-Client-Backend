@@ -1,11 +1,13 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.user
 
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
+import com.kobeinyourpocket.backend.application.user.command.UpdateOwnIconService
 import com.kobeinyourpocket.backend.application.user.command.UpdateOwnProfileService
 import com.kobeinyourpocket.backend.application.user.query.GetMeService
 import com.kobeinyourpocket.backend.application.user.query.ListUsersService
 import com.kobeinyourpocket.backend.domain.user.model.User
 import jakarta.validation.Valid
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -13,10 +15,12 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 /**
  * ユーザー API（#91 / #151）。
@@ -32,6 +36,7 @@ class UserController(
     private val getMeService: GetMeService,
     private val listUsersService: ListUsersService,
     private val updateOwnProfileService: UpdateOwnProfileService,
+    private val updateOwnIconService: UpdateOwnIconService,
     private val deleteUserService: DeleteUserService,
 ) {
     @GetMapping("/me")
@@ -65,6 +70,26 @@ class UserController(
                 name = request.name,
                 icon = request.toIconUpdate(),
             )
+        return PublicUserResponse.from(updated.toPublicUser())
+    }
+
+    /**
+     * 本人によるアイコン画像の差し替え（#184）。写真ライブラリで選んだ画像をそのまま受ける。
+     *
+     * アップロードと設定を 1 回で終える。運営向けの `POST /api/v1/media/uploads` と分けているのは、
+     * 一般利用者に開くぶんサイズ上限を小さくし、EXIF を落とす再エンコードを必ず通すため。
+     * 返すのは更新後のプロフィールで、Client は `iconUrl` をそのまま表示に使える。
+     *
+     * 大きすぎる・画像として読めない場合は 400、5MB（multipart 上限）を超える場合は 413。
+     */
+    @PostMapping("/me/icon", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @PreAuthorize("isAuthenticated()")
+    fun updateMyIcon(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam("file") file: MultipartFile,
+    ): PublicUserResponse {
+        val subject = requireNotNull(jwt.subject) { "JWT subject is missing" }
+        val updated = updateOwnIconService.execute(userId = User.Id.of(subject), bytes = file.bytes)
         return PublicUserResponse.from(updated.toPublicUser())
     }
 

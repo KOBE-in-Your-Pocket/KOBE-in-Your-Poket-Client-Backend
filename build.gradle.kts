@@ -34,6 +34,10 @@ dependencies {
     implementation(platform("software.amazon.awssdk:bom:2.28.0"))
     implementation("software.amazon.awssdk:s3")
 
+    // ユーザーアイコンの縮小・再エンコード（#184）。JDK の ImageIO だけでは EXIF の
+    // Orientation を見ないため、縦向きで撮った写真が横倒しになる。依存は無し（単一 jar）。
+    implementation("net.coobird:thumbnailator:0.4.20")
+
     // DB スキーマ管理 (Spring Boot 4 は starter が必要)
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")

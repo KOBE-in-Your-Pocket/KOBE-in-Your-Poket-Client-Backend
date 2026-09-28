@@ -89,6 +89,10 @@ class SecurityConfig(
                     // 他人を指定する余地が無いため一般ロールで許可する。
                     .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me")
                     .authenticated()
+                    // 本人によるアイコン画像の差し替え（#184）。運営向けの
+                    // POST /api/v1/media/uploads は別パスで OPERATOR 必須のまま。
+                    .requestMatchers(HttpMethod.POST, "/api/v1/users/me/icon")
+                    .authenticated()
                     // 本人によるアカウント削除（退会）。削除対象は JWT の subject から決まり
                     // 他人を指定する余地が無いため、一般ロールのまま許可する。
                     // 運営による削除は DELETE /api/v1/auth/users/{id} と別パスで ADMIN 限定のまま。

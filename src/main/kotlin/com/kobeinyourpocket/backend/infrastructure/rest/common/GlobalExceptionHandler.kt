@@ -18,6 +18,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 /** バリデーション・不正リクエストの統一エラー応答（§3.3 / #24）。 */
 @RestControllerAdvice
@@ -117,6 +118,25 @@ class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArgument(ex: IllegalArgumentException): ResponseEntity<ApiErrorResponse> =
         badRequest(message = ex.message ?: "Invalid request")
+
+    /**
+     * multipart の上限（`spring.servlet.multipart.max-file-size`）超過。
+     *
+     * ハンドラを置かないと 500 になり、Client からは不具合と区別できない。
+     * 上限より小さいアイコン用の上限（`media.icon.max-file-size`）超過は
+     * ユースケース側の検証で 400 になる。
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleMaxUploadSizeExceeded(ex: MaxUploadSizeExceededException): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.PAYLOAD_TOO_LARGE)
+            .body(
+                ApiErrorResponse(
+                    status = HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                    error = HttpStatus.PAYLOAD_TOO_LARGE.reasonPhrase,
+                    message = "uploaded file is too large",
+                ),
+            )
 
     private fun badRequest(
         message: String,
