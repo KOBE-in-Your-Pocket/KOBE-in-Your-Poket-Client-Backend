@@ -96,7 +96,7 @@ class UpdateOwnIconServiceTest {
     }
 
     @Test
-    fun `保存されるのは正規化後のバイト列で、キーは uploads 配下`() {
+    fun `保存されるのは正規化後のバイト列で、キーは icons 配下`() {
         every { userRepository.findById(userId) } returns existingUser()
         stubSave()
         val key = slot<String>()
@@ -107,7 +107,9 @@ class UpdateOwnIconServiceTest {
 
         // 受け取った生バイトではなく、正規化（縮小・再エンコード）の結果を置く。
         assertEquals(listOf<Byte>(1, 2, 3), bytes.captured.toList())
-        assertTrue(key.captured.startsWith("uploads/"), "キーが uploads 配下でないと清理の対象外になる: ${key.captured}")
+        // 運営が上げた画像（uploads/）と混ざると、不適切画像の対処や容量把握で見分けが付かない。
+        // ライフサイクル規則も prefix で絞るため、ここが変わると未確定画像が消えなくなる。
+        assertTrue(key.captured.startsWith("icons/"), "キーが icons 配下でない: ${key.captured}")
         assertTrue(key.captured.endsWith(".jpg"))
     }
 

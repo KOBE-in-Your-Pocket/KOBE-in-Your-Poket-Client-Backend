@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.application.user.command
 
 import com.kobeinyourpocket.backend.application.media.ImageNormalizer
+import com.kobeinyourpocket.backend.application.media.MediaKeyPrefix
 import com.kobeinyourpocket.backend.application.media.MediaStorage
 import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
 import com.kobeinyourpocket.backend.domain.user.model.User
@@ -66,7 +67,8 @@ class UpdateOwnIconService(
         val current = userRepository.findById(userId) ?: throw UserNotFoundException(userId)
 
         val normalized = imageNormalizer.normalize(bytes, MAX_EDGE_PX)
-        val key = "${UploadMediaService.KEY_PREFIX}/${UUID.randomUUID()}.${normalized.extension}"
+        // 運営が上げた画像（uploads/）と混ざらないよう、利用者のアイコンは icons/ 配下に置く。
+        val key = MediaKeyPrefix.ICONS.keyFor("${UUID.randomUUID()}.${normalized.extension}")
         val iconUrl =
             mediaStorage.store(
                 key = key,

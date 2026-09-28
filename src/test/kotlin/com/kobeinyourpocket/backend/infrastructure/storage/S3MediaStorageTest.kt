@@ -52,8 +52,17 @@ class S3MediaStorageTest {
     }
 
     @Test
+    fun `アイコン用プレフィクスのキーも解決できる`() {
+        // 利用者のアイコンは icons/ 配下（#184）。ここが外れると旧アイコンを清理できない。
+        assertEquals(
+            "icons/abc.jpg",
+            storage().keyOf("https://$bucket.s3.$region.amazonaws.com/icons/abc.jpg"),
+        )
+    }
+
+    @Test
     fun `アップロード用プレフィクス外のキーは null`() {
-        // バケット内の他用途オブジェクト（例: dev 画像ストア）へタグ操作させない。
+        // バケット内の他用途オブジェクト（例: 手置きした spots/ のシード画像）へタグ操作させない。
         assertNull(storage().keyOf("https://$bucket.s3.$region.amazonaws.com/spots/seed.jpg"))
     }
 
@@ -70,7 +79,7 @@ class S3MediaStorageTest {
 
     @Test
     fun `ベース URL そのものはプレフィクス外なので null`() {
-        // キーが空文字列になり uploads/ 判定で外れる。
+        // キーが空文字列になり prefix 判定で外れる。
         assertNull(storage().keyOf("https://$bucket.s3.$region.amazonaws.com/"))
     }
 

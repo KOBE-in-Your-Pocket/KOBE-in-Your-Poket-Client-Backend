@@ -1,7 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.storage
 
+import com.kobeinyourpocket.backend.application.media.MediaKeyPrefix
 import com.kobeinyourpocket.backend.application.media.MediaStorage
-import com.kobeinyourpocket.backend.application.media.command.UploadMediaService
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.stereotype.Component
 import software.amazon.awssdk.core.sync.RequestBody
@@ -29,9 +29,13 @@ import java.time.Duration
  * ```
  * ID     : expire-staging-media
  * Filter : Prefix "uploads/" AND Tag status=staging
+ * ID     : expire-staging-icons
+ * Filter : Prefix "icons/"   AND Tag status=staging
  * Expire : 1 日（S3 の評価は 1 日 1 回 UTC 0 時なので削除は最大 2 日ほど遅れる）
  * IAM    : 実行ロールに s3:PutObject / s3:PutObjectTagging / s3:DeleteObjectTagging
  * ```
+ * 規則は [MediaKeyPrefix] の値ごとに 1 つ要る。prefix を増やして規則を足し忘れると、
+ * その prefix の未確定メディアが消えずに溜まる。
  * [STAGING_TAG_KEY] / [STAGING_TAG_VALUE] を変えると規則に一致しなくなり、未確定の画像が
  * 消えなくなる。変更する場合はバケットのライフサイクル規則も同時に更新すること。
  */
@@ -156,8 +160,8 @@ class S3MediaStorage(
         val prefix = "${publicBaseUrl()}/"
         if (!imageUrl.startsWith(prefix)) return null
         val key = imageUrl.removePrefix(prefix)
-        if (!key.startsWith("${UploadMediaService.KEY_PREFIX}/")) return null
-        // "uploads/../secret" のような相対指定でプレフィクス制限を迂回されないようにする。
+        if (!MediaKeyPrefix.isKnownKey(key)) return null
+        // "icons/../secret" のような相対指定でプレフィクス制限を迂回されないようにする。
         if (key.contains("..") || key.contains('?') || key.contains('#')) return null
         return key
     }
