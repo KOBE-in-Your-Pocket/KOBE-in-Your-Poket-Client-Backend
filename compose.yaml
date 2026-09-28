@@ -31,6 +31,16 @@ services:
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
       SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+      # 画像アップロード（#86 / #184）。ローカルから実 S3 を叩いて確かめるとき用。
+      # 認証情報は SDK 既定のチェーンが拾う。一時認証は次で取り出せる:
+      #   eval "$(aws configure export-credentials --format env)"
+      MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET:-}
+      MEDIA_S3_REGION: ${MEDIA_S3_REGION:-}
+      MEDIA_S3_PUBLIC_BASE_URL: ${MEDIA_S3_PUBLIC_BASE_URL:-}
+      AWS_REGION: ${MEDIA_S3_REGION:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
     ports:
       - "9090:9090"
 
@@ -55,6 +65,16 @@ services:
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
       SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+      # 画像アップロード（#86 / #184）。ローカルから実 S3 を叩いて確かめるとき用。
+      # 認証情報は SDK 既定のチェーンが拾う。一時認証は次で取り出せる:
+      #   eval "$(aws configure export-credentials --format env)"
+      MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET:-}
+      MEDIA_S3_REGION: ${MEDIA_S3_REGION:-}
+      MEDIA_S3_PUBLIC_BASE_URL: ${MEDIA_S3_PUBLIC_BASE_URL:-}
+      AWS_REGION: ${MEDIA_S3_REGION:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
     volumes:
       - .:/workspace
     ports:

@@ -49,6 +49,11 @@ media:
     bucket: ${MEDIA_S3_BUCKET:}
     region: ${MEDIA_S3_REGION:}
     public-base-url: ${MEDIA_S3_PUBLIC_BASE_URL:}
+  icon:
+    # ユーザーアイコン 1 枚の上限（#184）。一般利用者に開く経路なので multipart 全体の
+    # 上限（MEDIA_MAX_FILE_SIZE）より小さく絞る。サーバー側で長辺 512px へ縮小するため、
+    # これ以上の解像度を受け取っても保存される画像は変わらない。
+    max-file-size: ${MEDIA_ICON_MAX_FILE_SIZE:2MB}
 
 management:
   endpoints:
