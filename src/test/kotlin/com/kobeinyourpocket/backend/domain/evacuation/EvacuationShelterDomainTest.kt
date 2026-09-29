@@ -2,17 +2,19 @@ package com.kobeinyourpocket.backend.domain.evacuation
 
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.DisasterType
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.PetAcceptance
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterExternalUrl
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalization
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalizations
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSiting
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitabilities
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitability
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
 private fun localizationsOf(vararg languages: Language) =
@@ -23,6 +25,15 @@ private fun localizationsOf(vararg languages: Language) =
                 address = "address-${it.code}",
             )
         },
+    )
+
+/** 全種別が suitable の適否。個別に変えたいテストだけ copy する。 */
+private fun allSuitable() =
+    ShelterSuitabilities.of(
+        landslide = ShelterSuitability.SUITABLE,
+        flood = ShelterSuitability.SUITABLE,
+        tsunami = ShelterSuitability.SUITABLE,
+        largeFire = ShelterSuitability.SUITABLE,
     )
 
 class EvacuationShelterIdTest {
@@ -114,61 +125,134 @@ class ShelterTypeTest {
     }
 }
 
-class ShelterFacilityCategoryTest {
+class DisasterTypeTest {
     @Test
-    fun `Client と同じ wireValue を持つ`() {
-        assertEquals("government", ShelterFacilityCategory.GOVERNMENT.wireValue)
-        assertEquals("school", ShelterFacilityCategory.SCHOOL.wireValue)
-        assertEquals("park", ShelterFacilityCategory.PARK.wireValue)
-        assertEquals("gymnasium", ShelterFacilityCategory.GYMNASIUM.wireValue)
+    fun `元データの 4 種だけを持つ`() {
+        // 高潮・内水氾濫などは神戸市オープンデータに列が無い。持っていない種別を
+        // 並べると「対応していない」と「データが無い」の区別が付かなくなる（#180）。
+        assertEquals(
+            listOf("landslide", "flood", "tsunami", "large-fire"),
+            DisasterType.entries.map(DisasterType::wireValue),
+        )
     }
 
     @Test
-    fun `code から生成でき trim と lowercase を正規化する`() {
-        assertEquals(ShelterFacilityCategory.GOVERNMENT, ShelterFacilityCategory.of("government"))
-        assertEquals(ShelterFacilityCategory.SCHOOL, ShelterFacilityCategory.of("  SCHOOL  "))
+    fun `オープンデータの列名と対応が付く`() {
+        assertEquals("土砂災害", DisasterType.LANDSLIDE.sourceColumn)
+        assertEquals("大火事", DisasterType.LARGE_FIRE.sourceColumn)
     }
 
     @Test
-    fun `未知の code も生成できる`() {
-        assertEquals("hospital", ShelterFacilityCategory.of("hospital").wireValue)
+    fun `wireValue から解決でき trim と lowercase を正規化する`() {
+        assertEquals(DisasterType.FLOOD, DisasterType.of("  FLOOD "))
+        assertEquals(DisasterType.LARGE_FIRE, DisasterType.of("large-fire"))
     }
 
     @Test
-    fun `空文字の code は拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
-            ShelterFacilityCategory.of("   ")
-        }
-    }
-}
-
-class ShelterMediaTest {
-    @Test
-    fun `imageUrl を保持する`() {
-        val media = ShelterMedia("https://example.com/shelter.webp")
-
-        assertEquals("https://example.com/shelter.webp", media.imageUrl)
-    }
-
-    @Test
-    fun `空文字は拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
-            ShelterMedia("   ")
-        }
+    fun `未対応値は null を返す`() {
+        assertNull(DisasterType.of("storm-surge"))
+        assertNull(DisasterType.of(""))
     }
 }
 
-class ShelterCapacityTest {
+class ShelterSuitabilityTest {
     @Test
-    fun `正の整数を保持する`() {
-        assertEquals(500, ShelterCapacity(500).value)
+    fun `元データの 5 値を 4 値に寄せた wireValue を持つ`() {
+        assertEquals("suitable", ShelterSuitability.SUITABLE.wireValue)
+        assertEquals("conditional", ShelterSuitability.CONDITIONAL.wireValue)
+        assertEquals("unsuitable", ShelterSuitability.UNSUITABLE.wireValue)
+        assertEquals("not-applicable", ShelterSuitability.NOT_APPLICABLE.wireValue)
     }
 
     @Test
-    fun `0 以下は拒否する`() {
+    fun `条件付きは利用できるとは別の値`() {
+        // △ を ○ に丸めると、条件付きの避難所を「使える」と表示してしまう。
+        assertNotEquals(ShelterSuitability.SUITABLE, ShelterSuitability.CONDITIONAL)
+    }
+
+    @Test
+    fun `未対応値は null を返す`() {
+        assertNull(ShelterSuitability.of("maybe"))
+        assertNull(ShelterSuitability.of(""))
+    }
+}
+
+class ShelterSuitabilitiesTest {
+    @Test
+    fun `全災害種別の適否を引ける`() {
+        val suitabilities =
+            ShelterSuitabilities.of(
+                landslide = ShelterSuitability.SUITABLE,
+                flood = ShelterSuitability.CONDITIONAL,
+                tsunami = ShelterSuitability.UNSUITABLE,
+                largeFire = ShelterSuitability.NOT_APPLICABLE,
+            )
+
+        assertEquals(ShelterSuitability.SUITABLE, suitabilities.of(DisasterType.LANDSLIDE))
+        assertEquals(ShelterSuitability.CONDITIONAL, suitabilities.of(DisasterType.FLOOD))
+        assertEquals(ShelterSuitability.UNSUITABLE, suitabilities.of(DisasterType.TSUNAMI))
+        assertEquals(ShelterSuitability.NOT_APPLICABLE, suitabilities.of(DisasterType.LARGE_FIRE))
+    }
+
+    @Test
+    fun `種別が欠けていたら拒否する`() {
+        // 欠けた種別を「不明」として扱うと、表示側の分岐を書き忘れたときに危険側へ倒れる。
         assertFailsWith<IllegalArgumentException> {
-            ShelterCapacity(0)
+            ShelterSuitabilities.of(
+                mapOf(
+                    DisasterType.LANDSLIDE to ShelterSuitability.SUITABLE,
+                    DisasterType.FLOOD to ShelterSuitability.SUITABLE,
+                ),
+            )
         }
+    }
+
+    @Test
+    fun `渡した Map を後から変えても影響を受けない`() {
+        val source =
+            mutableMapOf(
+                DisasterType.LANDSLIDE to ShelterSuitability.SUITABLE,
+                DisasterType.FLOOD to ShelterSuitability.SUITABLE,
+                DisasterType.TSUNAMI to ShelterSuitability.SUITABLE,
+                DisasterType.LARGE_FIRE to ShelterSuitability.SUITABLE,
+            )
+        val suitabilities = ShelterSuitabilities.of(source)
+
+        source[DisasterType.TSUNAMI] = ShelterSuitability.UNSUITABLE
+
+        assertEquals(ShelterSuitability.SUITABLE, suitabilities.of(DisasterType.TSUNAMI))
+    }
+}
+
+class ShelterSitingTest {
+    @Test
+    fun `屋内と屋外の 2 値`() {
+        assertEquals("indoor", ShelterSiting.INDOOR.wireValue)
+        assertEquals("outdoor", ShelterSiting.OUTDOOR.wireValue)
+        assertEquals(2, ShelterSiting.entries.size)
+    }
+
+    @Test
+    fun `未対応値は null を返す`() {
+        assertNull(ShelterSiting.of("underground"))
+        assertNull(ShelterSiting.of(""))
+    }
+}
+
+class PetAcceptanceTest {
+    @Test
+    fun `調整中を含む 3 値`() {
+        // 元データに「調整中」が 38 件あり、可否の 2 値には潰せない。
+        assertEquals("accepted", PetAcceptance.ACCEPTED.wireValue)
+        assertEquals("not-accepted", PetAcceptance.NOT_ACCEPTED.wireValue)
+        assertEquals("under-consideration", PetAcceptance.UNDER_CONSIDERATION.wireValue)
+        assertEquals(3, PetAcceptance.entries.size)
+    }
+
+    @Test
+    fun `未対応値は null を返す`() {
+        assertNull(PetAcceptance.of("maybe"))
+        assertNull(PetAcceptance.of(""))
     }
 }
 
@@ -177,12 +261,25 @@ class ShelterLocalizationTest {
     fun `name と address を保持する`() {
         val localization =
             ShelterLocalization(
-                name = "神戸市役所",
-                address = "兵庫県神戸市中央区加納町6丁目5-1",
+                name = "東灘小学校",
+                address = "神戸市東灘区深江北町2-4-1",
             )
 
-        assertEquals("神戸市役所", localization.name)
-        assertEquals("兵庫県神戸市中央区加納町6丁目5-1", localization.address)
+        assertEquals("東灘小学校", localization.name)
+        assertEquals("神戸市東灘区深江北町2-4-1", localization.address)
+        assertNull(localization.note)
+    }
+
+    @Test
+    fun `note は任意`() {
+        val localization =
+            ShelterLocalization(
+                name = "name",
+                address = "address",
+                note = "《土砂災害時》正門が土砂災害警戒区域内にあるので注意、早めに避難",
+            )
+
+        assertEquals("《土砂災害時》正門が土砂災害警戒区域内にあるので注意、早めに避難", localization.note)
     }
 
     @Test
@@ -196,6 +293,14 @@ class ShelterLocalizationTest {
     fun `address が空なら拒否する`() {
         assertFailsWith<IllegalArgumentException> {
             ShelterLocalization(name = "name", address = "  ")
+        }
+    }
+
+    @Test
+    fun `note が空文字なら拒否する`() {
+        // 「備考が無い」は null で表す。空文字が混ざると表示側で空欄が出る。
+        assertFailsWith<IllegalArgumentException> {
+            ShelterLocalization(name = "name", address = "address", note = "  ")
         }
     }
 }
@@ -233,106 +338,62 @@ class EvacuationShelterTest {
     fun `集約ルートを生成し localizations を所有する`() {
         val shelter =
             EvacuationShelter.create(
-                id = EvacuationShelter.Id.of("kobe-city-hall"),
-                coordinates = ShelterCoordinates.of(34.6826, 135.1863),
+                id = EvacuationShelter.Id.of("kobe-001"),
+                coordinates = ShelterCoordinates.of(34.7248161, 135.2944292),
                 type = ShelterType.DUAL_USE,
-                facilityCategory = ShelterFacilityCategory.GOVERNMENT,
-                media = ShelterMedia("https://example.com/kobe-city-hall.webp"),
-                accessible = true,
+                siting = ShelterSiting.INDOOR,
+                suitabilities = allSuitable(),
+                petAcceptance = PetAcceptance.ACCEPTED,
                 localizations = localizationsOf(Language.JA, Language.EN),
+                phoneNumber = "078-411-0556",
             )
 
-        assertEquals("kobe-city-hall", shelter.id.value)
+        assertEquals("kobe-001", shelter.id.value)
         assertEquals(ShelterType.DUAL_USE, shelter.type)
+        assertEquals(ShelterSiting.INDOOR, shelter.siting)
+        assertEquals(PetAcceptance.ACCEPTED, shelter.petAcceptance)
         assertEquals("name-ja", shelter.localizations.resolve(Language.JA).name)
-        assertNull(shelter.capacity)
-        assertNull(shelter.externalUrl)
+        assertEquals("078-411-0556", shelter.phoneNumber)
     }
 
     @Test
-    fun `capacity と externalUrl は任意`() {
+    fun `phoneNumber は任意で、空文字は null に寄せる`() {
+        // 元データでは屋外の緊急避難場所 88 件が電話番号を持たない。
         val shelter =
             EvacuationShelter.create(
-                id = EvacuationShelter.Id.of("nunobiki-park"),
+                id = EvacuationShelter.Id.of("kobe-099"),
                 coordinates = ShelterCoordinates.of(34.7050, 135.1900),
                 type = ShelterType.DESIGNATED_EMERGENCY_EVACUATION_SITE,
-                facilityCategory = ShelterFacilityCategory.PARK,
-                media = ShelterMedia("https://example.com/nunobiki-park.webp"),
-                accessible = false,
+                siting = ShelterSiting.OUTDOOR,
+                suitabilities = allSuitable(),
+                petAcceptance = PetAcceptance.UNDER_CONSIDERATION,
                 localizations = localizationsOf(Language.EN),
-                capacity = ShelterCapacity(1200),
-                externalUrl = "https://example.com/evacuation-info",
+                phoneNumber = "   ",
             )
 
-        assertEquals(1200, shelter.capacity?.value)
-        assertEquals("https://example.com/evacuation-info", shelter.externalUrl?.value)
+        assertNull(shelter.phoneNumber)
     }
 
     @Test
-    fun `externalUrl が空文字なら拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
+    fun `災害種別ごとの適否を引ける`() {
+        val shelter =
             EvacuationShelter.create(
-                id = EvacuationShelter.Id.of("kobe-city-hall"),
-                coordinates = ShelterCoordinates.of(34.6826, 135.1863),
-                type = ShelterType.DESIGNATED_EVACUATION_SHELTER,
-                facilityCategory = ShelterFacilityCategory.GOVERNMENT,
-                media = ShelterMedia("https://example.com/kobe-city-hall.webp"),
-                accessible = true,
+                id = EvacuationShelter.Id.of("kobe-002"),
+                coordinates = ShelterCoordinates.of(34.7210202, 135.2886997),
+                type = ShelterType.DUAL_USE,
+                siting = ShelterSiting.INDOOR,
+                suitabilities =
+                    ShelterSuitabilities.of(
+                        landslide = ShelterSuitability.CONDITIONAL,
+                        flood = ShelterSuitability.SUITABLE,
+                        tsunami = ShelterSuitability.UNSUITABLE,
+                        largeFire = ShelterSuitability.NOT_APPLICABLE,
+                    ),
+                petAcceptance = PetAcceptance.ACCEPTED,
                 localizations = localizationsOf(Language.EN),
-                externalUrl = "   ",
             )
-        }
-    }
-}
 
-class ShelterExternalUrlTest {
-    @Test
-    fun `https URL を生成できる`() {
-        val url = ShelterExternalUrl.of("https://www.city.kobe.lg.jp/bosai/")
-
-        assertEquals("https://www.city.kobe.lg.jp/bosai/", url?.value)
-    }
-
-    @Test
-    fun `前後空白は trim される`() {
-        val url = ShelterExternalUrl.of("  https://example.com/evacuation-info  ")
-
-        assertEquals("https://example.com/evacuation-info", url?.value)
-    }
-
-    @Test
-    fun `null は null を返す`() {
-        assertNull(ShelterExternalUrl.of(null))
-    }
-
-    @Test
-    fun `空文字は拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
-            ShelterExternalUrl.of("   ")
-        }
-    }
-
-    @Test
-    fun `http 以外の scheme は拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
-            ShelterExternalUrl.of("javascript:alert(1)")
-        }
-        assertFailsWith<IllegalArgumentException> {
-            ShelterExternalUrl.of("ftp://example.com/")
-        }
-    }
-
-    @Test
-    fun `URI として不正な文字列は拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
-            ShelterExternalUrl.of("not-a-url")
-        }
-    }
-
-    @Test
-    fun `host が無い URL は拒否する`() {
-        assertFailsWith<IllegalArgumentException> {
-            ShelterExternalUrl.of("https://")
-        }
+        assertEquals(ShelterSuitability.CONDITIONAL, shelter.suitabilities.of(DisasterType.LANDSLIDE))
+        assertEquals(ShelterSuitability.UNSUITABLE, shelter.suitabilities.of(DisasterType.TSUNAMI))
     }
 }

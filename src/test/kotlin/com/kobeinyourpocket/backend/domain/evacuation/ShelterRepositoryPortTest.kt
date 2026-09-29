@@ -3,12 +3,14 @@ package com.kobeinyourpocket.backend.domain.evacuation
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.repository.ShelterRepository
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.PetAcceptance
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalization
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalizations
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSiting
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitabilities
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitability
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -34,67 +36,71 @@ class ShelterRepositoryPortTest {
         fun get(id: EvacuationShelter.Id): EvacuationShelter? = store[id]
     }
 
-    private fun shelter(id: String): EvacuationShelter =
+    private fun shelter(
+        id: String,
+        localizations: ShelterLocalizations =
+            ShelterLocalizations.of(
+                mapOf(Language.EN to ShelterLocalization(name = "Higashinada Elementary School", address = "2-4-1 Fukaekitamachi")),
+            ),
+    ): EvacuationShelter =
         EvacuationShelter.create(
             id = EvacuationShelter.Id.of(id),
-            coordinates = ShelterCoordinates.of(34.6826, 135.1863),
+            coordinates = ShelterCoordinates.of(34.7248161, 135.2944292),
             type = ShelterType.DUAL_USE,
-            facilityCategory = ShelterFacilityCategory.GOVERNMENT,
-            media = ShelterMedia("https://example.com/$id.webp"),
-            accessible = true,
-            localizations =
-                ShelterLocalizations.of(
-                    mapOf(Language.EN to ShelterLocalization(name = "Kobe City Hall", address = "6-5-1 Kanomachi")),
+            siting = ShelterSiting.INDOOR,
+            suitabilities =
+                ShelterSuitabilities.of(
+                    landslide = ShelterSuitability.SUITABLE,
+                    flood = ShelterSuitability.SUITABLE,
+                    tsunami = ShelterSuitability.SUITABLE,
+                    largeFire = ShelterSuitability.NOT_APPLICABLE,
                 ),
+            petAcceptance = PetAcceptance.ACCEPTED,
+            localizations = localizations,
+            phoneNumber = "078-411-0556",
         )
 
     @Test
     fun `save した集約を取得できる`() {
         val repository = FakeShelterRepository()
         val shelter =
-            EvacuationShelter.create(
-                id = EvacuationShelter.Id.of("kobe-city-hall"),
-                coordinates = ShelterCoordinates.of(34.6826, 135.1863),
-                type = ShelterType.DUAL_USE,
-                facilityCategory = ShelterFacilityCategory.GOVERNMENT,
-                media = ShelterMedia("https://example.com/kobe-city-hall.webp"),
-                accessible = true,
-                localizations =
-                    ShelterLocalizations.of(
-                        mapOf(
-                            Language.JA to
-                                ShelterLocalization(
-                                    name = "神戸市役所",
-                                    address = "兵庫県神戸市中央区加納町6丁目5-1",
-                                ),
-                            Language.EN to
-                                ShelterLocalization(
-                                    name = "Kobe City Hall",
-                                    address = "6-5-1 Kanomachi, Chuo-ku, Kobe, Hyogo",
-                                ),
-                        ),
+            shelter(
+                "kobe-001",
+                ShelterLocalizations.of(
+                    mapOf(
+                        Language.JA to
+                            ShelterLocalization(
+                                name = "東灘小学校",
+                                address = "神戸市東灘区深江北町2-4-1",
+                            ),
+                        Language.EN to
+                            ShelterLocalization(
+                                name = "Higashinada Elementary School",
+                                address = "2-4-1 Fukaekitamachi, Higashinada-ku, Kobe",
+                            ),
                     ),
+                ),
             )
 
         repository.save(shelter)
 
-        assertEquals(shelter, repository.get(EvacuationShelter.Id.of("kobe-city-hall")))
+        assertEquals(shelter, repository.get(EvacuationShelter.Id.of("kobe-001")))
     }
 
     @Test
     fun `existsById は save 済みかどうかを返す`() {
         val repository = FakeShelterRepository()
-        repository.save(shelter("kobe-city-hall"))
+        repository.save(shelter("kobe-001"))
 
-        assertTrue(repository.existsById(EvacuationShelter.Id.of("kobe-city-hall")))
-        assertFalse(repository.existsById(EvacuationShelter.Id.of("unknown-shelter")))
+        assertTrue(repository.existsById(EvacuationShelter.Id.of("kobe-001")))
+        assertFalse(repository.existsById(EvacuationShelter.Id.of("kobe-999")))
     }
 
     @Test
     fun `deleteById した集約は取得できなくなる`() {
         val repository = FakeShelterRepository()
-        val id = EvacuationShelter.Id.of("kobe-city-hall")
-        repository.save(shelter("kobe-city-hall"))
+        val id = EvacuationShelter.Id.of("kobe-001")
+        repository.save(shelter("kobe-001"))
 
         repository.deleteById(id)
 

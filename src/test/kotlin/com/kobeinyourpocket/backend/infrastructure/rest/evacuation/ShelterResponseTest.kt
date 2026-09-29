@@ -5,23 +5,27 @@ import tools.jackson.databind.json.JsonMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ShelterResponseTest {
     private val objectMapper = JsonMapper.builder().build()
 
     private val view =
         ShelterView(
-            id = "kobe-city-hall",
-            name = "神戸市役所",
-            address = "兵庫県神戸市中央区加納町6丁目5-1",
-            latitude = 34.6826,
-            longitude = 135.1863,
+            id = "kobe-001",
+            name = "東灘小学校",
+            address = "神戸市東灘区深江北町2-4-1",
+            latitude = 34.7248161,
+            longitude = 135.2944292,
             type = "both",
-            facilityCategory = "government",
-            imageUrl = "https://example.com/kobe-city-hall.webp",
-            capacity = 500,
-            accessible = true,
-            externalUrl = "https://example.com/kobe-city-hall",
+            siting = "indoor",
+            suitabilityLandslide = "suitable",
+            suitabilityFlood = "suitable",
+            suitabilityTsunami = "suitable",
+            suitabilityLargeFire = "not-applicable",
+            petAcceptance = "accepted",
+            phoneNumber = "078-411-0556",
+            note = null,
         )
 
     @Test
@@ -34,21 +38,47 @@ class ShelterResponseTest {
         assertEquals(view.latitude, response.coordinates.latitude)
         assertEquals(view.longitude, response.coordinates.longitude)
         assertEquals(view.type, response.type)
-        assertEquals(view.facilityCategory, response.facilityCategory)
-        assertEquals(view.imageUrl, response.media.imageUrl)
-        assertEquals(view.capacity, response.capacity)
-        assertEquals(view.accessible, response.accessible)
-        assertEquals(view.externalUrl, response.externalUrl)
+        assertEquals(view.siting, response.siting)
+        assertEquals(view.petAcceptance, response.petAcceptance)
+        assertEquals(view.phoneNumber, response.phoneNumber)
+        assertEquals(view.note, response.note)
     }
 
     @Test
-    fun `capacity・externalUrl が null の ShelterView は JSON から除外される`() {
-        val response = ShelterResponse.from(view.copy(capacity = null, externalUrl = null))
+    fun `suitability は災害種別 slug をキーに全種別を含む`() {
+        // Client は絞り込みでこのキーを引く。欠けると「対応していない」と
+        // 「情報が無い」の区別が付かなくなる（#180）。
+        val response = ShelterResponse.from(view)
+
+        assertEquals(
+            mapOf(
+                "landslide" to "suitable",
+                "flood" to "suitable",
+                "tsunami" to "suitable",
+                "large-fire" to "not-applicable",
+            ),
+            response.suitability,
+        )
+    }
+
+    @Test
+    fun `対象外の災害種別もキーごと落とさない`() {
+        val response = ShelterResponse.from(view.copy(suitabilityLargeFire = "not-applicable"))
+
+        val node = objectMapper.readTree(objectMapper.writeValueAsString(response))
+
+        assertTrue(node.get("suitability").has("large-fire"))
+        assertEquals("not-applicable", node.get("suitability").get("large-fire").asString())
+    }
+
+    @Test
+    fun `phoneNumber・note が null の ShelterView は JSON から除外される`() {
+        val response = ShelterResponse.from(view.copy(phoneNumber = null, note = null))
 
         val json = objectMapper.writeValueAsString(response)
         val node = objectMapper.readTree(json)
 
-        assertFalse(node.has("capacity"))
-        assertFalse(node.has("externalUrl"))
+        assertFalse(node.has("phoneNumber"))
+        assertFalse(node.has("note"))
     }
 }
