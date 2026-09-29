@@ -1,12 +1,11 @@
 package com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model
 
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.PetAcceptance
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterExternalUrl
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalizations
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSiting
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitabilities
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 
 /**
  * 避難所エンティティ（集約ルート）。
@@ -14,19 +13,23 @@ import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.mo
  * 「避難所 1 件」を表す。同一性は [Id] が担い、内容が更新されても同じ EvacuationShelter として続く。
  * 全言語のローカライズを [localizations] として所有し、集約の整合境界に含める。
  *
- * Client `EvacuationShelter` のうち id / coordinates / type / facilityCategory /
- * media / capacity? / accessible / externalUrl? に相当する（name / address は [localizations]）。
+ * 属性は神戸市オープンデータ「指定緊急避難場所・指定避難所」が持つ項目に揃えている（#180）。
+ * 以前あった施設種別・画像・収容人数・バリアフリー・外部リンクは元データに無いため持たない。
+ * 持っていない情報を空で返すより、項目ごと無い方が利用者にも Client にも誠実である。
  */
 data class EvacuationShelter(
     val id: Id,
     val coordinates: ShelterCoordinates,
     val type: ShelterType,
-    val facilityCategory: ShelterFacilityCategory,
-    val media: ShelterMedia,
-    val accessible: Boolean,
+    /** 屋内 / 屋外。 */
+    val siting: ShelterSiting,
+    /** 災害種別ごとの適否。全種別について値を持つ。 */
+    val suitabilities: ShelterSuitabilities,
+    /** ペット同行避難の可否（調整中を含む 3 値）。 */
+    val petAcceptance: PetAcceptance,
     val localizations: ShelterLocalizations,
-    val capacity: ShelterCapacity? = null,
-    val externalUrl: ShelterExternalUrl? = null,
+    /** 施設の電話番号。屋外の緊急避難場所は元データが空。 */
+    val phoneNumber: String? = null,
 ) {
     /**
      * 避難所の識別子（値オブジェクト）。
@@ -59,23 +62,22 @@ data class EvacuationShelter(
             id: Id,
             coordinates: ShelterCoordinates,
             type: ShelterType,
-            facilityCategory: ShelterFacilityCategory,
-            media: ShelterMedia,
-            accessible: Boolean,
+            siting: ShelterSiting,
+            suitabilities: ShelterSuitabilities,
+            petAcceptance: PetAcceptance,
             localizations: ShelterLocalizations,
-            capacity: ShelterCapacity? = null,
-            externalUrl: String? = null,
+            phoneNumber: String? = null,
         ): EvacuationShelter =
             EvacuationShelter(
                 id = id,
                 coordinates = coordinates,
                 type = type,
-                facilityCategory = facilityCategory,
-                media = media,
-                accessible = accessible,
+                siting = siting,
+                suitabilities = suitabilities,
+                petAcceptance = petAcceptance,
                 localizations = localizations,
-                capacity = capacity,
-                externalUrl = ShelterExternalUrl.of(externalUrl),
+                // 空文字は「電話番号が無い」として null に寄せる（元データの屋外 88 件）。
+                phoneNumber = phoneNumber?.trim()?.ifBlank { null },
             )
     }
 }

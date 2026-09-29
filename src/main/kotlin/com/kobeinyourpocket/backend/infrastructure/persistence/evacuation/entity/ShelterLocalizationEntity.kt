@@ -30,6 +30,8 @@ class ShelterLocalizationEntity(
     var name: String,
     @Column(name = "address", nullable = false)
     var address: String,
+    @Column(name = "note")
+    var note: String? = null,
 ) {
     companion object {
         fun fromDomain(
@@ -41,6 +43,7 @@ class ShelterLocalizationEntity(
                 id = ShelterLocalizationId(shelterId = shelterId.value, language = language.code),
                 name = localization.name,
                 address = localization.address,
+                note = localization.note,
             )
     }
 }
@@ -56,6 +59,7 @@ fun List<ShelterLocalizationEntity>.toDomainLocalizations(): ShelterLocalization
                 ShelterLocalization(
                     name = entity.name,
                     address = entity.address,
+                    note = entity.note,
                 )
         },
     )

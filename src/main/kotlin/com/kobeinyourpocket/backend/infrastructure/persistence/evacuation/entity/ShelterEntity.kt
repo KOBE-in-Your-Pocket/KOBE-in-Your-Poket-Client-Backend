@@ -1,11 +1,13 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.evacuation.entity
 
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.DisasterType
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.PetAcceptance
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSiting
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitabilities
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitability
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -27,16 +29,20 @@ class ShelterEntity(
     var longitude: Double,
     @Column(name = "type", nullable = false)
     var type: String,
-    @Column(name = "facility_category", nullable = false)
-    var facilityCategory: String,
-    @Column(name = "image_url", nullable = false)
-    var imageUrl: String,
-    @Column(name = "accessible", nullable = false)
-    var accessible: Boolean,
-    @Column(name = "capacity")
-    var capacity: Int? = null,
-    @Column(name = "external_url")
-    var externalUrl: String? = null,
+    @Column(name = "siting", nullable = false)
+    var siting: String,
+    @Column(name = "suitability_landslide", nullable = false)
+    var suitabilityLandslide: String,
+    @Column(name = "suitability_flood", nullable = false)
+    var suitabilityFlood: String,
+    @Column(name = "suitability_tsunami", nullable = false)
+    var suitabilityTsunami: String,
+    @Column(name = "suitability_large_fire", nullable = false)
+    var suitabilityLargeFire: String,
+    @Column(name = "pet_acceptance", nullable = false)
+    var petAcceptance: String,
+    @Column(name = "phone_number")
+    var phoneNumber: String? = null,
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null,
@@ -46,20 +52,32 @@ class ShelterEntity(
 ) {
     /**
      * ベース行と localization 行群を [EvacuationShelter] 集約へ復元する。
-     * 未知の type コードは永続化データ不整合として失敗させる。
+     * 未知のコードは永続化データ不整合として失敗させる（黙って別の値に寄せる方が危険）。
      */
     fun toDomain(localizations: List<ShelterLocalizationEntity>): EvacuationShelter =
         EvacuationShelter.create(
             id = EvacuationShelter.Id.of(id),
             coordinates = ShelterCoordinates.of(latitude, longitude),
             type = ShelterType.of(type) ?: error("Unknown shelter type in shelter: '$type'"),
-            facilityCategory = ShelterFacilityCategory.of(facilityCategory),
-            media = ShelterMedia(imageUrl),
-            accessible = accessible,
+            siting = ShelterSiting.of(siting) ?: error("Unknown shelter siting in shelter: '$siting'"),
+            suitabilities =
+                ShelterSuitabilities.of(
+                    landslide = suitability(suitabilityLandslide, "suitability_landslide"),
+                    flood = suitability(suitabilityFlood, "suitability_flood"),
+                    tsunami = suitability(suitabilityTsunami, "suitability_tsunami"),
+                    largeFire = suitability(suitabilityLargeFire, "suitability_large_fire"),
+                ),
+            petAcceptance =
+                PetAcceptance.of(petAcceptance)
+                    ?: error("Unknown pet acceptance in shelter: '$petAcceptance'"),
             localizations = localizations.toDomainLocalizations(),
-            capacity = capacity?.let { ShelterCapacity(it) },
-            externalUrl = externalUrl,
+            phoneNumber = phoneNumber,
         )
+
+    private fun suitability(
+        value: String,
+        column: String,
+    ): ShelterSuitability = ShelterSuitability.of(value) ?: error("Unknown suitability in shelter.$column: '$value'")
 
     companion object {
         fun fromDomain(shelter: EvacuationShelter): ShelterEntity =
@@ -68,11 +86,13 @@ class ShelterEntity(
                 latitude = shelter.coordinates.latitude,
                 longitude = shelter.coordinates.longitude,
                 type = shelter.type.wireValue,
-                facilityCategory = shelter.facilityCategory.wireValue,
-                imageUrl = shelter.media.imageUrl,
-                accessible = shelter.accessible,
-                capacity = shelter.capacity?.value,
-                externalUrl = shelter.externalUrl?.toString(),
+                siting = shelter.siting.wireValue,
+                suitabilityLandslide = shelter.suitabilities.of(DisasterType.LANDSLIDE).wireValue,
+                suitabilityFlood = shelter.suitabilities.of(DisasterType.FLOOD).wireValue,
+                suitabilityTsunami = shelter.suitabilities.of(DisasterType.TSUNAMI).wireValue,
+                suitabilityLargeFire = shelter.suitabilities.of(DisasterType.LARGE_FIRE).wireValue,
+                petAcceptance = shelter.petAcceptance.wireValue,
+                phoneNumber = shelter.phoneNumber,
             )
     }
 }
