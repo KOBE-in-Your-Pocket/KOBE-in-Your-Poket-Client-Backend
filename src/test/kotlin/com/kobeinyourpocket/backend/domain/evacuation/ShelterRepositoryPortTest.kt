@@ -13,11 +13,12 @@ import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.Shelt
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
-/** ShelterRepository write port の契約を Fake で検証する。 */
+/**
+ * ShelterRepository write port の契約を Fake で検証する。
+ *
+ * 避難所は閲覧のみで削除・追加の経路を持たないため、契約は [ShelterRepository.save] だけ（#180）。
+ */
 class ShelterRepositoryPortTest {
     private class FakeShelterRepository : ShelterRepository {
         private val store = linkedMapOf<EvacuationShelter.Id, EvacuationShelter>()
@@ -25,12 +26,6 @@ class ShelterRepositoryPortTest {
         override fun save(shelter: EvacuationShelter): EvacuationShelter {
             store[shelter.id] = shelter
             return shelter
-        }
-
-        override fun existsById(id: EvacuationShelter.Id): Boolean = store.containsKey(id)
-
-        override fun deleteById(id: EvacuationShelter.Id) {
-            store.remove(id)
         }
 
         fun get(id: EvacuationShelter.Id): EvacuationShelter? = store[id]
@@ -85,26 +80,5 @@ class ShelterRepositoryPortTest {
         repository.save(shelter)
 
         assertEquals(shelter, repository.get(EvacuationShelter.Id.of("kobe-001")))
-    }
-
-    @Test
-    fun `existsById は save 済みかどうかを返す`() {
-        val repository = FakeShelterRepository()
-        repository.save(shelter("kobe-001"))
-
-        assertTrue(repository.existsById(EvacuationShelter.Id.of("kobe-001")))
-        assertFalse(repository.existsById(EvacuationShelter.Id.of("kobe-999")))
-    }
-
-    @Test
-    fun `deleteById した集約は取得できなくなる`() {
-        val repository = FakeShelterRepository()
-        val id = EvacuationShelter.Id.of("kobe-001")
-        repository.save(shelter("kobe-001"))
-
-        repository.deleteById(id)
-
-        assertNull(repository.get(id))
-        assertFalse(repository.existsById(id))
     }
 }

@@ -1,12 +1,10 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.evacuation
 
-import com.kobeinyourpocket.backend.application.evacuation.command.DeleteShelterService
 import com.kobeinyourpocket.backend.application.evacuation.query.GetShelterListService
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterDatasetMetadataView
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterListView
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.verify
@@ -16,7 +14,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -34,9 +31,6 @@ class ShelterControllerTest {
 
     @MockitoBean
     private lateinit var getShelterListService: GetShelterListService
-
-    @MockitoBean
-    private lateinit var deleteShelterService: DeleteShelterService
 
     private val metadata =
         ShelterDatasetMetadataView(
@@ -169,14 +163,5 @@ class ShelterControllerTest {
         mockMvc.perform(get("/api/v1/evacuation/shelters")).andExpect(status().isOk)
 
         verify(getShelterListService).getShelterList(Language.EN)
-    }
-
-    @Test
-    fun `DELETE はパスの id を そのまま ユースケースへ渡し 204 を返す`() {
-        mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-001"))
-            .andExpect(status().isNoContent)
-
-        verify(deleteShelterService).execute(EvacuationShelter.Id.of("kobe-001"))
     }
 }
