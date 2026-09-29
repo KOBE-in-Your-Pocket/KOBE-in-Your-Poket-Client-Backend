@@ -28,7 +28,13 @@ data class EvacuationShelter(
     /** ペット同行避難の可否（調整中を含む 3 値）。 */
     val petAcceptance: PetAcceptance,
     val localizations: ShelterLocalizations,
-    /** 施設の電話番号。屋外の緊急避難場所は元データが空。 */
+    /**
+     * 施設の電話番号。屋外の緊急避難場所は元データが空。
+     *
+     * **単純な番号 1 つとは限らない。** 元データには `078-803-5921(昼)、078-803-5777(夜)` の
+     * ように注記付きで 2 つ並ぶ値が 6 件ある。表示用の文字列として扱い、tel: リンクへ
+     * そのまま流せる前提を置かない。
+     */
     val phoneNumber: String? = null,
 ) {
     /**

@@ -24,6 +24,9 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from hanzi import to_simplified
+from kana import to_hangul
+
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 SOURCE = HERE / "source.json"
@@ -106,17 +109,33 @@ def split_address(raw: str) -> tuple[str, str, str]:
 
 
 def translate(term: str, table: dict, lang: str) -> str:
-    """辞書を引く。未登録なら日本語のまま返す（生成を止めない）。"""
+    """辞書を引く。未登録なら日本語のまま返す（生成を止めない）。
+
+    人が与えるのは読み（`romaji`）だけで、英語はその読み、韓国語は読みからの転写。
+    中国語は固有名詞は原表記のまま使う（漢字なので読める）。区名・接尾語のような
+    訳語が決まっているものだけ `en` / `ko` / `zh` を直接書いて上書きする。
+    """
     entry = table.get(term)
     if not entry:
         return term
-    return entry.get(lang) or term
+    explicit = entry.get(lang)
+    if explicit:
+        return explicit
+    romaji = entry.get("romaji")
+    if not romaji:
+        return term
+    if lang == "en":
+        return romaji
+    if lang == "ko":
+        return to_hangul(romaji)
+    # 中国語は固有名詞を原表記のまま使い、字形だけ簡体字へ寄せる。
+    return to_simplified(term)
 
 
 def compose_name(raw: str, glossary: dict, lang: str) -> str:
     if lang == "ja":
         return raw.replace(OUTDOOR_MARKER, "").strip()
-    override = glossary["names"].get(raw)
+    override = glossary["names"].get(raw.replace(OUTDOOR_MARKER, "").strip())
     if override and override.get(lang):
         return override[lang]
 
@@ -206,11 +225,14 @@ def missing_terms(records: list[dict], glossary: dict) -> dict[str, list[tuple[s
         ward, town, _ = split_address(record["住所"])
         counters["wards"][ward] += 1
         counters["towns"][town] += 1
-        stem, tail, _ = split_name(record["施設名称"])
-        if stem:
-            counters["stems"][stem] += 1
-        for suffix in tail:
-            counters["suffixes"][suffix] += 1
+        # 名称ごと上書きしている避難所は語幹・接尾語を引かないので数えない。
+        plain_name = record["施設名称"].replace(OUTDOOR_MARKER, "").strip()
+        if plain_name not in glossary["names"]:
+            stem, tail, _ = split_name(record["施設名称"])
+            if stem:
+                counters["stems"][stem] += 1
+            for suffix in tail:
+                counters["suffixes"][suffix] += 1
         if record["備考"].strip():
             counters["notes"][record["備考"].strip()] += 1
 
@@ -220,9 +242,49 @@ def missing_terms(records: list[dict], glossary: dict) -> dict[str, list[tuple[s
         missing[key] = [
             (term, count)
             for term, count in counter.most_common()
-            if term not in table or not all(table[term].get(lang) for lang in ("en", "ko", "zh"))
+            if term not in table or not (table[term].get("romaji") or table[term].get("en"))
         ]
     return missing
+
+
+JAPANESE = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
+KANA = re.compile(r"[\u3040-\u30ff]")
+
+
+def verify_no_untranslated(records: list[dict], glossary: dict) -> None:
+    """辞書の穴を生成時に落とす。
+
+    未登録の語は日本語のまま通す作りにしてある（途中でも生成できるように）。
+    その代わり最後にここで確かめる。英語・韓国語に日本語が残っていたり、
+    中国語に仮名が残っていたら、辞書に穴がある。
+    """
+    problems: list[str] = []
+    for record in records:
+        for lang in LANGUAGES:
+            if lang == "ja":
+                continue
+            pattern = KANA if lang == "zh" else JAPANESE
+            for field, value in (
+                ("name", compose_name(record["施設名称"], glossary, lang)),
+                ("address", compose_address(record["住所"], glossary, lang)),
+            ):
+                if pattern.search(value):
+                    problems.append(f"  {shelter_id(record)} [{lang}] {field}: {value}")
+            note = record["備考"].strip()
+            if not note:
+                continue
+            # 漢字表記が定まらない仮名の固有名詞を含む訳は、辞書側で明示的に許す
+            # （allow_kana）。既定は厳しくしておき、例外は辞書に残して見えるようにする。
+            if lang == "zh" and glossary["notes"].get(note, {}).get("allow_kana"):
+                continue
+            if pattern.search(translate(note, glossary["notes"], lang)):
+                problems.append(f"  {shelter_id(record)} [{lang}] note: {note}")
+    if problems:
+        raise SystemExit(
+            "訳語辞書に穴がある（未翻訳の値が生成物に混ざる）:\n"
+            + "\n".join(problems[:20])
+            + (f"\n  ... 他 {len(problems) - 20} 件" if len(problems) > 20 else "")
+        )
 
 
 def main() -> None:
@@ -242,6 +304,18 @@ def main() -> None:
                 print(f"  ({count}) {term}")
         total = sum(len(v) for v in missing.values())
         print(f"\n合計 未登録 {total} 語")
+
+        # 読みに確信が持てず review フラグを立てたもの。日本語話者に見てほしい対象。
+        needs_review = [
+            (key, term, entry.get("romaji", ""))
+            for key in ("wards", "towns", "stems", "suffixes", "names", "notes")
+            for term, entry in glossary[key].items()
+            if entry.get("review")
+        ]
+        if needs_review:
+            print(f"\n=== 読みの確認が必要: {len(needs_review)} 語 ===")
+            for key, term, romaji in needs_review:
+                print(f"  [{key}] {term} → {romaji}")
         return
 
     shelters, localizations = build_rows(records, glossary)
@@ -258,6 +332,12 @@ def main() -> None:
 
 """
     body = [
+        "-- 出典・データ基準日。V9 で入れた値をこのデータセットに合わせて更新する。",
+        "UPDATE shelter_dataset_metadata SET",
+        "    source = '神戸市オープンデータ「神戸市避難場所 / 緊急避難場所・避難所」(CC BY) "
+        "https://catalog.city.kobe.lg.jp/dataset/evacuation',",
+        "    as_of = DATE '2025-04-02';",
+        "",
         "INSERT INTO shelter (id, latitude, longitude, type, siting,",
         "    suitability_landslide, suitability_flood, suitability_tsunami, suitability_large_fire,",
         "    pet_acceptance, phone_number) VALUES",
@@ -267,6 +347,8 @@ def main() -> None:
         ",\n".join(localizations) + ";",
         "",
     ]
+    verify_no_untranslated(records, glossary)
+
     OUTPUT.write_text(header + "\n".join(body), encoding="utf-8")
     print(f"{OUTPUT.relative_to(REPO)} を生成: 避難所 {len(shelters)} 件 / ローカライズ {len(localizations)} 行")
 

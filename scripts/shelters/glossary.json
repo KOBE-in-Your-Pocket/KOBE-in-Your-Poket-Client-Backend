@@ -46,8 +46,1838 @@
    "zh": "西区"
   }
  },
- "towns": {},
- "stems": {},
+ "towns": {
+  "脇浜海岸通": {
+   "romaji": "Wakinohama-kaigandori"
+  },
+  "青木": {
+   "romaji": "Ogi"
+  },
+  "野崎通": {
+   "romaji": "Nozakidori"
+  },
+  "御影石町": {
+   "romaji": "Mikageishimachi"
+  },
+  "本山南町": {
+   "romaji": "Motoyamaminamimachi"
+  },
+  "楠町": {
+   "romaji": "Kusunokicho"
+  },
+  "港島中町": {
+   "romaji": "Minatojimanakamachi"
+  },
+  "狩口台": {
+   "romaji": "Kariguchidai"
+  },
+  "住吉宮町": {
+   "romaji": "Sumiyoshimiyamachi"
+  },
+  "向洋町中": {
+   "romaji": "Koyocho-naka"
+  },
+  "魚崎南町": {
+   "romaji": "Uozakiminamimachi"
+  },
+  "駅南通": {
+   "romaji": "Ekiminamidori"
+  },
+  "若松町": {
+   "romaji": "Wakamatsucho"
+  },
+  "大池町": {
+   "romaji": "Oikecho"
+  },
+  "平磯": {
+   "romaji": "Hiraiso"
+  },
+  "学園東町": {
+   "romaji": "Gakuenhigashimachi"
+  },
+  "岡本": {
+   "romaji": "Okamoto"
+  },
+  "住吉山手": {
+   "romaji": "Sumiyoshiyamate"
+  },
+  "田中町": {
+   "romaji": "Tanakacho"
+  },
+  "御影中町": {
+   "romaji": "Mikagenakamachi"
+  },
+  "六甲台町": {
+   "romaji": "Rokkodaicho"
+  },
+  "備後町": {
+   "romaji": "Bingocho"
+  },
+  "摩耶海岸通": {
+   "romaji": "Maya-kaigandori"
+  },
+  "熊内町": {
+   "romaji": "Kumouchicho"
+  },
+  "南五葉": {
+   "romaji": "Minamigoyo"
+  },
+  "唐櫃台": {
+   "romaji": "Karitodai"
+  },
+  "大谷町": {
+   "romaji": "Otanicho"
+  },
+  "東落合": {
+   "romaji": "Higashiochiai"
+  },
+  "西落合": {
+   "romaji": "Nishiochiai"
+  },
+  "星陵台": {
+   "romaji": "Seiryodai"
+  },
+  "学が丘": {
+   "romaji": "Gakugaoka"
+  },
+  "伊川谷町長坂": {
+   "romaji": "Ikawadani-cho Nagasaka"
+  },
+  "春日台": {
+   "romaji": "Kasugadai"
+  },
+  "本山北町": {
+   "romaji": "Motoyamakitamachi"
+  },
+  "森北町": {
+   "romaji": "Morikitamachi"
+  },
+  "西岡本": {
+   "romaji": "Nishiokamoto"
+  },
+  "住吉東町": {
+   "romaji": "Sumiyoshihigashimachi"
+  },
+  "御影山手": {
+   "romaji": "Mikageyamate"
+  },
+  "渦森台": {
+   "romaji": "Uzumoridai"
+  },
+  "鶴甲": {
+   "romaji": "Tsurukabuto"
+  },
+  "船寺通": {
+   "romaji": "Funaderadori"
+  },
+  "宮本通": {
+   "romaji": "Miyamotodori"
+  },
+  "八幡通": {
+   "romaji": "Yahatadori"
+  },
+  "中山手通": {
+   "romaji": "Nakayamatedori"
+  },
+  "夢野町": {
+   "romaji": "Yumenocho"
+  },
+  "鵯越町": {
+   "romaji": "Hiyodorigoecho"
+  },
+  "会下山町": {
+   "romaji": "Egeyamacho"
+  },
+  "和田宮通": {
+   "romaji": "Wadamiyadori"
+  },
+  "荒田町": {
+   "romaji": "Aratacho"
+  },
+  "ひよどり台": {
+   "romaji": "Hiyodoridai",
+   "zh": "鵯台"
+  },
+  "星和台": {
+   "romaji": "Seiwadai"
+  },
+  "北五葉": {
+   "romaji": "Kitagoyo"
+  },
+  "鈴蘭台北町": {
+   "romaji": "Suzurandaikitamachi"
+  },
+  "筑紫が丘": {
+   "romaji": "Tsukushigaoka"
+  },
+  "西大池": {
+   "romaji": "Nishioike"
+  },
+  "有野町有野": {
+   "romaji": "Arino-cho Arino"
+  },
+  "有野台": {
+   "romaji": "Arinodai"
+  },
+  "藤原台中町": {
+   "romaji": "Fujiwaradainakamachi"
+  },
+  "道場町生野": {
+   "romaji": "Dojo-cho Ikuno"
+  },
+  "鹿の子台北町": {
+   "romaji": "Kanokodaikitamachi"
+  },
+  "房王寺町": {
+   "romaji": "Boojicho"
+  },
+  "西丸山町": {
+   "romaji": "Nishimaruyamacho"
+  },
+  "神楽町": {
+   "romaji": "Kaguracho"
+  },
+  "二葉町": {
+   "romaji": "Futabacho"
+  },
+  "細田町": {
+   "romaji": "Hosodacho"
+  },
+  "若宮町": {
+   "romaji": "Wakamiyacho"
+  },
+  "青葉町": {
+   "romaji": "Aobacho"
+  },
+  "一ノ谷町": {
+   "romaji": "Ichinotanicho"
+  },
+  "中島町": {
+   "romaji": "Nakajimacho"
+  },
+  "高倉台": {
+   "romaji": "Takakuradai"
+  },
+  "友が丘": {
+   "romaji": "Tomogaoka"
+  },
+  "横尾": {
+   "romaji": "Yokoo"
+  },
+  "竜が台": {
+   "romaji": "Ryugadai"
+  },
+  "白川台": {
+   "romaji": "Shirakawadai"
+  },
+  "塩屋町": {
+   "romaji": "Shioyacho"
+  },
+  "塩屋町字大谷": {
+   "romaji": "Shioya-cho Otani"
+  },
+  "桃山台": {
+   "romaji": "Momoyamadai"
+  },
+  "青山台": {
+   "romaji": "Aoyamadai"
+  },
+  "神陵台": {
+   "romaji": "Shinryodai"
+  },
+  "上高丸": {
+   "romaji": "Kamitakamaru"
+  },
+  "本多聞": {
+   "romaji": "Hontamon"
+  },
+  "海岸通": {
+   "romaji": "Kaigandori"
+  },
+  "学園西町": {
+   "romaji": "Gakuennishimachi"
+  },
+  "井吹台西町": {
+   "romaji": "Ibukidainishimachi"
+  },
+  "糀台": {
+   "romaji": "Kojidai"
+  },
+  "竹の台": {
+   "romaji": "Takenodai"
+  },
+  "桜が丘東町": {
+   "romaji": "Sakuragaokahigashimachi"
+  },
+  "岩岡町古郷": {
+   "romaji": "Iwaoka-cho Furusato"
+  },
+  "深江北町": {
+   "romaji": "Fukaekitamachi"
+  },
+  "深江浜町": {
+   "romaji": "Fukaehamamachi"
+  },
+  "深江南町": {
+   "romaji": "Fukaeminamimachi"
+  },
+  "魚崎中町": {
+   "romaji": "Uozakinakamachi"
+  },
+  "魚崎北町": {
+   "romaji": "Uozakikitamachi"
+  },
+  "本山中町": {
+   "romaji": "Motoyamanakamachi"
+  },
+  "住吉南町": {
+   "romaji": "Sumiyoshiminamimachi"
+  },
+  "住吉台": {
+   "romaji": "Sumiyoshidai"
+  },
+  "住吉本町": {
+   "romaji": "Sumiyoshihonmachi"
+  },
+  "森南町": {
+   "romaji": "Morinamimachi"
+  },
+  "篠原伯母野山町": {
+   "romaji": "Shinohara-obanoyamacho"
+  },
+  "高羽町": {
+   "romaji": "Takabacho"
+  },
+  "土山町": {
+   "romaji": "Tsuchiyamacho"
+  },
+  "大石東町": {
+   "romaji": "Oishihigashimachi"
+  },
+  "八幡町": {
+   "romaji": "Yahatacho"
+  },
+  "福住通": {
+   "romaji": "Fukuzumidori"
+  },
+  "城の下通": {
+   "romaji": "Shironoshitadori"
+  },
+  "青谷町": {
+   "romaji": "Aotanicho"
+  },
+  "岸地通": {
+   "romaji": "Kishijidori"
+  },
+  "箕岡通": {
+   "romaji": "Minookadori"
+  },
+  "国玉通": {
+   "romaji": "Kunitamadori"
+  },
+  "畑原通": {
+   "romaji": "Hatawaradori"
+  },
+  "千旦通": {
+   "romaji": "Sendandori"
+  },
+  "六甲山町北六甲": {
+   "romaji": "Rokkosan-cho Kita-rokko"
+  },
+  "高徳町": {
+   "romaji": "Kotokucho"
+  },
+  "烏帽子町": {
+   "romaji": "Eboshicho"
+  },
+  "長峰台": {
+   "romaji": "Nagaminedai"
+  },
+  "中郷町": {
+   "romaji": "Nakagocho"
+  },
+  "六甲町": {
+   "romaji": "Rokkocho"
+  },
+  "桜口": {
+   "romaji": "Sakuraguchi"
+  },
+  "王子町": {
+   "romaji": "Ojicho"
+  },
+  "脇浜町": {
+   "romaji": "Wakinohamacho"
+  },
+  "神若通": {
+   "romaji": "Kamiwakadori"
+  },
+  "吾妻通": {
+   "romaji": "Azumadori"
+  },
+  "真砂通": {
+   "romaji": "Masagodori"
+  },
+  "磯上通": {
+   "romaji": "Isogamidori"
+  },
+  "北野町": {
+   "romaji": "Kitanocho"
+  },
+  "山本通": {
+   "romaji": "Yamamotodori"
+  },
+  "北長狭通": {
+   "romaji": "Kitanagasadori"
+  },
+  "東川崎町": {
+   "romaji": "Higashikawasakicho"
+  },
+  "東川崎": {
+   "romaji": "Higashikawasaki"
+  },
+  "元町通": {
+   "romaji": "Motomachidori"
+  },
+  "港島": {
+   "romaji": "Minatojima"
+  },
+  "加納町": {
+   "romaji": "Kanocho"
+  },
+  "波止場町": {
+   "romaji": "Hatobacho"
+  },
+  "小野浜町": {
+   "romaji": "Onohamacho"
+  },
+  "下三条町": {
+   "romaji": "Shimosanjocho"
+  },
+  "雪御所町": {
+   "romaji": "Yukigoshocho"
+  },
+  "烏原町字譲原": {
+   "romaji": "Karasuhara-cho Yuzuriwara"
+  },
+  "東山町": {
+   "romaji": "Higashiyamacho"
+  },
+  "上沢通": {
+   "romaji": "Kamisawadori"
+  },
+  "松本通": {
+   "romaji": "Matsumotodori"
+  },
+  "大開通": {
+   "romaji": "Daikaidori"
+  },
+  "水木通": {
+   "romaji": "Mizukidori"
+  },
+  "永沢町": {
+   "romaji": "Eizawacho"
+  },
+  "須佐野通": {
+   "romaji": "Susanodori"
+  },
+  "松原通": {
+   "romaji": "Matsubaradori"
+  },
+  "材木町": {
+   "romaji": "Zaimokucho"
+  },
+  "吉田町": {
+   "romaji": "Yoshidacho"
+  },
+  "里山町": {
+   "romaji": "Satoyamacho"
+  },
+  "滝山町": {
+   "romaji": "Takiyamacho"
+  },
+  "湊川町": {
+   "romaji": "Minatogawacho"
+  },
+  "御崎町": {
+   "romaji": "Misakicho"
+  },
+  "菊水町": {
+   "romaji": "Kikusuicho"
+  },
+  "山田町藍那字下の町": {
+   "romaji": "Yamada-cho Aina Shimonocho"
+  },
+  "君影町": {
+   "romaji": "Kimikagecho"
+  },
+  "鈴蘭台南町": {
+   "romaji": "Suzurandaiminamimachi"
+  },
+  "山田町小部字向井谷": {
+   "romaji": "Yamada-cho Obe Mukaidani"
+  },
+  "泉台": {
+   "romaji": "Izumidai"
+  },
+  "若葉台": {
+   "romaji": "Wakabadai"
+  },
+  "大脇台": {
+   "romaji": "Owakidai"
+  },
+  "大原": {
+   "romaji": "Ohara"
+  },
+  "桂木": {
+   "romaji": "Katsuragi"
+  },
+  "緑町": {
+   "romaji": "Midoricho"
+  },
+  "松が枝町": {
+   "romaji": "Matsugaecho"
+  },
+  "小倉台": {
+   "romaji": "Oguradai"
+  },
+  "山田町下谷上字宮ノ前": {
+   "romaji": "Yamada-cho Shimotanigami Miyanomae"
+  },
+  "山田町下谷上字中上": {
+   "romaji": "Yamada-cho Shimotanigami Nakagami"
+  },
+  "山田町中字長尾サ": {
+   "romaji": "Yamada-cho Naka Nagaosa",
+   "zh": "山田町中字长尾"
+  },
+  "花山東町": {
+   "romaji": "Hanayamahigashimachi"
+  },
+  "東大池": {
+   "romaji": "Higashioike"
+  },
+  "有馬町": {
+   "romaji": "Arimacho"
+  },
+  "藤原台南町": {
+   "romaji": "Fujiwaradaiminamimachi"
+  },
+  "藤原台北町": {
+   "romaji": "Fujiwaradaikitamachi"
+  },
+  "有野中町": {
+   "romaji": "Arinonakamachi"
+  },
+  "西山": {
+   "romaji": "Nishiyama"
+  },
+  "道場町塩田": {
+   "romaji": "Dojo-cho Shiota"
+  },
+  "道場町平田": {
+   "romaji": "Dojo-cho Hirata"
+  },
+  "八多町附物": {
+   "romaji": "Hata-cho Tsukumono"
+  },
+  "八多町中": {
+   "romaji": "Hata-cho Naka"
+  },
+  "大沢町中大沢": {
+   "romaji": "Osawa-cho Nakaosawa"
+  },
+  "大沢町上大沢": {
+   "romaji": "Osawa-cho Kamiosawa"
+  },
+  "上津台": {
+   "romaji": "Kotsudai"
+  },
+  "長尾町上津": {
+   "romaji": "Nagao-cho Kozu"
+  },
+  "淡河町野瀬": {
+   "romaji": "Ogo-cho Nose"
+  },
+  "淡河町行原字中沢": {
+   "romaji": "Ogo-cho Yukihara Nakazawa"
+  },
+  "淡河町萩原": {
+   "romaji": "Ogo-cho Hagihara"
+  },
+  "山田町下谷上字中一里山": {
+   "romaji": "Yamada-cho Shimotanigami Nakaichiriyama"
+  },
+  "前原町": {
+   "romaji": "Maebaracho"
+  },
+  "四番町": {
+   "romaji": "Yonbancho"
+  },
+  "大丸町": {
+   "romaji": "Daimarucho"
+  },
+  "雲雀ヶ丘": {
+   "romaji": "Hibarigaoka"
+  },
+  "丸山町": {
+   "romaji": "Maruyamacho"
+  },
+  "長田町": {
+   "romaji": "Nagatacho"
+  },
+  "池田上町": {
+   "romaji": "Ikedakamicho"
+  },
+  "上池田": {
+   "romaji": "Kamiikeda"
+  },
+  "池田谷町": {
+   "romaji": "Ikedatanicho"
+  },
+  "西山町": {
+   "romaji": "Nishiyamacho"
+  },
+  "高取山町": {
+   "romaji": "Takatoriyamacho"
+  },
+  "長尾町": {
+   "romaji": "Nagaocho"
+  },
+  "五位ノ池町": {
+   "romaji": "Goinoikecho"
+  },
+  "一番町": {
+   "romaji": "Ichibancho"
+  },
+  "苅藻通": {
+   "romaji": "Karumodori"
+  },
+  "真野町": {
+   "romaji": "Manocho"
+  },
+  "野田町": {
+   "romaji": "Nodacho"
+  },
+  "蓮池町": {
+   "romaji": "Hasuikecho"
+  },
+  "水笠通": {
+   "romaji": "Mizukasadori"
+  },
+  "行幸町": {
+   "romaji": "Miyukicho"
+  },
+  "離宮西町": {
+   "romaji": "Rikyunishimachi"
+  },
+  "大黒町": {
+   "romaji": "Daikokucho"
+  },
+  "堀池町": {
+   "romaji": "Horiikecho"
+  },
+  "大手町": {
+   "romaji": "Otemachi"
+  },
+  "菊池町": {
+   "romaji": "Kikuchicho"
+  },
+  "多井畑字東所": {
+   "romaji": "Taihata Higashisho"
+  },
+  "妙法寺字桜界地": {
+   "romaji": "Myohoji Sakaiji"
+  },
+  "緑ヶ丘": {
+   "romaji": "Midorigaoka"
+  },
+  "南落合": {
+   "romaji": "Minamiochiai"
+  },
+  "菅の台": {
+   "romaji": "Suganodai"
+  },
+  "中落合": {
+   "romaji": "Nakaochiai"
+  },
+  "若草町": {
+   "romaji": "Wakakusacho"
+  },
+  "東白川台": {
+   "romaji": "Higashishirakawadai"
+  },
+  "北落合": {
+   "romaji": "Kitaochiai"
+  },
+  "神の谷": {
+   "romaji": "Shinotani"
+  },
+  "千歳町": {
+   "romaji": "Chitosecho"
+  },
+  "東須磨": {
+   "romaji": "Higashisuma"
+  },
+  "戸政町": {
+   "romaji": "Tomasacho"
+  },
+  "塩屋北町": {
+   "romaji": "Shioyakitamachi"
+  },
+  "塩屋台": {
+   "romaji": "Shioyadai"
+  },
+  "下畑町字谷川": {
+   "romaji": "Shimohata-cho Tanigawa"
+  },
+  "つつじが丘": {
+   "romaji": "Tsutsujigaoka",
+   "zh": "杜鹃之丘"
+  },
+  "乙木": {
+   "romaji": "Otogi"
+  },
+  "王居殿": {
+   "romaji": "Oidono"
+  },
+  "城が山": {
+   "romaji": "Shirogayama"
+  },
+  "美山台": {
+   "romaji": "Miyamadai"
+  },
+  "東垂水": {
+   "romaji": "Higashitarumi"
+  },
+  "名谷町": {
+   "romaji": "Myodanicho"
+  },
+  "名谷町字猿倉": {
+   "romaji": "Myodani-cho Sarukura"
+  },
+  "福田": {
+   "romaji": "Fukuda"
+  },
+  "大町": {
+   "romaji": "Omachi"
+  },
+  "千鳥が丘": {
+   "romaji": "Chidorigaoka"
+  },
+  "日向": {
+   "romaji": "Hyuga"
+  },
+  "霞ヶ丘": {
+   "romaji": "Kasumigaoka"
+  },
+  "歌敷山": {
+   "romaji": "Utashikiyama"
+  },
+  "舞子台": {
+   "romaji": "Maikodai"
+  },
+  "西舞子": {
+   "romaji": "Nishimaiko"
+  },
+  "多聞台": {
+   "romaji": "Tamondai"
+  },
+  "西脇": {
+   "romaji": "Nishiwaki"
+  },
+  "舞多聞西": {
+   "romaji": "Maitamon-nishi"
+  },
+  "小束山": {
+   "romaji": "Kozukayama"
+  },
+  "舞子陵": {
+   "romaji": "Maikoryo"
+  },
+  "伊川谷町前開": {
+   "romaji": "Ikawadani-cho Senkai"
+  },
+  "北別府": {
+   "romaji": "Kitabeppu"
+  },
+  "伊川谷町有瀬": {
+   "romaji": "Ikawadani-cho Arise"
+  },
+  "伊川谷町上脇": {
+   "romaji": "Ikawadani-cho Uwawaki"
+  },
+  "井吹台東町": {
+   "romaji": "Ibukidaihigashimachi"
+  },
+  "井吹台北町": {
+   "romaji": "Ibukidaikitamachi"
+  },
+  "美賀多台": {
+   "romaji": "Mikatadai"
+  },
+  "平野町宮前": {
+   "romaji": "Hirano-cho Miyamae"
+  },
+  "櫨谷町池谷": {
+   "romaji": "Hazetani-cho Ikedani"
+  },
+  "狩場台": {
+   "romaji": "Karibadai"
+  },
+  "樫野台": {
+   "romaji": "Kashinodai"
+  },
+  "桜が丘中町": {
+   "romaji": "Sakuragaokanakamachi"
+  },
+  "押部谷町福住": {
+   "romaji": "Oshibedani-cho Fukuzumi"
+  },
+  "北山台": {
+   "romaji": "Kitayamadai"
+  },
+  "押部谷町押部": {
+   "romaji": "Oshibedani-cho Oshibe"
+  },
+  "月が丘": {
+   "romaji": "Tsukigaoka"
+  },
+  "押部谷町高和": {
+   "romaji": "Oshibedani-cho Takawa"
+  },
+  "小山": {
+   "romaji": "Koyama"
+  },
+  "中野": {
+   "romaji": "Nakano"
+  },
+  "王塚台": {
+   "romaji": "Ozukadai"
+  },
+  "枝吉": {
+   "romaji": "Shikiyoshi"
+  },
+  "玉津町高津橋": {
+   "romaji": "Tamatsu-cho Takatsubashi"
+  },
+  "玉津町上池": {
+   "romaji": "Tamatsu-cho Uwaike"
+  },
+  "玉津町今津": {
+   "romaji": "Tamatsu-cho Imazu"
+  },
+  "神出町田井": {
+   "romaji": "Kande-cho Tai"
+  },
+  "神出町東": {
+   "romaji": "Kande-cho Higashi"
+  }
+ },
+ "stems": {
+  "御影": {
+   "romaji": "Mikage"
+  },
+  "本庄": {
+   "romaji": "Honjo"
+  },
+  "住吉": {
+   "romaji": "Sumiyoshi"
+  },
+  "葺合": {
+   "romaji": "Fukiai"
+  },
+  "長田": {
+   "romaji": "Nagata"
+  },
+  "舞子": {
+   "romaji": "Maiko"
+  },
+  "東灘": {
+   "romaji": "Higashinada"
+  },
+  "魚崎": {
+   "romaji": "Uozaki"
+  },
+  "本山南": {
+   "romaji": "Motoyamaminami"
+  },
+  "成徳": {
+   "romaji": "Seitoku"
+  },
+  "なぎさ": {
+   "romaji": "Nagisa",
+   "zh": "渚"
+  },
+  "塩屋": {
+   "romaji": "Shioya"
+  },
+  "垂水": {
+   "romaji": "Tarumi"
+  },
+  "伊川谷": {
+   "romaji": "Ikawadani"
+  },
+  "本山第二": {
+   "romaji": "Motoyama Daini"
+  },
+  "本山": {
+   "romaji": "Motoyama"
+  },
+  "甲南": {
+   "romaji": "Konan"
+  },
+  "住之江": {
+   "romaji": "Suminoe"
+  },
+  "渦が森": {
+   "romaji": "Uzugamori"
+  },
+  "向洋": {
+   "romaji": "Koyo"
+  },
+  "神戸": {
+   "romaji": "Kobe"
+  },
+  "上筒井": {
+   "romaji": "Kamitsutsui"
+  },
+  "筒井台": {
+   "romaji": "Tsutsuidai"
+  },
+  "渚": {
+   "romaji": "Nagisa"
+  },
+  "中央": {
+   "romaji": "Chuo"
+  },
+  "磯上": {
+   "romaji": "Isogami"
+  },
+  "会下山": {
+   "romaji": "Egeyama"
+  },
+  "夢野台": {
+   "romaji": "Yumenodai"
+  },
+  "星和台": {
+   "romaji": "Seiwadai"
+  },
+  "鈴蘭台": {
+   "romaji": "Suzurandai"
+  },
+  "南五葉": {
+   "romaji": "Minamigoyo"
+  },
+  "小部": {
+   "romaji": "Obe"
+  },
+  "桜の宮": {
+   "romaji": "Sakuranomiya"
+  },
+  "広陵": {
+   "romaji": "Koryo"
+  },
+  "山田": {
+   "romaji": "Yamada"
+  },
+  "大池": {
+   "romaji": "Oike"
+  },
+  "唐櫃": {
+   "romaji": "Karito"
+  },
+  "有馬": {
+   "romaji": "Arima"
+  },
+  "有野": {
+   "romaji": "Arino"
+  },
+  "淡河": {
+   "romaji": "Ogo"
+  },
+  "蓮池": {
+   "romaji": "Hasuike"
+  },
+  "長田南": {
+   "romaji": "Nagataminami"
+  },
+  "駒ヶ林": {
+   "romaji": "Komagabayashi"
+  },
+  "だいち": {
+   "romaji": "Daichi",
+   "zh": "大地"
+  },
+  "横尾": {
+   "romaji": "Yokoo"
+  },
+  "竜が台": {
+   "romaji": "Ryugadai"
+  },
+  "東落合": {
+   "romaji": "Higashiochiai"
+  },
+  "西落合": {
+   "romaji": "Nishiochiai"
+  },
+  "福田": {
+   "romaji": "Fukuda"
+  },
+  "東垂水": {
+   "romaji": "Higashitarumi"
+  },
+  "西舞子": {
+   "romaji": "Nishimaiko"
+  },
+  "神陵台": {
+   "romaji": "Shinryodai"
+  },
+  "多聞東": {
+   "romaji": "Tamonhigashi"
+  },
+  "長坂": {
+   "romaji": "Nagasaka"
+  },
+  "平野": {
+   "romaji": "Hirano"
+  },
+  "櫨谷": {
+   "romaji": "Hazetani"
+  },
+  "桜が丘": {
+   "romaji": "Sakuragaoka"
+  },
+  "押部谷": {
+   "romaji": "Oshibedani"
+  },
+  "神出": {
+   "romaji": "Kande"
+  },
+  "岩岡": {
+   "romaji": "Iwaoka"
+  },
+  "本山第一": {
+   "romaji": "Motoyama Daiichi"
+  },
+  "甲南女子": {
+   "romaji": "Konan Joshi"
+  },
+  "本山第三": {
+   "romaji": "Motoyama Daisan"
+  },
+  "御影北": {
+   "romaji": "Mikagekita"
+  },
+  "本庄中央": {
+   "romaji": "Honjo Chuo"
+  },
+  "住吉宮町": {
+   "romaji": "Sumiyoshimiyamachi"
+  },
+  "森": {
+   "romaji": "Mori"
+  },
+  "鶴甲": {
+   "romaji": "Tsurukabuto"
+  },
+  "高羽": {
+   "romaji": "Takaba"
+  },
+  "西郷": {
+   "romaji": "Saigo"
+  },
+  "六甲": {
+   "romaji": "Rokko"
+  },
+  "福住": {
+   "romaji": "Fukuzumi"
+  },
+  "西灘": {
+   "romaji": "Nishinada"
+  },
+  "原田": {
+   "romaji": "Harada"
+  },
+  "稗田": {
+   "romaji": "Hieda"
+  },
+  "上野": {
+   "romaji": "Ueno"
+  },
+  "摩耶": {
+   "romaji": "Maya"
+  },
+  "灘": {
+   "romaji": "Nada"
+  },
+  "六甲山": {
+   "romaji": "Rokkosan"
+  },
+  "長峰": {
+   "romaji": "Nagamine"
+  },
+  "烏帽子": {
+   "romaji": "Eboshi"
+  },
+  "灘の浜": {
+   "romaji": "Nadanohama"
+  },
+  "大和": {
+   "romaji": "Yamato"
+  },
+  "六甲道南": {
+   "romaji": "Rokkomichiminami"
+  },
+  "王子": {
+   "romaji": "Oji"
+  },
+  "摩耶海岸通": {
+   "romaji": "Maya-kaigandori"
+  },
+  "宮本": {
+   "romaji": "Miyamoto"
+  },
+  "春日野": {
+   "romaji": "Kasugano"
+  },
+  "雲中": {
+   "romaji": "Unchu"
+  },
+  "布引": {
+   "romaji": "Nunobiki"
+  },
+  "こうべ": {
+   "romaji": "Kobe",
+   "zh": "神户"
+  },
+  "浄福": {
+   "romaji": "Jofuku"
+  },
+  "神戸生田": {
+   "romaji": "Kobe Ikuta"
+  },
+  "山の手": {
+   "romaji": "Yamanote"
+  },
+  "湊": {
+   "romaji": "Minato"
+  },
+  "脇浜海岸通": {
+   "romaji": "Wakinohama-kaigandori"
+  },
+  "大倉山": {
+   "romaji": "Okurayama"
+  },
+  "神戸祇園": {
+   "romaji": "Kobe Gion"
+  },
+  "夢野": {
+   "romaji": "Yumeno"
+  },
+  "夢野の丘": {
+   "romaji": "Yumenonooka"
+  },
+  "水木": {
+   "romaji": "Mizuki"
+  },
+  "兵庫": {
+   "romaji": "Hyogo"
+  },
+  "須佐野": {
+   "romaji": "Susano"
+  },
+  "和田岬": {
+   "romaji": "Wadamisaki"
+  },
+  "浜山": {
+   "romaji": "Hamayama"
+  },
+  "吉田": {
+   "romaji": "Yoshida"
+  },
+  "湊川": {
+   "romaji": "Minatogawa"
+  },
+  "荒田": {
+   "romaji": "Arata"
+  },
+  "御崎": {
+   "romaji": "Misaki"
+  },
+  "菊水": {
+   "romaji": "Kikusui"
+  },
+  "ひよどり台": {
+   "romaji": "Hiyodoridai",
+   "zh": "鵯台"
+  },
+  "北五葉": {
+   "romaji": "Kitagoyo"
+  },
+  "君影": {
+   "romaji": "Kimikage"
+  },
+  "小部東": {
+   "romaji": "Obehigashi"
+  },
+  "泉台": {
+   "romaji": "Izumidai"
+  },
+  "大原": {
+   "romaji": "Ohara"
+  },
+  "桂木": {
+   "romaji": "Katsuragi"
+  },
+  "箕谷": {
+   "romaji": "Minotani"
+  },
+  "筑紫が丘": {
+   "romaji": "Tsukushigaoka"
+  },
+  "谷上": {
+   "romaji": "Tanigami"
+  },
+  "花山": {
+   "romaji": "Hanayama"
+  },
+  "六甲が丘": {
+   "romaji": "Rokkogaoka"
+  },
+  "神戸北": {
+   "romaji": "Kobe Kita"
+  },
+  "ありの台": {
+   "romaji": "Arinodai",
+   "zh": "有野台"
+  },
+  "藤原台": {
+   "romaji": "Fujiwaradai"
+  },
+  "有野北": {
+   "romaji": "Arinokita"
+  },
+  "西山": {
+   "romaji": "Nishiyama"
+  },
+  "道場": {
+   "romaji": "Dojo"
+  },
+  "生野": {
+   "romaji": "Ikuno"
+  },
+  "平田": {
+   "romaji": "Hirata"
+  },
+  "中": {
+   "romaji": "Naka",
+   "review": true
+  },
+  "長尾": {
+   "romaji": "Nagao"
+  },
+  "岩谷": {
+   "romaji": "Iwaya"
+  },
+  "鹿の子台": {
+   "romaji": "Kanokodai"
+  },
+  "北神戸": {
+   "romaji": "Kita-kobe"
+  },
+  "鈴蘭": {
+   "romaji": "Suzuran"
+  },
+  "鵯越": {
+   "romaji": "Hiyodorigoe"
+  },
+  "室内": {
+   "romaji": "Shitsunai",
+   "review": true
+  },
+  "丸山": {
+   "romaji": "Maruyama"
+  },
+  "雲雀丘": {
+   "romaji": "Hibarigaoka"
+  },
+  "宮川": {
+   "romaji": "Miyagawa"
+  },
+  "池田": {
+   "romaji": "Ikeda"
+  },
+  "西代": {
+   "romaji": "Nishidai"
+  },
+  "神戸常盤": {
+   "romaji": "Kobe Tokiwa"
+  },
+  "高取台": {
+   "romaji": "Takatoridai"
+  },
+  "育英": {
+   "romaji": "Ikuei"
+  },
+  "御蔵": {
+   "romaji": "Mikura"
+  },
+  "真野": {
+   "romaji": "Mano"
+  },
+  "駒ケ林": {
+   "romaji": "Komagabayashi"
+  },
+  "神楽": {
+   "romaji": "Kagura"
+  },
+  "新湊川": {
+   "romaji": "Shin-minatogawa"
+  },
+  "西代蓮池": {
+   "romaji": "Nishidai Hasuike"
+  },
+  "水笠通": {
+   "romaji": "Mizukasadori"
+  },
+  "若松": {
+   "romaji": "Wakamatsu"
+  },
+  "駅前": {
+   "romaji": "Ekimae"
+  },
+  "若宮": {
+   "romaji": "Wakamiya"
+  },
+  "鷹取": {
+   "romaji": "Takatori"
+  },
+  "南須磨": {
+   "romaji": "Minamisuma"
+  },
+  "西須磨": {
+   "romaji": "Nishisuma"
+  },
+  "北須磨": {
+   "romaji": "Kitasuma"
+  },
+  "太田": {
+   "romaji": "Ota"
+  },
+  "東須磨": {
+   "romaji": "Higashisuma"
+  },
+  "須磨": {
+   "romaji": "Suma"
+  },
+  "飛松": {
+   "romaji": "Tobimatsu"
+  },
+  "高倉台": {
+   "romaji": "Takakuradai"
+  },
+  "高倉": {
+   "romaji": "Takakura"
+  },
+  "板宿": {
+   "romaji": "Itayado"
+  },
+  "多井畑": {
+   "romaji": "Taihata"
+  },
+  "友が丘": {
+   "romaji": "Tomogaoka"
+  },
+  "南落合": {
+   "romaji": "Minamiochiai"
+  },
+  "菅の台": {
+   "romaji": "Suganodai"
+  },
+  "花谷": {
+   "romaji": "Hanatani"
+  },
+  "若草": {
+   "romaji": "Wakakusa"
+  },
+  "松尾": {
+   "romaji": "Matsuo"
+  },
+  "神の谷": {
+   "romaji": "Shinotani"
+  },
+  "白川": {
+   "romaji": "Shirakawa"
+  },
+  "白川台": {
+   "romaji": "Shirakawadai"
+  },
+  "千歳": {
+   "romaji": "Chitose"
+  },
+  "須磨海浜": {
+   "romaji": "Suma Kaihin"
+  },
+  "須磨離宮": {
+   "romaji": "Suma Rikyu"
+  },
+  "須磨浦": {
+   "romaji": "Sumaura"
+  },
+  "妙法寺川": {
+   "romaji": "Myohojigawa"
+  },
+  "下中島": {
+   "romaji": "Shimonakajima"
+  },
+  "塩屋北": {
+   "romaji": "Shioyakita"
+  },
+  "塩屋台": {
+   "romaji": "Shioyadai"
+  },
+  "下畑台": {
+   "romaji": "Shimohatadai"
+  },
+  "桃山台": {
+   "romaji": "Momoyamadai"
+  },
+  "下畑": {
+   "romaji": "Shimohata"
+  },
+  "つつじが丘": {
+   "romaji": "Tsutsujigaoka",
+   "zh": "杜鹃之丘"
+  },
+  "乙木": {
+   "romaji": "Otogi"
+  },
+  "垂水東": {
+   "romaji": "Tarumihigashi"
+  },
+  "名谷": {
+   "romaji": "Myodani"
+  },
+  "高丸": {
+   "romaji": "Takamaru"
+  },
+  "千鳥が丘": {
+   "romaji": "Chidorigaoka"
+  },
+  "霞ヶ丘": {
+   "romaji": "Kasumigaoka"
+  },
+  "歌敷山": {
+   "romaji": "Utashikiyama"
+  },
+  "東舞子": {
+   "romaji": "Higashimaiko"
+  },
+  "多聞台": {
+   "romaji": "Tamondai"
+  },
+  "西脇": {
+   "romaji": "Nishiwaki"
+  },
+  "千代が丘": {
+   "romaji": "Chiyogaoka"
+  },
+  "本多聞": {
+   "romaji": "Hontamon"
+  },
+  "舞多聞": {
+   "romaji": "Maitamon"
+  },
+  "多聞の丘": {
+   "romaji": "Tamonnooka"
+  },
+  "小束山": {
+   "romaji": "Kozukayama"
+  },
+  "星陵台": {
+   "romaji": "Seiryodai"
+  },
+  "星陵": {
+   "romaji": "Seiryo"
+  },
+  "神戸商業": {
+   "romaji": "Kobe Shogyo"
+  },
+  "青山台東": {
+   "romaji": "Aoyamadaihigashi"
+  },
+  "平磯": {
+   "romaji": "Hiraiso"
+  },
+  "矢元台": {
+   "romaji": "Yamotodai",
+   "review": true
+  },
+  "有瀬": {
+   "romaji": "Arise"
+  },
+  "東町": {
+   "romaji": "Higashimachi"
+  },
+  "井吹東": {
+   "romaji": "Ibukihigashi"
+  },
+  "井吹台": {
+   "romaji": "Ibukidai"
+  },
+  "井吹西": {
+   "romaji": "Ibukinishi"
+  },
+  "井吹の丘": {
+   "romaji": "Ibukinooka"
+  },
+  "春日台": {
+   "romaji": "Kasugadai"
+  },
+  "西": {
+   "romaji": "Nishi",
+   "review": true
+  },
+  "美賀多台": {
+   "romaji": "Mikatadai"
+  },
+  "糀台": {
+   "romaji": "Kojidai"
+  },
+  "狩場台": {
+   "romaji": "Karibadai"
+  },
+  "竹の台": {
+   "romaji": "Takenodai"
+  },
+  "西神": {
+   "romaji": "Seishin"
+  },
+  "樫野台": {
+   "romaji": "Kashinodai"
+  },
+  "木津": {
+   "romaji": "Kizu"
+  },
+  "北山": {
+   "romaji": "Kitayama"
+  },
+  "月が丘": {
+   "romaji": "Tsukigaoka"
+  },
+  "高和": {
+   "romaji": "Takawa"
+  },
+  "玉津第一": {
+   "romaji": "Tamatsu Daiichi"
+  },
+  "出合": {
+   "romaji": "Deai"
+  },
+  "王塚台": {
+   "romaji": "Ozukadai"
+  },
+  "枝吉": {
+   "romaji": "Shikiyoshi"
+  },
+  "高津橋": {
+   "romaji": "Takatsubashi"
+  },
+  "玉津南": {
+   "romaji": "Tamatsuminami"
+  },
+  "玉津": {
+   "romaji": "Tamatsu"
+  },
+  "小": {
+   "romaji": "Sho",
+   "review": true
+  },
+  "太山": {
+   "romaji": "Taisan"
+  },
+  "妙法": {
+   "romaji": "Myoho"
+  },
+  "須磨北": {
+   "romaji": "Sumakita"
+  },
+  "緑ヶ丘": {
+   "romaji": "Midorigaoka"
+  },
+  "中落合": {
+   "romaji": "Nakaochiai"
+  },
+  "北落合": {
+   "romaji": "Kitaochiai"
+  },
+  "東白川台": {
+   "romaji": "Higashishirakawadai"
+  },
+  "神戸学院": {
+   "romaji": "Kobe Gakuin"
+  },
+  "神戸国際展示場": {
+   "en": "Kobe International Exhibition Hall",
+   "ko": "고베 국제전시장",
+   "zh": "神户国际展览场"
+  },
+  "東遊園地": {
+   "romaji": "Higashi Yuenchi"
+  },
+  "産業振興": {
+   "romaji": "Sangyo Shinko"
+  },
+  "甲緑": {
+   "romaji": "Koryoku",
+   "review": true
+  },
+  "好徳": {
+   "romaji": "Kotoku",
+   "review": true
+  },
+  "名倉": {
+   "romaji": "Nagura",
+   "review": true
+  },
+  "真陽": {
+   "romaji": "Shinyo"
+  },
+  "五位の池": {
+   "romaji": "Goinoike"
+  },
+  "神港橘": {
+   "romaji": "Shinko Tachibana"
+  },
+  "兵庫大開": {
+   "romaji": "Hyogo Daikai"
+  },
+  "明親": {
+   "romaji": "Meishin"
+  },
+  "兵庫工業": {
+   "romaji": "Hyogo Kogyo"
+  },
+  "兵庫駅南": {
+   "romaji": "Hyogo Ekiminami"
+  },
+  "正慶町": {
+   "romaji": "Shokeicho",
+   "review": true
+  },
+  "鵯台": {
+   "romaji": "Hiyodoridai"
+  },
+  "上大沢ふれあい": {
+   "romaji": "Kamiosawa Fureai",
+   "zh": "上大泽交流"
+  },
+  "大沢小・": {
+   "romaji": "Osawa"
+  },
+  "湊翔楠中": {
+   "romaji": "Minatoshokusu",
+   "review": true
+  },
+  "須磨翔風": {
+   "romaji": "Suma Shofu"
+  },
+  "神戸星城": {
+   "romaji": "Kobe Seijo"
+  },
+  "鷹取駅北": {
+   "romaji": "Takatori Ekikita"
+  },
+  "兵庫県自治研修所": {
+   "en": "Hyogo Prefectural Training Institute",
+   "ko": "효고현 자치연수소",
+   "zh": "兵库县自治研修所"
+  },
+  "神戸市外国語": {
+   "en": "Kobe City University of Foreign Studies",
+   "ko": "고베시 외국어",
+   "zh": "神户市外国语"
+  },
+  "工業高等専門": {
+   "en": "Kobe City College of Technology",
+   "ko": "고베시립 공업고등전문",
+   "zh": "神户市立工业高等专门"
+  },
+  "神戸聴覚": {
+   "en": "Kobe School for the Deaf",
+   "ko": "고베 청각",
+   "zh": "神户听觉"
+  },
+  "視覚": {
+   "en": "School for the Blind",
+   "ko": "시각",
+   "zh": "视觉"
+  },
+  "総合療育": {
+   "romaji": "Sogo Ryoiku"
+  },
+  "友生支援": {
+   "romaji": "Yusei"
+  },
+  "北須磨文化": {
+   "romaji": "Kitasuma Bunka"
+  },
+  "垂水年金": {
+   "romaji": "Tarumi Nenkin"
+  },
+  "舞子墓園": {
+   "en": "Maiko Cemetery",
+   "ko": "마이코 묘지",
+   "zh": "舞子墓园"
+  },
+  "鵯越墓園": {
+   "en": "Hiyodorigoe Cemetery",
+   "ko": "히요도리고에 묘지",
+   "zh": "鵯越墓园"
+  },
+  "平磯芝生": {
+   "romaji": "Hiraiso Shibafu"
+  },
+  "平磯緑地": {
+   "romaji": "Hiraiso Ryokuchi"
+  },
+  "藍那小河地域福祉": {
+   "romaji": "Aina Ogawa"
+  },
+  "五社ふれあい館": {
+   "en": "Gosha Fureai Hall",
+   "ko": "고샤 후레아이관",
+   "zh": "五社交流馆"
+  },
+  "多井畑自治": {
+   "romaji": "Taihata Jichi"
+  },
+  "塩屋台自治": {
+   "romaji": "Shioyadai Jichi"
+  },
+  "生野自治": {
+   "romaji": "Ikuno Jichi"
+  },
+  "平田自治": {
+   "romaji": "Hirata Jichi"
+  },
+  "西二郎集会所": {
+   "en": "Nishijiro Meeting Hall",
+   "ko": "니시지로 집회소",
+   "zh": "西二郎集会所"
+  },
+  "会下山配水場": {
+   "en": "Egeyama Reservoir",
+   "ko": "에게야마 배수장",
+   "zh": "会下山配水场"
+  },
+  "湊翔楠": {
+   "romaji": "Minatoshokusu",
+   "review": true
+  },
+  "科学技術": {
+   "romaji": "Kagaku Gijutsu"
+  },
+  "中央図書館": {
+   "en": "Central Library",
+   "ko": "중앙도서관",
+   "zh": "中央图书馆"
+  },
+  "こうべまちづくり": {
+   "romaji": "Kobe Machizukuri",
+   "zh": "神户城市建设"
+  },
+  "こうべ市民福祉交流": {
+   "romaji": "Kobe Shimin Fukushi Koryu",
+   "zh": "神户市民福祉交流"
+  },
+  "海外移住と文化の交流": {
+   "romaji": "Kaigai Iju to Bunka no Koryu",
+   "zh": "海外移居与文化交流"
+  },
+  "夢野中学校第２": {
+   "en": "Yumeno Junior High School No. 2",
+   "ko": "유메노 중학교 제2",
+   "zh": "梦野初中第二"
+  },
+  "湊川中学校・楠": {
+   "en": "Minatogawa Junior High School / Kusunoki",
+   "ko": "미나토가와 중학교·구스노키",
+   "zh": "凑川初中·楠"
+  },
+  "高齢者ケアセンターひょうご": {
+   "en": "Korei-sha Care Center Hyogo",
+   "ko": "고령자 케어센터 효고",
+   "zh": "高龄者护理中心兵库"
+  },
+  "神戸松蔭女子学院": {
+   "en": "Kobe Shoin Women's University",
+   "ko": "고베 쇼인 여자학원",
+   "zh": "神户松荫女子学院"
+  },
+  "親和女子高校・親和": {
+   "romaji": "Shinwa"
+  },
+  "王子スポーツ": {
+   "en": "Oji Sports",
+   "ko": "오지 스포츠",
+   "zh": "王子体育"
+  },
+  "西郷川河口": {
+   "romaji": "Saigogawa Kako"
+  },
+  "メリケンパーク": {
+   "en": "Meriken Park",
+   "ko": "메리켄 파크",
+   "zh": "美利坚公园"
+  },
+  "ワールド記念": {
+   "en": "World Memorial",
+   "ko": "월드 기념",
+   "zh": "World记念"
+  },
+  "六甲アイランド": {
+   "en": "Rokko Island",
+   "ko": "롯코 아일랜드",
+   "zh": "六甲岛"
+  },
+  "六甲風の郷": {
+   "romaji": "Rokko Kaze no Sato"
+  },
+  "美野丘": {
+   "romaji": "Minooka",
+   "review": true
+  },
+  "鷹匠": {
+   "romaji": "Takajo"
+  },
+  "呉田": {
+   "romaji": "Goden",
+   "review": true
+  },
+  "小寄": {
+   "romaji": "Koyose",
+   "review": true
+  },
+  "手水": {
+   "romaji": "Chozu",
+   "review": true
+  },
+  "瀬戸": {
+   "romaji": "Seto"
+  },
+  "福池": {
+   "romaji": "Fukuike"
+  },
+  "神大附属中等教育": {
+   "en": "Kobe University Secondary",
+   "ko": "고베대학 부속 중등교육",
+   "zh": "神户大学附属中等教育"
+  },
+  "妙法寺川左岸": {
+   "romaji": "Myohojigawa Sagan"
+  }
+ },
  "suffixes": {
   "小学校": {
    "en": "Elementary School",
@@ -180,6 +2010,467 @@
    "zh": "别馆"
   }
  },
- "names": {},
- "notes": {}
+ "names": {
+  "神戸大学海洋政策科学部": {
+   "en": "Kobe University Graduate School of Maritime Sciences",
+   "ko": "고베대학 해양정책과학부",
+   "zh": "神户大学海洋政策科学部"
+  },
+  "神戸大学白鴎寮": {
+   "en": "Kobe University Hakuo Dormitory",
+   "ko": "고베대학 하쿠오 기숙사",
+   "zh": "神户大学白鸥寮"
+  },
+  "神戸大学テニスコート": {
+   "en": "Kobe University Tennis Courts",
+   "ko": "고베대학 테니스 코트",
+   "zh": "神户大学网球场"
+  },
+  "神戸大学農学部": {
+   "en": "Kobe University Faculty of Agriculture",
+   "ko": "고베대학 농학부",
+   "zh": "神户大学农学部"
+  },
+  "神戸大学工学部": {
+   "en": "Kobe University Faculty of Engineering",
+   "ko": "고베대학 공학부",
+   "zh": "神户大学工学部"
+  },
+  "神戸大学大学院人間発達環境学研究科": {
+   "en": "Kobe University Graduate School of Human Development and Environment",
+   "ko": "고베대학 대학원 인간발달환경학연구과",
+   "zh": "神户大学大学院人类发展环境学研究科"
+  },
+  "神大附属中等教育学校": {
+   "en": "Kobe University Secondary School",
+   "ko": "고베대학 부속 중등교육학교",
+   "zh": "神户大学附属中等教育学校"
+  },
+  "神戸薬科大学": {
+   "en": "Kobe Pharmaceutical University",
+   "ko": "고베약과대학",
+   "zh": "神户药科大学"
+  },
+  "頌栄短期大学": {
+   "en": "Shoei Junior College",
+   "ko": "쇼에이 단기대학",
+   "zh": "颂荣短期大学"
+  },
+  "幼保連携型認定こども園同朋住吉台こども園": {
+   "en": "Doho Sumiyoshidai Nursery Center",
+   "ko": "도호 스미요시다이 어린이집",
+   "zh": "同朋住吉台幼儿园"
+  },
+  "コミスタこうべ（生涯学習支援センター）": {
+   "en": "Comista Kobe (Lifelong Learning Support Center)",
+   "ko": "코미스타 고베 (평생학습지원센터)",
+   "zh": "Comista神户（终身学习支援中心）"
+  },
+  "生田川公園（ＨＡＴゆめ公園）": {
+   "en": "Ikutagawa Park (HAT Yume Park)",
+   "ko": "이쿠타가와 공원 (HAT 유메 공원)",
+   "zh": "生田川公园（HAT梦公园）"
+  },
+  "神戸震災復興記念公園（みなとのもり公園）": {
+   "en": "Kobe Earthquake Memorial Park (Minato no Mori Park)",
+   "ko": "고베 지진 부흥 기념 공원 (미나토노모리 공원)",
+   "zh": "神户震灾复兴纪念公园（港之森公园）"
+  },
+  "ＪＡ兵庫六甲（神戸北文化センター）": {
+   "en": "JA Hyogo Rokko (Kobe Kita Cultural Center)",
+   "ko": "JA 효고 롯코 (고베키타 문화센터)",
+   "zh": "JA兵库六甲（神户北文化中心）"
+  },
+  "ネイチャー　スタジオ": {
+   "en": "Nature Studio",
+   "ko": "네이처 스튜디오",
+   "zh": "Nature Studio"
+  },
+  "建設局中央水環境センター鈴蘭台処理場": {
+   "en": "Suzurandai Water Treatment Plant",
+   "ko": "스즈란다이 처리장",
+   "zh": "铃兰台处理场"
+  },
+  "夢野こどもホーム（一階地域交流スペース）": {
+   "en": "Yumeno Children's Home (1F Community Space)",
+   "ko": "유메노 어린이집 (1층 지역교류 공간)",
+   "zh": "梦野儿童之家（一楼地区交流空间）"
+  },
+  "キャナルタウン広場（駅前）": {
+   "en": "Canal Town Plaza (Station Side)",
+   "ko": "캐널타운 광장 (역앞)",
+   "zh": "运河城广场（站前）"
+  },
+  "キャナルタウン広場（西）": {
+   "en": "Canal Town Plaza (West)",
+   "ko": "캐널타운 광장 (서)",
+   "zh": "运河城广场（西）"
+  },
+  "生野高原安心コミュニティプラザ": {
+   "en": "Ikuno Kogen Anshin Community Plaza",
+   "ko": "이쿠노 고원 안심 커뮤니티 플라자",
+   "zh": "生野高原安心社区广场"
+  },
+  "ポートアイランドスポーツセンター": {
+   "en": "Port Island Sports Center",
+   "ko": "포트아일랜드 스포츠센터",
+   "zh": "港岛体育中心"
+  },
+  "バンドー神戸青少年科学館": {
+   "en": "Bandai Kobe Youth Science Museum",
+   "ko": "반도 고베 청소년 과학관",
+   "zh": "阪东神户青少年科学馆"
+  },
+  "義務教育学校港島学園": {
+   "en": "Minatojima Compulsory Education School",
+   "ko": "미나토지마 학원",
+   "zh": "港岛学园"
+  },
+  "義務教育学校八多学園": {
+   "en": "Hata Compulsory Education School",
+   "ko": "하타 학원",
+   "zh": "八多学园"
+  },
+  "大沢小・中学校": {
+   "en": "Osawa Elementary and Junior High School",
+   "ko": "오사와 초·중학교",
+   "zh": "大沢小学与初中"
+  },
+  "親和女子高校・親和中学校": {
+   "en": "Shinwa Girls' Senior and Junior High School",
+   "ko": "신와 여자 고·중학교",
+   "zh": "亲和女子高中与初中"
+  },
+  "兵庫県立大学（神戸商科キャンパス）": {
+   "en": "University of Hyogo (Kobe Shosha Campus)",
+   "ko": "효고현립대학 (고베 상과 캠퍼스)",
+   "zh": "兵库县立大学（神户商科校区）"
+  },
+  "マリンピア神戸": {
+   "en": "Marine Pia Kobe",
+   "ko": "마린피아 고베",
+   "zh": "Marine Pia神户"
+  },
+  "アジュール舞子": {
+   "en": "Azur Maiko",
+   "ko": "아주르 마이코",
+   "zh": "Azur舞子"
+  },
+  "ふたば学舎": {
+   "en": "Futaba Gakusha",
+   "ko": "후타바 학사",
+   "zh": "双叶学舍"
+  },
+  "丸山コミュニティ・センター": {
+   "en": "Maruyama Community Center",
+   "ko": "마루야마 커뮤니티 센터",
+   "zh": "丸山社区中心"
+  },
+  "丸山ひばり小学校": {
+   "en": "Maruyama Hibari Elementary School",
+   "ko": "마루야마 히바리 초등학교",
+   "zh": "丸山云雀小学"
+  },
+  "須磨一の谷プラザ": {
+   "en": "Suma Ichinotani Plaza",
+   "ko": "스마 이치노타니 플라자",
+   "zh": "须磨一之谷广场"
+  },
+  "御影公会堂": {
+   "en": "Mikage Public Hall",
+   "ko": "미카게 공회당",
+   "zh": "御影公会堂"
+  },
+  "住之江公民館別館": {
+   "en": "Suminoe Community Center Annex",
+   "ko": "스미노에 공민관 별관",
+   "zh": "住之江公民馆别馆"
+  },
+  "灘中・高校": {
+   "en": "Nada Junior and Senior High School",
+   "ko": "나다 중·고등학교",
+   "zh": "滩中学与高中"
+  },
+  "甲南女子中・高校": {
+   "en": "Konan Girls' Junior and Senior High School",
+   "ko": "고난 여자 중·고등학교",
+   "zh": "甲南女子中学与高中"
+  }
+ },
+ "notes": {
+  "建物に被害が無ければ、原則自宅避難": {
+   "en": "If the building is undamaged, stay at home as a rule.",
+   "ko": "건물에 피해가 없으면 원칙적으로 자택에 머무르십시오.",
+   "zh": "如建筑物无损坏，原则上在家避难。"
+  },
+  "《津波時》念のため海岸から離れること。": {
+   "en": "[Tsunami] Move away from the coast as a precaution.",
+   "ko": "[쓰나미] 만일을 위해 해안에서 멀어지십시오.",
+   "zh": "【海啸】为安全起见请远离海岸。"
+  },
+  "《土砂災害時》正門が土砂災害警戒区域内にあるので注意、早めに避難": {
+   "en": "[Landslide] The main gate is inside a landslide warning zone. Take care and evacuate early.",
+   "ko": "[토사재해] 정문이 토사재해경계구역 안에 있으므로 주의하고 일찍 대피하십시오.",
+   "zh": "【泥石流】正门位于泥石流灾害警戒区域内，请注意并尽早避难。"
+  },
+  "《津波時》JRより北などへ避難が困難な場合はノエビアスタジアムへ避難": {
+   "en": "[Tsunami] If you cannot evacuate north of the JR line, evacuate to Noevir Stadium.",
+   "ko": "[쓰나미] JR선 북쪽 등으로 대피가 어려우면 노에비아 스타디움으로 대피하십시오.",
+   "zh": "【海啸】如难以向JR线以北避难，请前往Noevir体育场。"
+  },
+  "《洪水時》別の避難場所へ避難": {
+   "en": "[Flood] Evacuate to a different site.",
+   "ko": "[홍수] 다른 대피 장소로 대피하십시오.",
+   "zh": "【洪水】请前往其他避难场所。"
+  },
+  "《土砂災害時》施設の一部・施設までの道のりの一部が土砂災害警戒区域内にあるので注意、早めに避難": {
+   "en": "[Landslide] Part of the facility and part of the route to it are inside a landslide warning zone. Take care and evacuate early.",
+   "ko": "[토사재해] 시설의 일부와 시설까지의 경로 일부가 토사재해경계구역 안에 있으므로 주의하고 일찍 대피하십시오.",
+   "zh": "【泥石流】设施部分区域及前往设施的部分路径位于警戒区域内，请注意并尽早避难。"
+  },
+  "《水害時》別の避難場所へ避難": {
+   "en": "[Flood damage] Evacuate to a different site.",
+   "ko": "[수해] 다른 대피 장소로 대피하십시오.",
+   "zh": "【水灾】请前往其他避难场所。"
+  },
+  "《洪水時》避難経路の通行に注意が必要": {
+   "en": "[Flood] Take care when travelling along the evacuation route.",
+   "ko": "[홍수] 대피 경로 통행에 주의가 필요합니다.",
+   "zh": "【洪水】通行避难路线时需注意。"
+  },
+  "《土砂災害時》原則、土砂災害警戒区域外（本山第二小学校）へ避難。ただし、警戒区域外への避難が困難な方や余裕のない場合は状況により利用可": {
+   "en": "[Landslide] As a rule, evacuate outside the landslide warning zone (Motoyama Daini Elementary School). However, this site may be used depending on the situation if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 원칙적으로 경계구역 밖(모토야마 다이니 초등학교)으로 대피하십시오. 다만 구역 밖 대피가 어렵거나 여유가 없는 경우 상황에 따라 이용할 수 있습니다.",
+   "zh": "【泥石流】原则上请前往警戒区域外（本山第二小学）避难。但若难以前往区域外或时间紧迫，可视情况使用本处。"
+  },
+  "《土砂災害時》正門が土砂災害警戒区域内にあるので注意": {
+   "en": "[Landslide] The main gate is inside a landslide warning zone. Take care.",
+   "ko": "[토사재해] 정문이 토사재해경계구역 안에 있으므로 주의하십시오.",
+   "zh": "【泥石流】正门位于警戒区域内，请注意。"
+  },
+  "《洪水時》一部洪水による浸水想定区域に入っているため注意": {
+   "en": "[Flood] Part of the site is within the expected inundation area. Take care.",
+   "ko": "[홍수] 일부가 침수 예상 구역에 포함되므로 주의하십시오.",
+   "zh": "【洪水】部分区域位于预计淹水范围内，请注意。"
+  },
+  "《土砂災害時》正門が土砂災害警戒区域内にあるので注意、西門を利用": {
+   "en": "[Landslide] The main gate is inside a landslide warning zone. Use the west gate.",
+   "ko": "[토사재해] 정문이 경계구역 안에 있으므로 서문을 이용하십시오.",
+   "zh": "【泥石流】正门位于警戒区域内，请使用西门。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（稗田小学校・王子スポーツセンター）へ避難。ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Hieda Elementary School / Oji Sports Center). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖(히에다 초등학교·오지 스포츠센터)으로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外（稗田小学·王子体育中心）避难。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（稗田小学校・上野中学校）へ避難、ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Hieda Elementary School / Ueno Junior High School). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖(히에다 초등학교·우에노 중학교)으로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外（稗田小学·上野初中）避难。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（高羽小学校）へ避難すること、ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Takaba Elementary School). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖(다카바 초등학교)으로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外（高羽小学）避难。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《津波時》念のため海岸から離れ、北へ避難": {
+   "en": "[Tsunami] Move away from the coast as a precaution and evacuate north.",
+   "ko": "[쓰나미] 만일을 위해 해안에서 멀어져 북쪽으로 대피하십시오.",
+   "zh": "【海啸】为安全起见请远离海岸并向北避难。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（雲中小学校、春日野小学校）へ避難": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Unchu Elementary School or Kasugano Elementary School).",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(운추 초등학교, 가스가노 초등학교)로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（云中小学、春日野小学）。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（雲中小学校、中央小学校）へ避難": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Unchu Elementary School or Chuo Elementary School).",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(운추 초등학교, 주오 초등학교)로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（云中小学、中央小学）。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（こうべ小学校）へ避難": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Kobe Elementary School).",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(고베 초등학교)로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（神户小学）。"
+  },
+  "《津波時》3階以上へ避難すること。": {
+   "en": "[Tsunami] Evacuate to the third floor or higher.",
+   "ko": "[쓰나미] 3층 이상으로 대피하십시오.",
+   "zh": "【海啸】请避难至三楼以上。"
+  },
+  "再整備のため一部使用できません": {
+   "en": "Partly unavailable due to renovation work.",
+   "ko": "재정비 공사로 일부 이용할 수 없습니다.",
+   "zh": "因重新整修，部分区域无法使用。"
+  },
+  "再整備のため使用できません": {
+   "en": "Unavailable due to renovation work.",
+   "ko": "재정비 공사로 이용할 수 없습니다.",
+   "zh": "因重新整修，无法使用。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（神戸祇園小学校）へ避難": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Kobe Gion Elementary School).",
+   "ko": "[토사재해] 경계구역 밖(고베 기온 초등학교)으로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外（神户祇园小学）避难。"
+  },
+  "《津波時》JR より北や明親小学校へ避難することが困難な場合は利用可": {
+   "en": "[Tsunami] May be used if evacuating north of the JR line or to Meishin Elementary School is difficult.",
+   "ko": "[쓰나미] JR선 북쪽이나 메이신 초등학교로 대피가 어려운 경우 이용할 수 있습니다.",
+   "zh": "【海啸】如难以前往JR线以北或明亲小学，可使用本处。"
+  },
+  "《津波時》JRより北などへ避難が困難な場合はノエビアスタジアムへ避難が困難な場合はD棟３階以上へ避難": {
+   "en": "[Tsunami] If you cannot evacuate north of the JR line, evacuate to Noevir Stadium; if that is also difficult, evacuate to the third floor or higher of Building D.",
+   "ko": "[쓰나미] JR선 북쪽 등으로 대피가 어려우면 노에비아 스타디움으로, 그것도 어려우면 D동 3층 이상으로 대피하십시오.",
+   "zh": "【海啸】如难以向JR线以北避难，请前往Noevir体育场；若亦有困难，请避难至D栋三楼以上。"
+  },
+  "《土砂災害時》北門が土砂災害警戒区域内にあるので注意、西門を利用": {
+   "en": "[Landslide] The north gate is inside a landslide warning zone. Use the west gate.",
+   "ko": "[토사재해] 북문이 경계구역 안에 있으므로 서문을 이용하십시오.",
+   "zh": "【泥石流】北门位于警戒区域内，请使用西门。"
+  },
+  "《土砂災害時》南門が土砂災害警戒区域内にあるので注意、北門を利用": {
+   "en": "[Landslide] The south gate is inside a landslide warning zone. Use the north gate.",
+   "ko": "[토사재해] 남문이 경계구역 안에 있으므로 북문을 이용하십시오.",
+   "zh": "【泥石流】南门位于警戒区域内，请使用北门。"
+  },
+  "《土砂災害時》正門及び西門が土砂災害警戒区域にあるため、東門を利用": {
+   "en": "[Landslide] The main and west gates are in a landslide warning zone. Use the east gate.",
+   "ko": "[토사재해] 정문과 서문이 경계구역에 있으므로 동문을 이용하십시오.",
+   "zh": "【泥石流】正门与西门位于警戒区域内，请使用东门。"
+  },
+  "《土砂災害時》避難場所への進入経路が土砂災害警戒区域内にあるので注意": {
+   "en": "[Landslide] The approach route to the site is inside a landslide warning zone. Take care.",
+   "ko": "[토사재해] 대피 장소로의 진입 경로가 경계구역 안에 있으므로 주의하십시오.",
+   "zh": "【泥石流】进入避难场所的路径位于警戒区域内，请注意。"
+  },
+  "夜間、土休日は閉館のため避難の際は北神区役所（981-53）に問い合わせ": {
+   "en": "Closed at night and on weekends and holidays. To evacuate here, contact the Hokushin Ward Office (981-53).",
+   "ko": "야간과 주말·공휴일에는 휴관하므로 대피 시 호쿠신 구청(981-53)에 문의하십시오.",
+   "zh": "夜间及周末、节假日闭馆。避难时请联系北神区役所（981-53）。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（丸山中学校）へ避難。ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可。": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Maruyama Junior High School). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(마루야마 중학교)로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（丸山初中）。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（宮川小学校、長田高校、蓮池小学校）へ避難。ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可。": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Miyagawa Elementary School, Nagata High School or Hasuike Elementary School). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(미야가와 초등학교, 나가타 고등학교, 하스이케 초등학교)로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（宫川小学、长田高中、莲池小学）。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（宮川小学校、長田高校、蓮池小学校）へ避難": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Miyagawa Elementary School, Nagata High School or Hasuike Elementary School).",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(미야가와 초등학교, 나가타 고등학교, 하스이케 초등학교)로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（宫川小学、长田高中、莲池小学）。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（蓮池小学校）へ避難。ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可。": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Hasuike Elementary School). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(하스이케 초등학교)로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（莲池小学）。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（長田小学校、五位の池小学校）へ避難すること。ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可。": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Nagata Elementary School or Goinoike Elementary School). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(나가타 초등학교, 고이노이케 초등학교)로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（长田小学、五位之池小学）。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《土砂災害時》土砂災害警戒区域外の緊急避難場所（長田小学校、五位の池小学校）へ避難": {
+   "en": "[Landslide] Evacuate to an emergency evacuation site outside the landslide warning zone (Nagata Elementary School or Goinoike Elementary School).",
+   "ko": "[토사재해] 경계구역 밖의 긴급대피장소(나가타 초등학교, 고이노이케 초등학교)로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外的紧急避难场所（长田小学、五位之池小学）。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（西須磨小学校）へ避難、ただし、警戒区域外への避難が困難な方や余裕のない場合は利用可": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Nishisuma Elementary School). This site may be used if evacuating outside the zone is difficult or there is no time.",
+   "ko": "[토사재해] 경계구역 밖(니시스마 초등학교)으로 대피하십시오. 구역 밖 대피가 어렵거나 여유가 없는 경우 이용할 수 있습니다.",
+   "zh": "【泥石流】请前往警戒区域外（西须磨小学）避难。若难以前往或时间紧迫，可使用本处。"
+  },
+  "《土砂災害時》西門が土砂災害警戒区域内にあるので注意、正門を利用": {
+   "en": "[Landslide] The west gate is inside a landslide warning zone. Use the main gate.",
+   "ko": "[토사재해] 서문이 경계구역 안에 있으므로 정문을 이용하십시오.",
+   "zh": "【泥石流】西门位于警戒区域内，请使用正门。"
+  },
+  "《土砂災害時》通用門が土砂災害警戒区域内にあるので注意、正門を利用": {
+   "en": "[Landslide] The service gate is inside a landslide warning zone. Use the main gate.",
+   "ko": "[토사재해] 통용문이 경계구역 안에 있으므로 정문을 이용하십시오.",
+   "zh": "【泥石流】便门位于警戒区域内，请使用正门。"
+  },
+  "《土砂災害時》西門が土砂災害警戒区域内にあるので注意、南校舎側の門を利用": {
+   "en": "[Landslide] The west gate is inside a landslide warning zone. Use the gate on the south building side.",
+   "ko": "[토사재해] 서문이 경계구역 안에 있으므로 남교사 쪽 문을 이용하십시오.",
+   "zh": "【泥石流】西门位于警戒区域内，请使用南校舍侧的门。"
+  },
+  "《土砂災害時》西門が土砂災害警戒区域付近にあるので注意、正門を利用": {
+   "en": "[Landslide] The west gate is near a landslide warning zone. Use the main gate.",
+   "ko": "[토사재해] 서문이 경계구역 근처에 있으므로 정문을 이용하십시오.",
+   "zh": "【泥石流】西门位于警戒区域附近，请使用正门。"
+  },
+  "《土砂災害時》正門が土砂災害警戒区域内にあるので注意、東門を利用": {
+   "en": "[Landslide] The main gate is inside a landslide warning zone. Use the east gate.",
+   "ko": "[토사재해] 정문이 경계구역 안에 있으므로 동문을 이용하십시오.",
+   "zh": "【泥石流】正门位于警戒区域内，请使用东门。"
+  },
+  "《津波時》念のため海岸から離れ、JR線より北へ避難。令和３年より再整備工事、一部利用不可": {
+   "en": "[Tsunami] Move away from the coast as a precaution and evacuate north of the JR line. Renovation work since 2021; partly unavailable.",
+   "ko": "[쓰나미] 만일을 위해 해안에서 멀어져 JR선 북쪽으로 대피하십시오. 2021년부터 재정비 공사로 일부 이용할 수 없습니다.",
+   "zh": "【海啸】为安全起见请远离海岸并避难至JR线以北。自2021年起进行整修工程，部分无法使用。"
+  },
+  "《土砂災害時》武道場・体育館は使用できません": {
+   "en": "[Landslide] The martial arts hall and gymnasium cannot be used.",
+   "ko": "[토사재해] 무도장과 체육관은 이용할 수 없습니다.",
+   "zh": "【泥石流】武道馆与体育馆无法使用。"
+  },
+  "《土砂災害時》格技室・体育館は使用できないため、近隣の避難所へ避難してください。": {
+   "en": "[Landslide] The martial arts room and gymnasium cannot be used. Evacuate to a nearby shelter.",
+   "ko": "[토사재해] 격기실과 체육관을 이용할 수 없으므로 인근 대피소로 대피하십시오.",
+   "zh": "【泥石流】格技室与体育馆无法使用，请前往附近的避难所。"
+  },
+  "《土砂災害時》体育館は使用できません": {
+   "en": "[Landslide] The gymnasium cannot be used.",
+   "ko": "[토사재해] 체육관은 이용할 수 없습니다.",
+   "zh": "【泥石流】体育馆无法使用。"
+  },
+  "《津波時》念のため海岸から離れること。※工事中のため一部使用できません": {
+   "en": "[Tsunami] Move away from the coast as a precaution. Note: partly unavailable due to construction work.",
+   "ko": "[쓰나미] 만일을 위해 해안에서 멀어지십시오. ※공사 중으로 일부 이용할 수 없습니다.",
+   "zh": "【海啸】为安全起见请远离海岸。※因施工，部分区域无法使用。"
+  },
+  "《洪水時》南別府1～5丁目からの避難については、河川がはん濫したら、有瀬小学校へ避難": {
+   "en": "[Flood] For people evacuating from Minamibeppu 1-5 chome: if the river overflows, evacuate to Arise Elementary School.",
+   "ko": "[홍수] 미나미벳푸 1~5초메에서 대피하는 경우, 하천이 범람하면 아리세 초등학교로 대피하십시오.",
+   "zh": "【洪水】自南别府1～5丁目避难者，如河川泛滥，请前往有濑小学。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（伊川谷小学校）へ避難": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Ikawadani Elementary School).",
+   "ko": "[토사재해] 경계구역 밖(이카와다니 초등학교)으로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外（伊川谷小学）避难。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（太山寺中学校）へ避難": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Taisanji Junior High School).",
+   "ko": "[토사재해] 경계구역 밖(다이산지 중학교)으로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外（太山寺初中）避难。"
+  },
+  "《土砂災害時》土砂災害警戒区域外（東町小学校）へ避難": {
+   "en": "[Landslide] Evacuate outside the landslide warning zone (Higashimachi Elementary School).",
+   "ko": "[토사재해] 경계구역 밖(히가시마치 초등학교)으로 대피하십시오.",
+   "zh": "【泥石流】请前往警戒区域外（东町小学）避难。"
+  },
+  "《洪水時》玉津町二ツ屋（櫨谷川以東）からの避難については、河川がはん濫したら、玉津中学校へ避難": {
+   "en": "[Flood] For people evacuating from Tamatsu-cho Futatsuya (east of the Hazetani River): if the river overflows, evacuate to Tamatsu Junior High School.",
+   "ko": "[홍수] 다마쓰초 후타쓰야(하제타니강 동쪽)에서 대피하는 경우, 하천이 범람하면 다마쓰 중학교로 대피하십시오.",
+   "zh": "【洪水】自玉津町二ツ屋（榈谷川以东）避难者，如河川泛滥，请前往玉津初中。",
+   "allow_kana": true,
+   "review": true,
+   "note": "地名「二ツ屋」は漢字表記が定まらないため中国語でも日本語表記のまま残している"
+  },
+  "《土砂災害時》山腹崩壊に注意": {
+   "en": "[Landslide] Beware of hillside collapse.",
+   "ko": "[토사재해] 산사면 붕괴에 주의하십시오.",
+   "zh": "【泥石流】请注意山坡崩塌。"
+  }
+ },
+ "_readme": {
+  "目的": "避難所シードの訳語辞書。scripts/shelters/build_seed.py が読む。",
+  "読みの与え方": "towns / stems は romaji だけ入れる。英語はその読み、韓国語は kana.py の転写規則、中国語は原表記（漢字）を使う。",
+  "上書き": "訳語が決まっているもの（wards / suffixes）や、読みでは伝わらない固有名は en / ko / zh を直接書くと優先される。",
+  "確認してほしい点": "地名の読みは一意でないものがある（例: 葺合, 魚崎, 太山寺）。romaji の値を確認してほしい。"
+ }
 }

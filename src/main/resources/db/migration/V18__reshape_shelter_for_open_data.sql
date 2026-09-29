@@ -57,7 +57,14 @@ ALTER TABLE shelter ADD CONSTRAINT ck_shelter_pet_acceptance
     CHECK (pet_acceptance IN ('accepted', 'not-accepted', 'under-consideration'));
 
 -- 電話番号。屋外の 88 件は元データが空。
-ALTER TABLE shelter ADD COLUMN phone_number VARCHAR(32);
+--
+-- 単純な番号 1 つとは限らない。元データには次のような値が 6 件ある。
+--   078-803-5921(昼)、078-803-5777(夜)
+--   078-982-0048(前期課程)、078-982-0049(後期課程)
+-- そのため「表示用の文字列」として扱い、tel: リンクへそのまま流せる前提を置かない。
+-- 注記が日本語のままになる点は割り切り（避難先へ電話する場面は限られる）。
+-- 最長 37 文字だったため 64 で取る。
+ALTER TABLE shelter ADD COLUMN phone_number VARCHAR(64);
 
 -- 備考は言語別。「《土砂災害時》正門が土砂災害警戒区域内にあるので注意、早めに避難」
 -- のように避難の判断そのものに関わる文があるため、翻訳して出す必要がある。
