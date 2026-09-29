@@ -40,39 +40,46 @@ class ShelterControllerTest {
 
     private val metadata =
         ShelterDatasetMetadataView(
-            source = "神戸市オープンデータポータル「神戸市避難場所」(CC BY 2.1 JP)",
+            source = "神戸市オープンデータ「指定緊急避難場所・指定避難所」(CC BY 4.0)",
             asOf = LocalDate.of(2025, 4, 2),
             updatedAt = Instant.parse("2025-04-02T00:00:00Z"),
         )
 
-    private val kobeCityHall =
+    private val higashinadaElementary =
         ShelterView(
-            id = "kobe-city-hall",
-            name = "神戸市役所",
-            address = "兵庫県神戸市中央区加納町6丁目5-1",
-            latitude = 34.6826,
-            longitude = 135.1863,
+            id = "kobe-001",
+            name = "東灘小学校",
+            address = "神戸市東灘区深江北町2-4-1",
+            latitude = 34.7248161,
+            longitude = 135.2944292,
             type = "both",
-            facilityCategory = "government",
-            imageUrl = "https://example.com/kobe-city-hall.webp",
-            capacity = 500,
-            accessible = true,
-            externalUrl = "https://example.com/kobe-city-hall",
+            siting = "indoor",
+            suitabilityLandslide = "suitable",
+            suitabilityFlood = "conditional",
+            suitabilityTsunami = "unsuitable",
+            suitabilityLargeFire = "not-applicable",
+            petAcceptance = "accepted",
+            phoneNumber = "078-411-0556",
+            note = "《洪水時》別の避難場所へ避難",
         )
 
-    private val minimalShelter =
+    /** 屋外の緊急避難場所。電話番号と備考を持たない（元データの屋外 88 件に相当）。 */
+    private val honjoPark =
         ShelterView(
-            id = "minimal-shelter",
-            name = "Minimal Park",
-            address = "Somewhere",
+            id = "kobe-099",
+            name = "本庄中央公園",
+            address = "神戸市東灘区甲南町1-1",
             latitude = 34.0,
             longitude = 135.0,
             type = "emergency",
-            facilityCategory = "park",
-            imageUrl = "https://example.com/minimal.webp",
-            capacity = null,
-            accessible = false,
-            externalUrl = null,
+            siting = "outdoor",
+            suitabilityLandslide = "not-applicable",
+            suitabilityFlood = "not-applicable",
+            suitabilityTsunami = "suitable",
+            suitabilityLargeFire = "suitable",
+            petAcceptance = "not-accepted",
+            phoneNumber = null,
+            note = null,
         )
 
     private fun stub(
@@ -84,26 +91,32 @@ class ShelterControllerTest {
 
     @Test
     fun `lang=ja で Client EvacuationShelter 形の JSON を data に返す`() {
-        stub(Language.JA, listOf(kobeCityHall, minimalShelter))
+        stub(Language.JA, listOf(higashinadaElementary, honjoPark))
 
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=ja"))
             .andExpect(status().isOk)
             .andExpect(content().contentTypeCompatibleWith("application/json"))
             .andExpect(jsonPath("$.data.length()").value(2))
-            .andExpect(jsonPath("$.data[0].id").value("kobe-city-hall"))
-            .andExpect(jsonPath("$.data[0].name").value("神戸市役所"))
-            .andExpect(jsonPath("$.data[0].address").value("兵庫県神戸市中央区加納町6丁目5-1"))
-            .andExpect(jsonPath("$.data[0].coordinates.latitude").value(34.6826))
-            .andExpect(jsonPath("$.data[0].coordinates.longitude").value(135.1863))
+            .andExpect(jsonPath("$.data[0].id").value("kobe-001"))
+            .andExpect(jsonPath("$.data[0].name").value("東灘小学校"))
+            .andExpect(jsonPath("$.data[0].address").value("神戸市東灘区深江北町2-4-1"))
+            .andExpect(jsonPath("$.data[0].coordinates.latitude").value(34.7248161))
+            .andExpect(jsonPath("$.data[0].coordinates.longitude").value(135.2944292))
             .andExpect(jsonPath("$.data[0].type").value("both"))
-            .andExpect(jsonPath("$.data[0].facilityCategory").value("government"))
-            .andExpect(jsonPath("$.data[0].media.imageUrl").value("https://example.com/kobe-city-hall.webp"))
-            .andExpect(jsonPath("$.data[0].capacity").value(500))
-            .andExpect(jsonPath("$.data[0].accessible").value(true))
-            .andExpect(jsonPath("$.data[0].externalUrl").value("https://example.com/kobe-city-hall"))
-            .andExpect(jsonPath("$.data[1].capacity").doesNotExist())
-            .andExpect(jsonPath("$.data[1].externalUrl").doesNotExist())
+            .andExpect(jsonPath("$.data[0].siting").value("indoor"))
+            .andExpect(jsonPath("$.data[0].petAcceptance").value("accepted"))
+            .andExpect(jsonPath("$.data[0].phoneNumber").value("078-411-0556"))
+            .andExpect(jsonPath("$.data[0].note").value("《洪水時》別の避難場所へ避難"))
+            // 適否は全種別を含む。△（conditional）を ○ に丸めない（#180）。
+            .andExpect(jsonPath("$.data[0].suitability.landslide").value("suitable"))
+            .andExpect(jsonPath("$.data[0].suitability.flood").value("conditional"))
+            .andExpect(jsonPath("$.data[0].suitability.tsunami").value("unsuitable"))
+            .andExpect(jsonPath("$.data[0].suitability['large-fire']").value("not-applicable"))
+            .andExpect(jsonPath("$.data[1].siting").value("outdoor"))
+            .andExpect(jsonPath("$.data[1].suitability['large-fire']").value("suitable"))
+            .andExpect(jsonPath("$.data[1].phoneNumber").doesNotExist())
+            .andExpect(jsonPath("$.data[1].note").doesNotExist())
     }
 
     @Test
@@ -161,9 +174,9 @@ class ShelterControllerTest {
     @Test
     fun `DELETE はパスの id を そのまま ユースケースへ渡し 204 を返す`() {
         mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall"))
+            .perform(delete("/api/v1/evacuation/shelters/kobe-001"))
             .andExpect(status().isNoContent)
 
-        verify(deleteShelterService).execute(EvacuationShelter.Id.of("kobe-city-hall"))
+        verify(deleteShelterService).execute(EvacuationShelter.Id.of("kobe-001"))
     }
 }

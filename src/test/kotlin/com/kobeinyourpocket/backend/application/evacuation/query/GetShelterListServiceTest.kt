@@ -12,22 +12,25 @@ import kotlin.test.assertEquals
 class GetShelterListServiceTest {
     private val shelterView =
         ShelterView(
-            id = "kobe-city-hall",
-            name = "神戸市役所",
-            address = "兵庫県神戸市中央区加納町6丁目5-1",
-            latitude = 34.6826,
-            longitude = 135.1863,
+            id = "kobe-001",
+            name = "東灘小学校",
+            address = "神戸市東灘区深江北町2-4-1",
+            latitude = 34.7248161,
+            longitude = 135.2944292,
             type = "both",
-            facilityCategory = "government",
-            imageUrl = "https://example.com/kobe-city-hall.webp",
-            capacity = 500,
-            accessible = true,
-            externalUrl = "https://example.com/kobe-city-hall",
+            siting = "indoor",
+            suitabilityLandslide = "suitable",
+            suitabilityFlood = "suitable",
+            suitabilityTsunami = "suitable",
+            suitabilityLargeFire = "not-applicable",
+            petAcceptance = "accepted",
+            phoneNumber = "078-411-0556",
+            note = null,
         )
 
     private val metadataView =
         ShelterDatasetMetadataView(
-            source = "神戸市オープンデータポータル「神戸市避難場所」(CC BY 2.1 JP)",
+            source = "神戸市オープンデータ「指定緊急避難場所・指定避難所」(CC BY 4.0)",
             asOf = LocalDate.of(2025, 4, 2),
             updatedAt = Instant.parse("2025-04-02T00:00:00Z"),
         )

@@ -3,13 +3,14 @@ package com.kobeinyourpocket.backend.infrastructure.rest.evacuation
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.repository.ShelterRepository
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.PetAcceptance
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalization
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalizations
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSiting
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitabilities
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitability
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import com.kobeinyourpocket.backend.domain.user.vo.Role
 import com.kobeinyourpocket.backend.infrastructure.persistence.evacuation.entity.ShelterDatasetMetadataEntity
 import com.kobeinyourpocket.backend.infrastructure.persistence.evacuation.repository.ShelterDatasetMetadataJpaRepository
@@ -60,45 +61,59 @@ class ShelterApiIntegrationTest {
     private val metadata =
         ShelterDatasetMetadataEntity(
             id = ShelterDatasetMetadataEntity.SINGLETON_ID,
-            source = "神戸市オープンデータポータル「神戸市避難場所」(CC BY 2.1 JP)",
+            source = "神戸市オープンデータ「指定緊急避難場所・指定避難所」(CC BY 4.0)",
             asOf = LocalDate.of(2025, 4, 2),
             updatedAt = Instant.parse("2025-04-02T00:00:00Z"),
         )
 
-    private val kobeCityHall =
+    private val higashinadaElementary =
         EvacuationShelter.create(
-            id = EvacuationShelter.Id.of("kobe-city-hall"),
-            coordinates = ShelterCoordinates.of(34.6826, 135.1863),
+            id = EvacuationShelter.Id.of("kobe-001"),
+            coordinates = ShelterCoordinates.of(34.7248161, 135.2944292),
             type = ShelterType.DUAL_USE,
-            facilityCategory = ShelterFacilityCategory.GOVERNMENT,
-            media = ShelterMedia("https://example.com/kobe-city-hall.webp"),
-            accessible = true,
+            siting = ShelterSiting.INDOOR,
+            suitabilities =
+                ShelterSuitabilities.of(
+                    landslide = ShelterSuitability.SUITABLE,
+                    flood = ShelterSuitability.CONDITIONAL,
+                    tsunami = ShelterSuitability.UNSUITABLE,
+                    largeFire = ShelterSuitability.NOT_APPLICABLE,
+                ),
+            petAcceptance = PetAcceptance.ACCEPTED,
             localizations =
                 ShelterLocalizations.of(
                     mapOf(
-                        Language.JA to ShelterLocalization("神戸市役所", "兵庫県神戸市中央区加納町6丁目5-1"),
-                        Language.EN to ShelterLocalization("Kobe City Hall", "6-5-1 Kanomachi, Chuo-ku, Kobe, Hyogo"),
-                        Language.ZH to ShelterLocalization("神户市政府", "兵库县神户市中央区加纳町6丁目5-1"),
+                        Language.JA to
+                            ShelterLocalization("東灘小学校", "神戸市東灘区深江北町2-4-1", note = "《洪水時》別の避難場所へ避難"),
+                        Language.EN to
+                            ShelterLocalization("Higashinada Elementary School", "2-4-1 Fukaekitamachi, Higashinada-ku, Kobe"),
+                        Language.ZH to ShelterLocalization("东滩小学", "神户市东滩区深江北町2-4-1"),
                     ),
                 ),
-            capacity = ShelterCapacity(500),
-            externalUrl = "https://example.com/kobe-city-hall",
+            phoneNumber = "078-411-0556",
         )
 
-    private val minimalShelter =
+    /** 屋外の緊急避難場所。en のみ収録し、電話番号・備考を持たない。 */
+    private val honjoPark =
         EvacuationShelter.create(
-            id = EvacuationShelter.Id.of("minimal-shelter"),
+            id = EvacuationShelter.Id.of("kobe-099"),
             coordinates = ShelterCoordinates.of(34.0, 135.0),
             type = ShelterType.DESIGNATED_EMERGENCY_EVACUATION_SITE,
-            facilityCategory = ShelterFacilityCategory.PARK,
-            media = ShelterMedia("https://example.com/minimal.webp"),
-            accessible = false,
-            localizations = ShelterLocalizations.of(mapOf(Language.EN to ShelterLocalization("Minimal Park", "Somewhere"))),
+            siting = ShelterSiting.OUTDOOR,
+            suitabilities =
+                ShelterSuitabilities.of(
+                    landslide = ShelterSuitability.NOT_APPLICABLE,
+                    flood = ShelterSuitability.NOT_APPLICABLE,
+                    tsunami = ShelterSuitability.SUITABLE,
+                    largeFire = ShelterSuitability.SUITABLE,
+                ),
+            petAcceptance = PetAcceptance.NOT_ACCEPTED,
+            localizations = ShelterLocalizations.of(mapOf(Language.EN to ShelterLocalization("Honjo Park", "Somewhere"))),
         )
 
     private fun seedShelters() {
-        shelterRepository.save(kobeCityHall)
-        shelterRepository.save(minimalShelter)
+        shelterRepository.save(higashinadaElementary)
+        shelterRepository.save(honjoPark)
     }
 
     private fun seedMetadata() {
@@ -115,19 +130,24 @@ class ShelterApiIntegrationTest {
             .andExpect(status().isOk)
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.data.length()").value(2))
-            .andExpect(jsonPath("$.data[0].id").value("kobe-city-hall"))
-            .andExpect(jsonPath("$.data[0].name").value("神戸市役所"))
-            .andExpect(jsonPath("$.data[0].address").value("兵庫県神戸市中央区加納町6丁目5-1"))
-            .andExpect(jsonPath("$.data[0].coordinates.latitude").value(34.6826))
+            .andExpect(jsonPath("$.data[0].id").value("kobe-001"))
+            .andExpect(jsonPath("$.data[0].name").value("東灘小学校"))
+            .andExpect(jsonPath("$.data[0].address").value("神戸市東灘区深江北町2-4-1"))
+            .andExpect(jsonPath("$.data[0].coordinates.latitude").value(34.7248161))
             .andExpect(jsonPath("$.data[0].type").value("both"))
-            .andExpect(jsonPath("$.data[0].facilityCategory").value("government"))
-            .andExpect(jsonPath("$.data[0].media.imageUrl").value("https://example.com/kobe-city-hall.webp"))
-            .andExpect(jsonPath("$.data[0].capacity").value(500))
-            .andExpect(jsonPath("$.data[0].accessible").value(true))
-            .andExpect(jsonPath("$.data[0].externalUrl").value("https://example.com/kobe-city-hall"))
-            .andExpect(jsonPath("$.data[1].id").value("minimal-shelter"))
-            .andExpect(jsonPath("$.data[1].capacity").doesNotExist())
-            .andExpect(jsonPath("$.data[1].externalUrl").doesNotExist())
+            .andExpect(jsonPath("$.data[0].siting").value("indoor"))
+            .andExpect(jsonPath("$.data[0].petAcceptance").value("accepted"))
+            .andExpect(jsonPath("$.data[0].phoneNumber").value("078-411-0556"))
+            .andExpect(jsonPath("$.data[0].note").value("《洪水時》別の避難場所へ避難"))
+            .andExpect(jsonPath("$.data[0].suitability.landslide").value("suitable"))
+            .andExpect(jsonPath("$.data[0].suitability.flood").value("conditional"))
+            .andExpect(jsonPath("$.data[0].suitability.tsunami").value("unsuitable"))
+            .andExpect(jsonPath("$.data[0].suitability['large-fire']").value("not-applicable"))
+            .andExpect(jsonPath("$.data[1].id").value("kobe-099"))
+            .andExpect(jsonPath("$.data[1].siting").value("outdoor"))
+            .andExpect(jsonPath("$.data[1].suitability['large-fire']").value("suitable"))
+            .andExpect(jsonPath("$.data[1].phoneNumber").doesNotExist())
+            .andExpect(jsonPath("$.data[1].note").doesNotExist())
     }
 
     @Test
@@ -151,7 +171,7 @@ class ShelterApiIntegrationTest {
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=zh"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[0].name").value("神户市政府"))
+            .andExpect(jsonPath("$.data[0].name").value("东滩小学"))
     }
 
     @Test
@@ -159,11 +179,11 @@ class ShelterApiIntegrationTest {
         seedShelters()
         seedMetadata()
 
-        // minimal-shelter は en のみ収録 → lang=ja でも en を返す
+        // kobe-099 は en のみ収録 → lang=ja でも en を返す
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=ja"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[1].name").value("Minimal Park"))
+            .andExpect(jsonPath("$.data[1].name").value("Honjo Park"))
     }
 
     @Test
@@ -174,7 +194,7 @@ class ShelterApiIntegrationTest {
         mockMvc
             .perform(get("/api/v1/evacuation/shelters").header("Accept-Language", "ja-JP,ja;q=0.9"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[0].name").value("神戸市役所"))
+            .andExpect(jsonPath("$.data[0].name").value("東灘小学校"))
     }
 
     @Test
@@ -186,7 +206,7 @@ class ShelterApiIntegrationTest {
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=fr"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[0].name").value("Kobe City Hall"))
+            .andExpect(jsonPath("$.data[0].name").value("Higashinada Elementary School"))
     }
 
     @Test
@@ -205,7 +225,7 @@ class ShelterApiIntegrationTest {
         seedShelters()
 
         mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall"))
+            .perform(delete("/api/v1/evacuation/shelters/kobe-001"))
             .andExpect(status().isUnauthorized)
     }
 
@@ -214,7 +234,7 @@ class ShelterApiIntegrationTest {
         seedShelters()
 
         mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.GENERAL)))
+            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.GENERAL)))
             .andExpect(status().isForbidden)
             .andExpect(jsonPath("$.status").value(403))
     }
@@ -225,14 +245,14 @@ class ShelterApiIntegrationTest {
         seedMetadata()
 
         mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.OPERATOR)))
+            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.OPERATOR)))
             .andExpect(status().isNoContent)
 
         mockMvc
             .perform(get("/api/v1/evacuation/shelters?lang=ja"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.length()").value(1))
-            .andExpect(jsonPath("$.data[0].id").value("minimal-shelter"))
+            .andExpect(jsonPath("$.data[0].id").value("kobe-099"))
     }
 
     @Test
@@ -240,7 +260,7 @@ class ShelterApiIntegrationTest {
         seedShelters()
 
         mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.ADMIN)))
+            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.ADMIN)))
             .andExpect(status().isNoContent)
     }
 
@@ -258,11 +278,11 @@ class ShelterApiIntegrationTest {
     @Test
     fun `DELETE はローカライズも消し孤児行を残さない`() {
         seedShelters()
-        // kobe-city-hall は ja/en/zh の 3 件、minimal-shelter は en の 1 件
+        // kobe-001 は ja/en/zh の 3 件、kobe-099 は en の 1 件
         assertEquals(4, shelterLocalizationJpaRepository.count())
 
         mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-city-hall").with(withRole(Role.OPERATOR)))
+            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.OPERATOR)))
             .andExpect(status().isNoContent)
 
         assertEquals(1, shelterLocalizationJpaRepository.count())

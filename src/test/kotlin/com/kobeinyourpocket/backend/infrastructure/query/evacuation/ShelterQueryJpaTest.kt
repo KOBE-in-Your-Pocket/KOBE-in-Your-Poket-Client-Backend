@@ -3,13 +3,14 @@ package com.kobeinyourpocket.backend.infrastructure.query.evacuation
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.repository.ShelterRepository
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCapacity
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.PetAcceptance
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalization
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalizations
-import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterMedia
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSiting
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitabilities
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterSuitability
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterType
-import com.kobeinyourpocket.backend.domain.evacuation.shelterfacilitycategory.model.ShelterFacilityCategory
 import com.kobeinyourpocket.backend.infrastructure.persistence.evacuation.impl.ShelterRepositoryImpl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
@@ -31,82 +32,114 @@ class ShelterQueryJpaTest {
     @Autowired
     private lateinit var shelterQuery: ShelterQueryJpa
 
-    private val kobeCityHall =
+    /** 屋内・備考つき。屋外との違いを出すため適否も種別ごとに散らしてある。 */
+    private val higashinadaElementary =
         EvacuationShelter.create(
-            id = EvacuationShelter.Id.of("kobe-city-hall"),
-            coordinates = ShelterCoordinates.of(34.6826, 135.1863),
+            id = EvacuationShelter.Id.of("kobe-001"),
+            coordinates = ShelterCoordinates.of(34.7248161, 135.2944292),
             type = ShelterType.DUAL_USE,
-            facilityCategory = ShelterFacilityCategory.GOVERNMENT,
-            media = ShelterMedia("https://example.com/kobe-city-hall.webp"),
-            accessible = true,
+            siting = ShelterSiting.INDOOR,
+            suitabilities =
+                ShelterSuitabilities.of(
+                    landslide = ShelterSuitability.SUITABLE,
+                    flood = ShelterSuitability.CONDITIONAL,
+                    tsunami = ShelterSuitability.UNSUITABLE,
+                    largeFire = ShelterSuitability.NOT_APPLICABLE,
+                ),
+            petAcceptance = PetAcceptance.ACCEPTED,
             localizations =
                 ShelterLocalizations.of(
                     mapOf(
-                        Language.JA to ShelterLocalization("神戸市役所", "兵庫県神戸市中央区加納町6丁目5-1"),
-                        Language.EN to ShelterLocalization("Kobe City Hall", "6-5-1 Kanomachi, Chuo-ku, Kobe, Hyogo"),
+                        Language.JA to
+                            ShelterLocalization("東灘小学校", "神戸市東灘区深江北町2-4-1", note = "《洪水時》別の避難場所へ避難"),
+                        Language.EN to
+                            ShelterLocalization(
+                                "Higashinada Elementary School",
+                                "2-4-1 Fukaekitamachi, Higashinada-ku, Kobe",
+                                note = "In case of flood, evacuate to another site.",
+                            ),
                     ),
                 ),
-            capacity = ShelterCapacity(500),
-            externalUrl = "https://example.com/kobe-city-hall",
+            phoneNumber = "078-411-0556",
         )
 
-    private val minimalShelter =
+    /** 屋外・電話番号と備考なし。元データの屋外 88 件に相当する。 */
+    private val honjoPark =
         EvacuationShelter.create(
-            id = EvacuationShelter.Id.of("minimal-shelter"),
+            id = EvacuationShelter.Id.of("kobe-099"),
             coordinates = ShelterCoordinates.of(34.0, 135.0),
             type = ShelterType.DESIGNATED_EMERGENCY_EVACUATION_SITE,
-            facilityCategory = ShelterFacilityCategory.PARK,
-            media = ShelterMedia("https://example.com/minimal.webp"),
-            accessible = false,
-            localizations = ShelterLocalizations.of(mapOf(Language.EN to ShelterLocalization("Minimal Park", "Somewhere"))),
+            siting = ShelterSiting.OUTDOOR,
+            suitabilities =
+                ShelterSuitabilities.of(
+                    landslide = ShelterSuitability.NOT_APPLICABLE,
+                    flood = ShelterSuitability.NOT_APPLICABLE,
+                    tsunami = ShelterSuitability.SUITABLE,
+                    largeFire = ShelterSuitability.SUITABLE,
+                ),
+            petAcceptance = PetAcceptance.NOT_ACCEPTED,
+            localizations = ShelterLocalizations.of(mapOf(Language.EN to ShelterLocalization("Honjo Park", "Somewhere"))),
         )
 
     @Test
     fun `要求言語で解決した ShelterView を返す`() {
-        shelterRepository.save(kobeCityHall)
+        shelterRepository.save(higashinadaElementary)
 
         val result = shelterQuery.findAllResolved(Language.JA).single()
 
-        assertEquals("kobe-city-hall", result.id)
-        assertEquals("神戸市役所", result.name)
-        assertEquals("兵庫県神戸市中央区加納町6丁目5-1", result.address)
-        assertEquals(34.6826, result.latitude)
-        assertEquals(135.1863, result.longitude)
+        assertEquals("kobe-001", result.id)
+        assertEquals("東灘小学校", result.name)
+        assertEquals("神戸市東灘区深江北町2-4-1", result.address)
+        assertEquals("《洪水時》別の避難場所へ避難", result.note)
+        assertEquals(34.7248161, result.latitude)
+        assertEquals(135.2944292, result.longitude)
         assertEquals("both", result.type)
-        assertEquals("government", result.facilityCategory)
-        assertEquals("https://example.com/kobe-city-hall.webp", result.imageUrl)
-        assertEquals(500, result.capacity)
-        assertEquals(true, result.accessible)
-        assertEquals("https://example.com/kobe-city-hall", result.externalUrl)
+        assertEquals("indoor", result.siting)
+        assertEquals("suitable", result.suitabilityLandslide)
+        assertEquals("conditional", result.suitabilityFlood)
+        assertEquals("unsuitable", result.suitabilityTsunami)
+        assertEquals("not-applicable", result.suitabilityLargeFire)
+        assertEquals("accepted", result.petAcceptance)
+        assertEquals("078-411-0556", result.phoneNumber)
     }
 
     @Test
     fun `要求言語のローカライズが無ければ en へフォールバックする`() {
-        shelterRepository.save(minimalShelter)
+        shelterRepository.save(honjoPark)
 
         val result = shelterQuery.findAllResolved(Language.KO).single()
 
-        assertEquals("Minimal Park", result.name)
+        assertEquals("Honjo Park", result.name)
         assertEquals("Somewhere", result.address)
     }
 
     @Test
-    fun `capacity・externalUrl が無い避難所は null で返す`() {
-        shelterRepository.save(minimalShelter)
+    fun `電話番号・備考が無い避難所は null で返す`() {
+        shelterRepository.save(honjoPark)
 
         val result = shelterQuery.findAllResolved(Language.EN).single()
 
-        assertNull(result.capacity)
-        assertNull(result.externalUrl)
+        assertNull(result.phoneNumber)
+        assertNull(result.note)
+    }
+
+    @Test
+    fun `備考も要求言語で解決する`() {
+        // 備考は避難の判断に関わるため、名称・住所と同じく言語別に解決する必要がある。
+        shelterRepository.save(higashinadaElementary)
+
+        val result = shelterQuery.findAllResolved(Language.EN).single()
+
+        assertEquals("In case of flood, evacuate to another site.", result.note)
     }
 
     @Test
     fun `全件を id 順で返す`() {
-        shelterRepository.save(minimalShelter)
-        shelterRepository.save(kobeCityHall)
+        shelterRepository.save(honjoPark)
+        shelterRepository.save(higashinadaElementary)
 
         val result = shelterQuery.findAllResolved(Language.EN)
 
-        assertEquals(listOf("kobe-city-hall", "minimal-shelter"), result.map { it.id })
+        assertEquals(listOf("kobe-001", "kobe-099"), result.map { it.id })
     }
 }
