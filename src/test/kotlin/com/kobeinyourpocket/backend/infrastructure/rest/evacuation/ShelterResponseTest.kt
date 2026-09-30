@@ -81,4 +81,35 @@ class ShelterResponseTest {
         assertFalse(node.has("phoneNumber"))
         assertFalse(node.has("note"))
     }
+    // ---- 公開済み 1.0.0 のための互換（Client #557）----
+    //
+    // 1.0.0 はレスポンスを検証せずそのまま SQLite へ流すため、これらが欠けると
+    // 新規インストールの利用者に避難所が 1 件も出なくなる。
+
+    @Test
+    fun `1_0_0 が必須で読むキーを含む`() {
+        val response = ShelterResponse.from(view)
+
+        assertEquals("government", response.facilityCategory)
+        assertEquals("", response.media.imageUrl)
+        assertEquals(false, response.accessible)
+    }
+
+    @Test
+    fun `互換キーは JSON からも落とさない`() {
+        val node = objectMapper.readTree(objectMapper.writeValueAsString(ShelterResponse.from(view)))
+
+        assertTrue(node.has("facilityCategory"))
+        assertTrue(node.has("media"))
+        assertTrue(node.get("media").has("imageUrl"))
+        assertTrue(node.has("accessible"))
+    }
+
+    @Test
+    fun `屋外は公園、屋内は公共施設に当てる`() {
+        // 元データは施設種別を持たない。屋内を school にすると大学・会館・体育館で嘘になるため、
+        // どの避難所でも事実に反しない government を使う。
+        assertEquals("park", ShelterResponse.from(view.copy(siting = "outdoor")).facilityCategory)
+        assertEquals("government", ShelterResponse.from(view.copy(siting = "indoor")).facilityCategory)
+    }
 }
