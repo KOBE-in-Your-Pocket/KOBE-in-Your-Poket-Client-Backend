@@ -1,6 +1,5 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.common
 
-import com.kobeinyourpocket.backend.application.evacuation.ShelterNotFoundException
 import com.kobeinyourpocket.backend.application.manner.command.IncompleteMannerLocalizationsException
 import com.kobeinyourpocket.backend.application.manner.command.InvalidMannerTitleException
 import com.kobeinyourpocket.backend.application.manner.command.MannerItemNotFoundException
@@ -41,10 +40,6 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ReviewNotOwnedException::class)
     fun handleReviewNotOwned(ex: ReviewNotOwnedException): ResponseEntity<ApiErrorResponse> =
         forbidden(message = ex.message ?: "Review is not owned by the requester")
-
-    @ExceptionHandler(ShelterNotFoundException::class)
-    fun handleShelterNotFound(ex: ShelterNotFoundException): ResponseEntity<ApiErrorResponse> =
-        notFound(message = ex.message ?: "Shelter not found")
 
     @ExceptionHandler(GenreNotFoundException::class)
     fun handleGenreNotFound(ex: GenreNotFoundException): ResponseEntity<ApiErrorResponse> =

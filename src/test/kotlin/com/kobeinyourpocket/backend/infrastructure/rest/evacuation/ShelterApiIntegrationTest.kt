@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 /**
  * 避難所一覧の統合テスト（#67）。controller → application → JPA → DB を実 Bean で通し、
@@ -221,70 +220,15 @@ class ShelterApiIntegrationTest {
     }
 
     @Test
-    fun `DELETE は未認証だと 401`() {
+    fun `避難所を削除する経路は無い（運営ロールでも通らない）`() {
+        // 避難所は神戸市が指定するもので、データの正はオープンデータにある（#180）。
+        // 運営が個別に消せると「市が指定しているのにアプリに載っていない」状態を作る。
+        // 認証で弾かれているのではなく経路自体が無いことを見るため、運営ロールで叩く。
         seedShelters()
 
         mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-001"))
-            .andExpect(status().isUnauthorized)
-    }
-
-    @Test
-    fun `DELETE は一般ロールだと 403`() {
-        seedShelters()
-
-        mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.GENERAL)))
-            .andExpect(status().isForbidden)
-            .andExpect(jsonPath("$.status").value(403))
-    }
-
-    @Test
-    fun `DELETE を運営ロールで実行すると 204 になり一覧から消える`() {
-        seedShelters()
-        seedMetadata()
-
-        mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.OPERATOR)))
-            .andExpect(status().isNoContent)
-
-        mockMvc
-            .perform(get("/api/v1/evacuation/shelters?lang=ja"))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.length()").value(1))
-            .andExpect(jsonPath("$.data[0].id").value("kobe-099"))
-    }
-
-    @Test
-    fun `DELETE は admin でも実行できる（ロール階層）`() {
-        seedShelters()
-
-        mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.ADMIN)))
-            .andExpect(status().isNoContent)
-    }
-
-    @Test
-    fun `DELETE が未登録なら 404 と統一エラー JSON を返す`() {
-        seedShelters()
-
-        mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/unknown-shelter").with(withRole(Role.OPERATOR)))
-            .andExpect(status().isNotFound)
-            .andExpect(jsonPath("$.status").value(404))
-            .andExpect(jsonPath("$.error").value("Not Found"))
-    }
-
-    @Test
-    fun `DELETE はローカライズも消し孤児行を残さない`() {
-        seedShelters()
-        // kobe-001 は ja/en/zh の 3 件、kobe-099 は en の 1 件
-        assertEquals(4, shelterLocalizationJpaRepository.count())
-
-        mockMvc
-            .perform(delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.OPERATOR)))
-            .andExpect(status().isNoContent)
-
-        assertEquals(1, shelterLocalizationJpaRepository.count())
+            .perform(
+                delete("/api/v1/evacuation/shelters/kobe-001").with(withRole(Role.OPERATOR)),
+            ).andExpect(status().isNotFound)
     }
 }
