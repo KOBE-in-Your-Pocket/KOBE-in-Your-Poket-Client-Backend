@@ -10,9 +10,15 @@
 # 当たりうるため、compose のボリュームごと消さないこと。
 
 18-181-34-28.sslip.io {
-	# 公開するのは API のみ。/actuator（health 含む）は外から触らせない。
+	# 公開するのは API と API 契約（Swagger）のみ。/actuator（health 含む）は外から触らせない。
 	# 監視は EC2 内部（localhost:9090）から行う。
 	handle /api/* {
+		reverse_proxy app:9090
+	}
+
+	# API 契約（#82）。Swagger UI と OpenAPI JSON のみ通す。
+	@apidocs path /swagger-ui.html /swagger-ui/* /v3/api-docs /v3/api-docs/*
+	handle @apidocs {
 		reverse_proxy app:9090
 	}
 

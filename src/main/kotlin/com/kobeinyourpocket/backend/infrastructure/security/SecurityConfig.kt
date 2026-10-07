@@ -27,7 +27,7 @@ import javax.crypto.spec.SecretKeySpec
  * - 認可（#90）: 書き込みは deny-by-default。
  *   - GET 系は公開
  *   - `POST /api/v1/auth/signup|login|google|apple|refresh` は公開（認証の入り口）
- *   - `POST /api/v1/auth/logout` とレビュー投稿・更新は認証必須（一般ロール可）
+ *   - `POST /api/v1/auth/logout` とレビュー投稿・更新・通報は認証必須（一般ロール可）
  *   - 上記以外の書き込み（`POST /api/v1/tourism/spots` 等、今後追加分も含む）は
  *     運営（OPERATOR）ロール必須
  * - ロール階層: ADMIN > OPERATOR > GENERAL（[roleHierarchy]）。
@@ -85,6 +85,9 @@ class SecurityConfig(
                     // 運営のモデレーション削除は DELETE /api/v1/tourism/reviews/* で、
                     // パスが違うため下の anyRequest（OPERATOR 必須）に落ちる。
                     .requestMatchers(HttpMethod.DELETE, "/api/v1/tourism/spots/*/reviews/*")
+                    .authenticated()
+                    // レビューの通報（#147）。他人のレビューに対して一般ロールが行う。
+                    .requestMatchers(HttpMethod.POST, "/api/v1/tourism/spots/*/reviews/*/reports")
                     .authenticated()
                     // 本人によるプロフィール更新（#179）。対象は JWT の subject から決まり、
                     // 他人を指定する余地が無いため一般ロールで許可する。

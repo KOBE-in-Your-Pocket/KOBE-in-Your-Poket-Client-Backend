@@ -31,6 +31,22 @@ spring:
 server:
   # Metro/Expo (8081 系) との衝突回避のためデフォルトを 9090 にずらしている
   port: ${SERVER_PORT:9090}
+  # 本番は Caddy が TLS 終端する（deploy/ec2/Caddyfile）。X-Forwarded-Proto/Host を
+  # 解釈しないと OpenAPI の servers が http://app:9090 になり、Swagger UI の
+  # Try it out が届かない。native（Tomcat RemoteIpValve）は内部 IP（Docker の
+  # 172.16/12 等）からのヘッダーだけを信頼するため、:9090 直叩きでの偽装は効かない。
+  forward-headers-strategy: native
+
+# API 契約（#82）。Swagger UI: /swagger-ui.html、OpenAPI JSON: /v3/api-docs
+# 閲覧のみで、書き込み系の認可は SecurityConfig のまま。止めたい環境では
+# SPRINGDOC_ENABLED=false にする。
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_ENABLED:true}
+  swagger-ui:
+    enabled: ${SPRINGDOC_ENABLED:true}
+    # 認証済みで試すとき、ページを再読込しても Bearer を入れ直さずに済むようにする
+    persist-authorization: true
 
 # Supabase Auth JWT（#89）。検証は JWKS（Signing Keys / ES256 等）。url 空時のみ JWT Secret(HS256)。
 # Auth プロキシ（#89-b）は url / anon-key を使う。詳細: docs/supabase-jwt.md / docs/supabase-auth-proxy.md

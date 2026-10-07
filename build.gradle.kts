@@ -29,6 +29,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("tools.jackson.module:jackson-module-kotlin")
 
+    // API 契約の公開（#82）。Swagger UI と OpenAPI JSON を生成する。
+    // 3.x 系が Spring Boot 4 対応（3.1 系は Boot 4.1 ベース）。
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+
     // 画像アップロード（S3）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）に委ねる。
     // sync HTTP クライアント（apache-client）は s3 が transitive で持つため明示追加しない。
     implementation(platform("software.amazon.awssdk:bom:2.28.0"))

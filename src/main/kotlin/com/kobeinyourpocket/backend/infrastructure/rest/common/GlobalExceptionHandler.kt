@@ -4,6 +4,8 @@ import com.kobeinyourpocket.backend.application.evacuation.ShelterNotFoundExcept
 import com.kobeinyourpocket.backend.application.manner.command.IncompleteMannerLocalizationsException
 import com.kobeinyourpocket.backend.application.manner.command.InvalidMannerTitleException
 import com.kobeinyourpocket.backend.application.manner.command.MannerItemNotFoundException
+import com.kobeinyourpocket.backend.application.report.AlreadyReportedException
+import com.kobeinyourpocket.backend.application.report.CannotReportOwnContentException
 import com.kobeinyourpocket.backend.application.tourism.GenreInUseException
 import com.kobeinyourpocket.backend.application.tourism.GenreNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
@@ -41,6 +43,16 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ReviewNotOwnedException::class)
     fun handleReviewNotOwned(ex: ReviewNotOwnedException): ResponseEntity<ApiErrorResponse> =
         forbidden(message = ex.message ?: "Review is not owned by the requester")
+
+    /** 同じ対象をすでに通報している（#147）。Client は「通報済み」と表示する。 */
+    @ExceptionHandler(AlreadyReportedException::class)
+    fun handleAlreadyReported(ex: AlreadyReportedException): ResponseEntity<ApiErrorResponse> =
+        conflict(message = ex.message ?: "Already reported")
+
+    /** 自分の投稿は通報できない（#147）。Client はそもそも通報メニューを出さない。 */
+    @ExceptionHandler(CannotReportOwnContentException::class)
+    fun handleCannotReportOwnContent(ex: CannotReportOwnContentException): ResponseEntity<ApiErrorResponse> =
+        badRequest(message = ex.message ?: "Cannot report own content")
 
     @ExceptionHandler(ShelterNotFoundException::class)
     fun handleShelterNotFound(ex: ShelterNotFoundException): ResponseEntity<ApiErrorResponse> =
