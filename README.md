@@ -121,6 +121,15 @@ curl http://localhost:9090/actuator/health
 
 レスポンス形はクライアントのモック（`fetchSpots`）に整合させる。詳細は `docs/architecture.md` の API 契約を参照。
 
+全エンドポイントの契約は Swagger UI で確認できる（#82）。
+
+| 環境 | Swagger UI | OpenAPI JSON |
+| --- | --- | --- |
+| ローカル | `http://localhost:9090/swagger-ui.html` | `http://localhost:9090/v3/api-docs` |
+| 開発 EC2 | `https://18-181-34-28.sslip.io/swagger-ui.html` | `https://18-181-34-28.sslip.io/v3/api-docs` |
+
+書き込み系を試すときは右上の Authorize に Supabase の access_token を入れる。止めたい環境では `SPRINGDOC_ENABLED=false`。
+
 ---
 
 ## データ出典・ライセンス
