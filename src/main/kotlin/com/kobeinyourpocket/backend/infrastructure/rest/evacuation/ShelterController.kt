@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.evacuation
 import com.kobeinyourpocket.backend.application.evacuation.command.DeleteShelterService
 import com.kobeinyourpocket.backend.application.evacuation.query.GetShelterListService
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.DisasterType
 import com.kobeinyourpocket.backend.infrastructure.rest.common.LanguageResolver
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -28,13 +29,25 @@ class ShelterController(
     private val getShelterListService: GetShelterListService,
     private val deleteShelterService: DeleteShelterService,
 ) {
+    /**
+     * 避難所一覧を返す。
+     *
+     * `?disaster=` で災害種別（`landslide` / `flood` / `tsunami` / `large-fire`）を指定すると、
+     * **いずれか**の種別で ○（`suitable`）の避難所だけに絞る。△（条件付き）は含めない。
+     * カンマ区切り（`?disaster=flood,tsunami`）と繰り返し（`?disaster=flood&disaster=tsunami`）の
+     * どちらでも指定できる。省略時は全件（公開済み 1.0.0 の挙動のまま）。未知の種別は 400。
+     *
+     * 絞り込んでも `meta` はデータセット全体のもの。Client は絞り込み結果を
+     * オフライン用の全件データとして保存しないこと。
+     */
     @GetMapping
     fun listShelters(
         @RequestParam(name = "lang", required = false) lang: String?,
         @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
+        @RequestParam(name = "disaster", required = false) disaster: List<String>?,
     ): ShelterListResponse {
         val language = LanguageResolver.resolve(lang, acceptLanguage)
-        val (shelters, metadata) = getShelterListService.getShelterList(language)
+        val (shelters, metadata) = getShelterListService.getShelterList(language, parseDisasterTypes(disaster))
         return ShelterListResponse.of(shelters, metadata)
     }
 
@@ -52,4 +65,12 @@ class ShelterController(
         deleteShelterService.execute(EvacuationShelter.Id.of(shelterId))
         return ResponseEntity.noContent().build()
     }
+
+    /** 空要素（`?disaster=` や末尾カンマ）は無視する。未知の種別は 400 にして、黙って全件を返さない。 */
+    private fun parseDisasterTypes(values: List<String>?): Set<DisasterType> =
+        values
+            .orEmpty()
+            .filter(String::isNotBlank)
+            .map { DisasterType.of(it) ?: throw IllegalArgumentException("Unknown disaster type: $it") }
+            .toSet()
 }
