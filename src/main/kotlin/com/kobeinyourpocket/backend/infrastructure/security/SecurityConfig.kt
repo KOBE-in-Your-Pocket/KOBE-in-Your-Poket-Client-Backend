@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec
  *   `SUPABASE_URL` が空のときだけ JWT Secret（HS256）にフォールバック（主にテスト）
  * - 認可（#90）: 書き込みは deny-by-default。
  *   - GET 系は公開
- *   - `POST /api/v1/auth/signup|login|google|refresh` は公開（認証の入り口）
+ *   - `POST /api/v1/auth/signup|login|google|apple|refresh` は公開（認証の入り口）
  *   - `POST /api/v1/auth/logout` とレビュー投稿・更新は認証必須（一般ロール可）
  *   - 上記以外の書き込み（`POST /api/v1/tourism/spots` 等、今後追加分も含む）は
  *     運営（OPERATOR）ロール必須
@@ -71,6 +71,7 @@ class SecurityConfig(
                         "/api/v1/auth/signup",
                         "/api/v1/auth/login",
                         "/api/v1/auth/google",
+                        "/api/v1/auth/apple",
                         "/api/v1/auth/refresh",
                     ).permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout")
