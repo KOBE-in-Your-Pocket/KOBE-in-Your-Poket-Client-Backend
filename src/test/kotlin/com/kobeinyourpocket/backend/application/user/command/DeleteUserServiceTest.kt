@@ -2,6 +2,8 @@ package com.kobeinyourpocket.backend.application.user.command
 
 import com.kobeinyourpocket.backend.application.user.auth.AuthGateway
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
+import com.kobeinyourpocket.backend.domain.report.repository.ReportRepository
+import com.kobeinyourpocket.backend.domain.report.vo.ReporterId
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.user.model.User
@@ -19,36 +21,41 @@ class DeleteUserServiceTest {
     private val authGateway = mockk<AuthGateway>()
     private val userRepository = mockk<UserRepository>()
     private val reviewRepository = mockk<ReviewRepository>()
-    private val service = DeleteUserService(authGateway, userRepository, reviewRepository)
+    private val reportRepository = mockk<ReportRepository>()
+    private val service = DeleteUserService(authGateway, userRepository, reviewRepository, reportRepository)
 
     private val userId = User.Id.of(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
     private val authorId = ReviewAuthorId.of(userId.value)
+    private val reporterId = ReporterId.of(userId.value)
     private val existingUser = User.create(id = userId, name = "Alice")
 
     @Test
-    fun `存在するユーザーを削除すると Auth の後に本人のレビューと DB プロフィールを削除する`() {
+    fun `存在するユーザーを削除すると Auth の後に本人のレビュー・通報と DB プロフィールを削除する`() {
         every { userRepository.findById(userId) } returns existingUser
         justRun { authGateway.deleteUser(userId) }
         every { reviewRepository.deleteByAuthorId(authorId) } returns 2
+        every { reportRepository.deleteByReporterId(reporterId) } returns 1
         justRun { userRepository.deleteById(userId) }
 
         service.execute(userId)
 
         // Auth HTTP はトランザクション外。ロールバックで Auth だけ消える事態を避ける。
-        // レビュー削除を Auth の後に置くのは、退会が成立しないときにレビューだけ消えるのを防ぐため。
+        // レビュー・通報の削除を Auth の後に置くのは、退会が成立しないときにそれらだけ消えるのを防ぐため。
         verifyOrder {
             userRepository.findById(userId)
             authGateway.deleteUser(userId)
             reviewRepository.deleteByAuthorId(authorId)
+            reportRepository.deleteByReporterId(reporterId)
             userRepository.deleteById(userId)
         }
     }
 
     @Test
-    fun `レビューが 1 件も無くても削除は成功する`() {
+    fun `レビューも通報も 1 件も無くても削除は成功する`() {
         every { userRepository.findById(userId) } returns existingUser
         justRun { authGateway.deleteUser(userId) }
         every { reviewRepository.deleteByAuthorId(authorId) } returns 0
+        every { reportRepository.deleteByReporterId(reporterId) } returns 0
         justRun { userRepository.deleteById(userId) }
 
         service.execute(userId)
@@ -66,6 +73,7 @@ class DeleteUserServiceTest {
 
         verify(exactly = 0) { authGateway.deleteUser(any()) }
         verify(exactly = 0) { reviewRepository.deleteByAuthorId(any()) }
+        verify(exactly = 0) { reportRepository.deleteByReporterId(any()) }
         verify(exactly = 0) { userRepository.deleteById(any()) }
     }
 
@@ -79,8 +87,9 @@ class DeleteUserServiceTest {
             service.execute(userId)
         }
 
-        // 退会が成立していないのにレビューだけ消える状態を作らない。
+        // 退会が成立していないのにレビュー・通報だけ消える状態を作らない。
         verify(exactly = 0) { reviewRepository.deleteByAuthorId(any()) }
+        verify(exactly = 0) { reportRepository.deleteByReporterId(any()) }
         verify(exactly = 0) { userRepository.deleteById(any()) }
     }
 }
