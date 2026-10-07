@@ -73,6 +73,7 @@ class AuthController(
                 idToken = request.idToken,
                 accessToken = request.accessToken,
                 nonce = request.nonce,
+                name = request.name,
             ),
         )
 
@@ -90,6 +91,7 @@ class AuthController(
                 idToken = request.idToken,
                 accessToken = request.accessToken,
                 nonce = request.nonce,
+                name = request.name,
             ),
         )
 

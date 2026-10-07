@@ -48,9 +48,13 @@ Auth ユーザー削除による補償は `service_role` Admin が必要なた�
 
 Google / Apple はいずれも id_token グラント中継で対応済み（#89-c / #192）。
 
-- リクエスト: `{"idToken": "...", "accessToken": null, "nonce": null}`（`idToken` 必須。`nonce` はトークン取得時に使った場合のみ）
+- リクエスト: `{"idToken": "...", "accessToken": null, "nonce": null, "name": null}`
+  （`idToken` 必須。`nonce` はトークン取得時に使った場合のみ。`name` は任意で最大 100 文字、超過は 400）
 - 初回ログイン時は GoTrue が Auth ユーザーを自動作成（signup / login の区別なし）。
-  プロフィール行は login と同じく冪等補完し、表示名は `user_metadata.full_name` → `user_metadata.name` → email ローカル部 → `"user"`
+  プロフィール行は login と同じく冪等補完し、表示名はリクエストの `name` → `user_metadata.full_name` →
+  `user_metadata.name` → email ローカル部 → `"user"`
+- `name` はプロフィール行の**新規作成時のみ**使う。既存行があれば無視し、表示名を上書きしない
+  （表示名の変更は `PATCH /api/v1/users/me`。#179）
 
 ### Google（`POST /api/v1/auth/google`）
 
@@ -62,8 +66,11 @@ Google / Apple はいずれも id_token グラント中継で対応済み（#89-
 - 事前設定: Supabase ダッシュボード → Authentication → Sign In / Providers → Apple を有効化し、
   Services ID / Team ID / Key ID / 秘密鍵（`.p8`）を登録。Client IDs にネイティブアプリの Bundle ID を追記する（#191）
 - Apple のネイティブサインインは nonce を使う。Client が nonce を付けた場合は `nonce` が必須（未指定だと GoTrue が 400）
-- 表示名（`fullName`）は**初回認証時のみ**返る。2 回目以降は Apple 側から返らないため、
-  初回に受け取った値を Client から `name` として渡す必要がある（#193）
-- メールアドレスが非公開リレー（`@privaterelay.appleid.com`）になる場合がある
+- 表示名（`fullName`）は**初回認証時のみ**返り、ID トークンにも含まれない。
+  Client は初回に受け取った値を `name` として渡す（#193）。2 回目以降は省略してよい
+  - backend 呼び出しが失敗すると、再試行時には Apple が `fullName` を返さない。
+    Client は backend の成功まで `fullName` を保持して再送する
+- メールアドレスが非公開リレー（`@privaterelay.appleid.com`）になる場合がある。
+  `name` が無いとローカル部（ランダム文字列）が表示名になるため、ユーザーは `PATCH /api/v1/users/me` で変更する
 
 Kakao / LinkedIn / X は後続（`AuthGateway.signInWithIdToken` の provider 引数で拡張する）
