@@ -20,8 +20,7 @@ data class ReviewView(
     val language: String,
     /**
      * 運営が通報を承認し、非表示に同意した（不適切と判断した）口コミか。true なら Client はアプリ全体で非表示にする。
-     * 承認は通報の状態 [com.kobeinyourpocket.backend.domain.report.vo.ReportStatus.RESOLVED] で表す。
-     * 通報が却下された（DISMISSED）・まだ確認されていない（OPEN）だけの口コミは false。
+     * 通報が却下された・まだ確認されていないだけの口コミは false。
      */
     val hiddenByReport: Boolean,
 )
