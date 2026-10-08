@@ -48,7 +48,7 @@ class DeleteReviewServiceTest {
     private val reports = mockk<HandleReviewReportsService>()
 
     init {
-        every { reports.resolveOnReviewDeleted(any(), any(), any()) } returns 0
+        every { reports.approveOnReviewDeleted(any(), any(), any()) } returns 0
     }
 
     private fun service(repository: ReviewRepository) = DeleteReviewService(repository, reports)
@@ -66,7 +66,7 @@ class DeleteReviewServiceTest {
     fun `削除したレビューへの未対応の通報を、削除した運営の対応として閉じる`() {
         DeleteReviewService(RecordingReviewRepository(exists = true), reports).execute(id, operator)
 
-        verify(exactly = 1) { reports.resolveOnReviewDeleted(id, operator, any()) }
+        verify(exactly = 1) { reports.approveOnReviewDeleted(id, operator, any()) }
     }
 
     @Test
@@ -83,6 +83,6 @@ class DeleteReviewServiceTest {
         assertFailsWith<ReviewNotFoundException> { service(repository).execute(id, operator) }
 
         assertNull(repository.deletedId)
-        verify(exactly = 0) { reports.resolveOnReviewDeleted(any(), any(), any()) }
+        verify(exactly = 0) { reports.approveOnReviewDeleted(any(), any(), any()) }
     }
 }

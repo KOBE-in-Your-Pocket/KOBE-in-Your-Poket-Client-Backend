@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank
 /**
  * `PATCH /api/v1/reports/reviews/{reviewId}` のリクエストボディ（#145）。
  *
- * [status] は `RESOLVED`（対応済み）か `DISMISSED`（却下）。`OPEN` へ戻す操作は無い。
+ * [status] は `APPROVED`（承認）か `REJECTED`（拒否）。`OPEN` へ戻す操作は無い。
  */
 data class HandleReviewReportsRequest(
     @field:NotBlank

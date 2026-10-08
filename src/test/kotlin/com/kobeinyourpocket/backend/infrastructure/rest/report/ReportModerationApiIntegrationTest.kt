@@ -172,27 +172,27 @@ class ReportModerationApiIntegrationTest {
     }
 
     @Test
-    fun `却下すると未対応の一覧から消え、担当者と日時が残る`() {
-        handle(reviewB, """{ "status": "DISMISSED" }""")
+    fun `拒否すると未対応の一覧から消え、担当者と日時が残る`() {
+        handle(reviewB, """{ "status": "REJECTED" }""")
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.updatedCount").value(1))
 
         list("&status=OPEN")
             .andExpect(jsonPath("$.data.length()").value(1))
             .andExpect(jsonPath("$.data[0].reviewId").value(reviewA))
-        list("&status=DISMISSED")
+        list("&status=REJECTED")
             .andExpect(jsonPath("$.data.length()").value(1))
             .andExpect(jsonPath("$.data[0].openCount").value(0))
-            .andExpect(jsonPath("$.data[0].reports[0].status").value("DISMISSED"))
+            .andExpect(jsonPath("$.data[0].reports[0].status").value("REJECTED"))
             .andExpect(jsonPath("$.data[0].reports[0].handledBy").value(OPERATOR))
             .andExpect(jsonPath("$.data[0].reports[0].handledAt").exists())
     }
 
     @Test
     fun `同じ口コミをもう一度閉じても 0 件で成功する`() {
-        handle(reviewA, """{ "status": "RESOLVED" }""").andExpect(jsonPath("$.updatedCount").value(2))
+        handle(reviewA, """{ "status": "APPROVED" }""").andExpect(jsonPath("$.updatedCount").value(2))
 
-        handle(reviewA, """{ "status": "DISMISSED" }""")
+        handle(reviewA, """{ "status": "REJECTED" }""")
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.updatedCount").value(0))
     }
@@ -201,8 +201,8 @@ class ReportModerationApiIntegrationTest {
     fun `対応状況の更新は不正な値・未対応への戻し・通報の無い口コミ・一般ロールを弾く`() {
         handle(reviewA, """{ "status": "OPEN" }""").andExpect(status().isBadRequest)
         handle(reviewA, """{ "status": "DONE" }""").andExpect(status().isBadRequest)
-        handle(UUID.randomUUID().toString(), """{ "status": "RESOLVED" }""").andExpect(status().isNotFound)
-        handle(reviewA, """{ "status": "RESOLVED" }""", role = Role.GENERAL).andExpect(status().isForbidden)
+        handle(UUID.randomUUID().toString(), """{ "status": "APPROVED" }""").andExpect(status().isNotFound)
+        handle(reviewA, """{ "status": "APPROVED" }""", role = Role.GENERAL).andExpect(status().isForbidden)
     }
 
     @Test
@@ -212,8 +212,8 @@ class ReportModerationApiIntegrationTest {
 
     @Test
     fun `通報が承認された口コミだけ、レビュー取得で hiddenByReport が true になる`() {
-        handle(reviewA, """{ "status": "RESOLVED" }""").andExpect(status().isOk)
-        handle(reviewB, """{ "status": "DISMISSED" }""").andExpect(status().isOk)
+        handle(reviewA, """{ "status": "APPROVED" }""").andExpect(status().isOk)
+        handle(reviewB, """{ "status": "REJECTED" }""").andExpect(status().isOk)
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
@@ -232,7 +232,7 @@ class ReportModerationApiIntegrationTest {
     }
 
     @Test
-    fun `運営が口コミを削除すると未対応の通報は対応済みになり、通報は履歴として残る`() {
+    fun `運営が口コミを削除すると未対応の通報は承認になり、通報は履歴として残る`() {
         mockMvc
             .perform(delete("/api/v1/tourism/reviews/$reviewA").with(withRole(Role.OPERATOR, OPERATOR)))
             .andExpect(status().isNoContent)
@@ -240,11 +240,11 @@ class ReportModerationApiIntegrationTest {
         list("&status=OPEN")
             .andExpect(jsonPath("$.data.length()").value(1))
             .andExpect(jsonPath("$.data[0].reviewId").value(reviewB))
-        list("&status=RESOLVED")
+        list("&status=APPROVED")
             .andExpect(jsonPath("$.data[0].reviewId").value(reviewA))
             .andExpect(jsonPath("$.data[0].review").doesNotExist())
             .andExpect(jsonPath("$.data[0].reportCount").value(2))
-            .andExpect(jsonPath("$.data[0].reports[0].status").value("RESOLVED"))
+            .andExpect(jsonPath("$.data[0].reports[0].status").value("APPROVED"))
             .andExpect(jsonPath("$.data[0].reports[0].handledBy").value(OPERATOR))
     }
 

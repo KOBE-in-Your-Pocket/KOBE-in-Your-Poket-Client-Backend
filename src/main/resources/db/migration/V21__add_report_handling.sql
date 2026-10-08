@@ -1,11 +1,11 @@
--- 通報の対応状況（#145）。運営が通報を「対応済み」「却下」にでき、誰がいつ対応したかを残す。
+-- 通報の対応状況（#145）。運営が通報を「承認」「拒否」にでき、誰がいつ対応したかを残す。
 --
--- V20 では status を OPEN（受付）だけに絞っていた。ここで RESOLVED（対応済み）と
--- DISMISSED（却下・問題なし）を足す。対応済みを未対応に戻す操作は持たない。
+-- V20 では status を OPEN（受付）だけに絞っていた。ここで APPROVED（承認・通報を認めて口コミを削除）と
+-- REJECTED（拒否・問題なし）を足す。管理画面のラベル（承認済み / 拒否済み）に合わせた名前。対応済みを未対応に戻す操作は持たない。
 
 ALTER TABLE reports DROP CONSTRAINT ck_reports_status;
 ALTER TABLE reports
-    ADD CONSTRAINT ck_reports_status CHECK (status IN ('OPEN', 'RESOLVED', 'DISMISSED'));
+    ADD CONSTRAINT ck_reports_status CHECK (status IN ('OPEN', 'APPROVED', 'REJECTED'));
 
 -- 対応した運営（Supabase Auth の user id）と対応日時。OPEN の間は両方 NULL。
 -- 運営が退会しても履歴として残すため、users への外部キーは張らない。

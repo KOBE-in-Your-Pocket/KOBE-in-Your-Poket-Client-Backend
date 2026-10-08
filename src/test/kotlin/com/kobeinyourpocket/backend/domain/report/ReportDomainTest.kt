@@ -77,27 +77,27 @@ class ReportDomainTest {
     private val handledAt = Instant.parse("2026-10-07T03:00:00Z")
 
     @Test
-    fun `未対応の通報を対応済みにすると担当者と日時を記録する`() {
-        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.RESOLVED, operator, handledAt)
+    fun `未対応の通報を承認すると担当者と日時を記録する`() {
+        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.APPROVED, operator, handledAt)
 
-        assertEquals(ReportStatus.RESOLVED, handled.status)
+        assertEquals(ReportStatus.APPROVED, handled.status)
         assertEquals(operator, handled.handledBy)
         assertEquals(handledAt, handled.handledAt)
     }
 
     @Test
-    fun `却下にもできる`() {
+    fun `拒否にもできる`() {
         assertEquals(
-            ReportStatus.DISMISSED,
-            create(ReportReason.SPAM, null).handle(ReportStatus.DISMISSED, operator, handledAt).status,
+            ReportStatus.REJECTED,
+            create(ReportReason.SPAM, null).handle(ReportStatus.REJECTED, operator, handledAt).status,
         )
     }
 
     @Test
     fun `対応済みの通報は再度閉じられない（履歴を上書きしない）`() {
-        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.RESOLVED, operator, handledAt)
+        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.APPROVED, operator, handledAt)
 
-        assertFailsWith<IllegalStateException> { handled.handle(ReportStatus.DISMISSED, operator, handledAt) }
+        assertFailsWith<IllegalStateException> { handled.handle(ReportStatus.REJECTED, operator, handledAt) }
     }
 
     @Test
@@ -111,7 +111,7 @@ class ReportDomainTest {
     fun `対応状況と担当者・日時の組み合わせが矛盾する通報は作れない`() {
         val open = create(ReportReason.SPAM, null)
 
-        assertFailsWith<IllegalArgumentException> { open.copy(status = ReportStatus.RESOLVED) }
+        assertFailsWith<IllegalArgumentException> { open.copy(status = ReportStatus.APPROVED) }
         assertFailsWith<IllegalArgumentException> { open.copy(handledBy = operator, handledAt = handledAt) }
     }
 }

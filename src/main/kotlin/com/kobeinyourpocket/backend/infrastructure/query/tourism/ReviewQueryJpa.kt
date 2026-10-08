@@ -100,7 +100,7 @@ class ReviewQueryJpa(
 
     private fun Query.bindHiddenByReport(): Query =
         setParameter("reportTargetType", ReportTarget.Type.REVIEW.name)
-            .setParameter("resolvedReportStatus", ReportStatus.RESOLVED.name)
+            .setParameter("approvedReportStatus", ReportStatus.APPROVED.name)
 
     private companion object {
         /**
@@ -115,7 +115,7 @@ class ReviewQueryJpa(
                 SELECT 1 FROM reports rp
                 WHERE rp.target_type = :reportTargetType
                     AND rp.target_id = CAST(r.id AS VARCHAR)
-                    AND rp.status = :resolvedReportStatus
+                    AND rp.status = :approvedReportStatus
             ) AS hidden_by_report
             """.trimIndent()
 

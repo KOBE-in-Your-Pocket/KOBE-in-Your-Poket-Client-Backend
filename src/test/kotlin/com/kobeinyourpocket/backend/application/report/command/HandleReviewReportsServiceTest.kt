@@ -44,10 +44,10 @@ class HandleReviewReportsServiceTest {
         val saved = slot<List<Report>>()
         justRun { repository.saveAll(capture(saved)) }
 
-        val updated = service.execute(reviewId, ReportStatus.DISMISSED, operator, now)
+        val updated = service.execute(reviewId, ReportStatus.REJECTED, operator, now)
 
         assertEquals(2, updated)
-        assertEquals(listOf(ReportStatus.DISMISSED), saved.captured.map(Report::status).distinct())
+        assertEquals(listOf(ReportStatus.REJECTED), saved.captured.map(Report::status).distinct())
         assertEquals(listOf(operator), saved.captured.map(Report::handledBy).distinct())
     }
 
@@ -56,7 +56,7 @@ class HandleReviewReportsServiceTest {
         every { repository.existsByTarget(target) } returns true
         every { repository.findOpenByTarget(target) } returns emptyList()
 
-        assertEquals(0, service.execute(reviewId, ReportStatus.RESOLVED, operator, now))
+        assertEquals(0, service.execute(reviewId, ReportStatus.APPROVED, operator, now))
 
         verify(exactly = 0) { repository.saveAll(any()) }
     }
@@ -65,14 +65,14 @@ class HandleReviewReportsServiceTest {
     fun `通報が 1 件も無い口コミは ReportsNotFoundException`() {
         every { repository.existsByTarget(target) } returns false
 
-        assertFailsWith<ReportsNotFoundException> { service.execute(reviewId, ReportStatus.RESOLVED, operator, now) }
+        assertFailsWith<ReportsNotFoundException> { service.execute(reviewId, ReportStatus.APPROVED, operator, now) }
     }
 
     @Test
-    fun `口コミ削除時は未対応の通報を対応済みにし、通報が無くても例外にしない`() {
+    fun `口コミ削除時は未対応の通報を承認にし、通報が無くても例外にしない`() {
         every { repository.findOpenByTarget(target) } returns emptyList()
 
-        assertEquals(0, service.resolveOnReviewDeleted(reviewId, operator, now))
+        assertEquals(0, service.approveOnReviewDeleted(reviewId, operator, now))
 
         verify(exactly = 0) { repository.existsByTarget(any()) }
     }
