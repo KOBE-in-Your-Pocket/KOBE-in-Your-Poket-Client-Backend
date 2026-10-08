@@ -15,12 +15,6 @@ data class ReviewResponse(
     val author: AuthorResponse,
     val postedAt: Instant,
     val language: String,
-    /**
-     * 通報が運営に承認された口コミか。true なら Client は非表示にする。
-     *
-     * POST / PUT のレスポンスでは常に false（通報の状態を見ていないため）。
-     */
-    val hiddenByReport: Boolean,
 ) {
     data class RatingResponse(
         val value: Int,
@@ -53,7 +47,6 @@ data class ReviewResponse(
                     ),
                 postedAt = review.createdAt,
                 language = review.language.code,
-                hiddenByReport = false,
             )
 
         fun from(view: ReviewView): ReviewResponse =
@@ -69,7 +62,6 @@ data class ReviewResponse(
                     ),
                 postedAt = view.createdAt,
                 language = view.language,
-                hiddenByReport = view.hiddenByReport,
             )
     }
 }

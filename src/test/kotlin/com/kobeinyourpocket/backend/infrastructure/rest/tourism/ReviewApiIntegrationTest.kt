@@ -134,6 +134,7 @@ class ReviewApiIntegrationTest {
             .andExpect(jsonPath("$.author.name").value("Alice"))
             .andExpect(jsonPath("$.language").value("ja"))
             .andExpect(jsonPath("$.postedAt").exists())
+            .andExpect(jsonPath("$.hiddenByReport").doesNotExist())
     }
 
     @Test
