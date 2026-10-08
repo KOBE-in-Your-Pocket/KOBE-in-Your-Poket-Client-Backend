@@ -1,10 +1,12 @@
 package com.kobeinyourpocket.backend.domain.report
 
 import com.kobeinyourpocket.backend.domain.report.model.Report
+import com.kobeinyourpocket.backend.domain.report.vo.ReportHandlerId
 import com.kobeinyourpocket.backend.domain.report.vo.ReportReason
 import com.kobeinyourpocket.backend.domain.report.vo.ReportStatus
 import com.kobeinyourpocket.backend.domain.report.vo.ReportTarget
 import com.kobeinyourpocket.backend.domain.report.vo.ReporterId
+import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -69,5 +71,47 @@ class ReportDomainTest {
     @Test
     fun `通報対象の ID は空にできない`() {
         assertFailsWith<IllegalArgumentException> { ReportTarget(type = ReportTarget.Type.REVIEW, id = " ") }
+    }
+
+    private val operator = ReportHandlerId.of("33333333-3333-3333-3333-333333333333")
+    private val handledAt = Instant.parse("2026-10-07T03:00:00Z")
+
+    @Test
+    fun `未対応の通報を承認すると担当者と日時を記録する`() {
+        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.APPROVED, operator, handledAt)
+
+        assertEquals(ReportStatus.APPROVED, handled.status)
+        assertEquals(operator, handled.handledBy)
+        assertEquals(handledAt, handled.handledAt)
+    }
+
+    @Test
+    fun `拒否にもできる`() {
+        assertEquals(
+            ReportStatus.REJECTED,
+            create(ReportReason.SPAM, null).handle(ReportStatus.REJECTED, operator, handledAt).status,
+        )
+    }
+
+    @Test
+    fun `対応済みの通報は再度閉じられない（履歴を上書きしない）`() {
+        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.APPROVED, operator, handledAt)
+
+        assertFailsWith<IllegalStateException> { handled.handle(ReportStatus.REJECTED, operator, handledAt) }
+    }
+
+    @Test
+    fun `未対応へ戻す操作は無い`() {
+        assertFailsWith<IllegalArgumentException> {
+            create(ReportReason.SPAM, null).handle(ReportStatus.OPEN, operator, handledAt)
+        }
+    }
+
+    @Test
+    fun `対応状況と担当者・日時の組み合わせが矛盾する通報は作れない`() {
+        val open = create(ReportReason.SPAM, null)
+
+        assertFailsWith<IllegalArgumentException> { open.copy(status = ReportStatus.APPROVED) }
+        assertFailsWith<IllegalArgumentException> { open.copy(handledBy = operator, handledAt = handledAt) }
     }
 }

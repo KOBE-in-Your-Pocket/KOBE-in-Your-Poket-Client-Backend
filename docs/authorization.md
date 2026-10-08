@@ -12,6 +12,7 @@
 | `POST /api/v1/auth/logout` | 認証必須 |
 | `POST /api/v1/tourism/spots/{spotId}/reviews`・`PUT .../reviews/{reviewId}`・`DELETE .../reviews/{reviewId}` | 認証済みユーザー（一般ロール可）。**投稿者本人かどうかは application 層で判定**し、他人の投稿なら 403（#86） |
 | `POST /api/v1/tourism/spots/{spotId}/reviews/{reviewId}/reports` | 認証済みユーザー（一般ロール可）。自分のレビューは 400、重複は 409（#147 / [`report.md`](./report.md)） |
+| `GET /api/v1/reports/reviews`・`PATCH /api/v1/reports/reviews/{reviewId}` | OPERATOR 以上（`@PreAuthorize`）。GET も通報者情報を含むため公開しない（#145 / [`report.md`](./report.md)） |
 | `DELETE /api/v1/auth/users/{userId}` | ADMIN のみ（`@PreAuthorize` / #137） |
 | `DELETE /api/v1/tourism/spots/{spotId}` | ADMIN のみ（`@PreAuthorize`） |
 | 上記以外の書き込み全て（`POST /api/v1/tourism/spots` 等、今後追加分も含む） | **運営（OPERATOR）ロール必須** |

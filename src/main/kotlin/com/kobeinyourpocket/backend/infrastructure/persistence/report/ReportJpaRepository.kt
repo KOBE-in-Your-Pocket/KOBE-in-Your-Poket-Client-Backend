@@ -10,6 +10,17 @@ interface ReportJpaRepository : JpaRepository<ReportEntity, UUID> {
         reporterUserId: UUID,
     ): Boolean
 
+    fun existsByTargetTypeAndTargetId(
+        targetType: String,
+        targetId: String,
+    ): Boolean
+
+    fun findByTargetTypeAndTargetIdAndStatus(
+        targetType: String,
+        targetId: String,
+        status: String,
+    ): List<ReportEntity>
+
     /**
      * 通報者の user id で通報を一括削除する（退会処理）。
      *
