@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.persistence.report
 
 import com.kobeinyourpocket.backend.domain.report.model.Report
+import com.kobeinyourpocket.backend.domain.report.vo.ReportHandlerId
 import com.kobeinyourpocket.backend.domain.report.vo.ReportId
 import com.kobeinyourpocket.backend.domain.report.vo.ReportReason
 import com.kobeinyourpocket.backend.domain.report.vo.ReportStatus
@@ -15,7 +16,7 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * DB `reports`（V20）。
+ * DB `reports`（V20 / 対応状況は V21）。
  *
  * 一意制約は Flyway 側が正だが、テスト（H2 / create-drop）でも重複を DB で弾けるよう
  * エンティティにも同じ制約を宣言している。
@@ -48,6 +49,10 @@ class ReportEntity(
     var status: String,
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant,
+    @Column(name = "handled_by", columnDefinition = "uuid")
+    var handledBy: UUID? = null,
+    @Column(name = "handled_at")
+    var handledAt: Instant? = null,
 ) {
     fun toDomain(): Report =
         Report(
@@ -58,6 +63,8 @@ class ReportEntity(
             description = description,
             status = ReportStatus.valueOf(status),
             createdAt = createdAt,
+            handledBy = handledBy?.let(ReportHandlerId::of),
+            handledAt = handledAt,
         )
 
     companion object {
@@ -71,6 +78,8 @@ class ReportEntity(
                 description = report.description,
                 status = report.status.name,
                 createdAt = report.createdAt,
+                handledBy = report.handledBy?.value,
+                handledAt = report.handledAt,
             )
     }
 }

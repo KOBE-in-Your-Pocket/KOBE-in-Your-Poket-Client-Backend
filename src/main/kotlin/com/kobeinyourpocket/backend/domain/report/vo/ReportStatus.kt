@@ -1,11 +1,25 @@
 package com.kobeinyourpocket.backend.domain.report.vo
 
 /**
- * [値オブジェクト] 通報の対応状況。
+ * [値オブジェクト] 通報の対応状況（#145）。
  *
- * 現状は受付（[OPEN]）のみ。運営が対応済み・却下にする操作は #145 の運営向け一覧と合わせて追加する。
- * 追加時は DB の CHECK 制約（`ck_reports_status`）も新しいマイグレーションで広げる。
+ * [OPEN] から [RESOLVED] か [DISMISSED] へ一度だけ進む。対応済みを未対応へ戻す操作は持たない
+ * （誤って閉じた場合でも、同じ対象への新しい通報は別の人から届く）。
+ * 値を増やすときは DB の CHECK 制約（`ck_reports_status`）も新しいマイグレーションで広げる。
  */
 enum class ReportStatus {
+    /** 未対応。運営の確認待ち。 */
     OPEN,
+
+    /** 対応済み。削除など、運営が対処した。 */
+    RESOLVED,
+
+    /** 却下。確認した結果、問題なしと判断した。 */
+    DISMISSED,
+    ;
+
+    companion object {
+        /** code から復元する。未知の code は null（呼び出し側で 400 にする）。 */
+        fun of(code: String): ReportStatus? = entries.firstOrNull { it.name == code }
+    }
 }
