@@ -35,35 +35,69 @@ Client のラジオボタンの選択肢に 1 対 1 で対応する。表示文�
 
 選択肢を増やすときは `ReportReason` と DB の CHECK 制約（`ck_reports_reason`）を新しいマイグレーションで一緒に広げる。
 
-## データ（`reports` / V20）
+## データ（`reports` / V20・V21）
 
-- 対象は `target_type` + `target_id` で汎用に持つ。現状は `REVIEW` のみ。スポット・避難所は #145 で追加する
+- 対象は `target_type` + `target_id` で汎用に持つ。現状は `REVIEW` のみ。スポット・避難所は #145 の残りで追加する
 - `(target_type, target_id, reporter_user_id)` の一意制約で重複通報を防ぐ
 - 対象への外部キーは張らない。**レビューが削除されても通報は残す**（運営の対応履歴）
 - **通報者が退会したら本人の通報は削除する**（`DeleteUserService`）。退会者のレビューに他人が送った通報は残る
+- 対応状況（V21）: `status` は `OPEN`（未対応）→ `APPROVED`（承認済み）/ `REJECTED`（拒否済み）へ一度だけ進む。
+  対応した運営の id（`handled_by`）と日時（`handled_at`）を残す
 - RLS 有効・ポリシーなし（#117）。Supabase Data API からは読み書きできない
+
+## 運営向け API（#145）
+
+いずれも OPERATOR 以上（ADMIN も可）。通報者の id と名前を含むため公開しない。
+
+### 一覧 `GET /api/v1/reports/reviews`
+
+通報を**口コミごとにまとめて**、未対応の通報が多い順（同数なら最新の通報が新しい順）に返す。
+
+| パラメータ | 説明 |
+| --- | --- |
+| `status` | `OPEN` / `APPROVED` / `REJECTED`。その状態の通報が 1 件以上ある口コミだけに絞る。省略で全件 |
+| `page` / `size` | 0 始まり。`size` は既定 20・上限 100（他の一覧と揃える件は #205） |
+| `lang` | スポット名の解決にだけ効く。本文・投稿者名は投稿時の言語のまま |
+
+各口コミには、口コミの本文・評価・投稿者・スポット名（削除済みなら `review: null`）、件数（`reportCount` / `openCount`）、
+理由ごとの件数（`reasonCounts`）、通報の明細（理由・自由記述・状態・通報者の id と名前・対応者・対応日時）が入る。
+件数と明細は `status` の絞り込みにかかわらず、その口コミの全通報から作る。
+
+### 対応 `PATCH /api/v1/reports/reviews/{reviewId}`
+
+```json
+{ "status": "APPROVED" }
+```
+
+その口コミへの**未対応の通報をまとめて** `APPROVED` か `REJECTED` にする。対応済みの通報は書き換えない。
+
+| status | 条件 |
+| --- | --- |
+| 200 | 更新した（`updatedCount`。全件対応済みなら 0） |
+| 400 | `status` が不正、または `OPEN` |
+| 404 | その口コミへの通報が 1 件も無い |
 
 ## 運営フロー
 
-通報されたレビューは**自動では非表示にしない**。運営が確認して判断する。
+通報されたレビューは**自動では非表示にしない**。運営が管理画面（ADMIN の通報画面）で確認して判断する。
 
-1. **確認**: 運営向け一覧 API は未実装（#145）。それまでは Supabase の SQL Editor で未対応の通報を見る
+| 判断 | 操作 | 管理画面 | アプリ |
+| --- | --- | --- | --- |
+| 承認（問題あり） | PATCH `APPROVED` | 口コミは残る | **非表示**（下記） |
+| 拒否（問題なし） | PATCH `REJECTED` | 口コミは残る | 表示のまま |
+| 拒否後にやはり消す | `DELETE /api/v1/tourism/reviews/{reviewId}` | 削除済み | 消える |
 
-   ```sql
-   SELECT r.created_at, r.reason, r.description, r.target_id AS review_id,
-          v.spot_id, v.comment, v.author_name
-   FROM reports r
-   LEFT JOIN review v ON v.id::text = r.target_id
-   WHERE r.target_type = 'REVIEW' AND r.status = 'OPEN'
-   ORDER BY r.created_at DESC;
-   ```
+- **承認しても口コミは消さない。** 一般向けのレビュー取得（`GET /api/v1/tourism/spots/{spotId}/reviews`）が、
+  承認済みの通報がある口コミに `hiddenByReport: true` を付けて返し、Client がそれを見て非表示にする（#202）
+- 運営がモデレーション削除（`DELETE /api/v1/tourism/reviews/{reviewId}`）すると、その口コミへの未対応の通報は
+  削除した運営の対応として `APPROVED` になる。拒否済みの通報は書き換えない
+- 投稿者本人の削除・退会で口コミが消えた場合、未対応の通報は残る。一覧で `review: null` の行として出るので、運営が閉じる
 
-   `v.*` が NULL の行は、レビューがすでに削除されている。
+### 既知の制限
 
-2. **判断と削除**: 不適切なら運営のモデレーション削除で消す
-   `DELETE /api/v1/tourism/reviews/{reviewId}`（OPERATOR 以上 / #165）。投稿者本人かどうかは問わない
-3. **対応状況の記録**: `status` は現状 `OPEN` のみ。対応済み・却下の更新は #145 で運営向け一覧と合わせて追加する
+- 承認した口コミの本文は、一般向けのレスポンスに入ったまま届く。`hiddenByReport` を知らない古い Client では表示される
+- スポットの平均評価には、承認した口コミの評価も含まれたまま
 
 Guideline 1.2 は不適切なコンテンツへの速やかな対応を求めている（Client の
 `docs/appstore-release-plan.md` では 24 時間以内を目安にしている）。通知（メール転送など）は
-スコープ外のため、レビュー投稿の解禁後は運営が定期的に上の SQL で確認する。
+スコープ外のため、レビュー投稿の解禁後は運営が定期的に管理画面の「未対応」を確認する。
