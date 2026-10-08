@@ -153,6 +153,7 @@ class SignInWithIdTokenService(
         idToken: String,
         accessToken: String? = null,
         nonce: String? = null,
+        name: String? = null,
     ): AuthCommandResult {
         val session =
             authGateway.signInWithIdToken(
@@ -161,26 +162,34 @@ class SignInWithIdTokenService(
                 accessToken = accessToken,
                 nonce = nonce,
             )
-        val name = displayNameForSso(displayName = session.displayName, email = session.email)
+        val profileName =
+            displayNameForSso(requestedName = name, displayName = session.displayName, email = session.email)
         val user =
             ensureUserProfileResilient(
                 ensureUserProfileService = ensureUserProfileService,
                 userId = session.userId,
-                name = name,
+                name = profileName,
             )
         return AuthCommandResult(session = session, user = user.toPublicUser())
     }
 }
 
 /**
- * SSO ログイン時の表示名。プロバイダの表示名を優先し、[User.MAX_NAME_LENGTH] を超える分は
+ * SSO ログイン時の表示名。リクエストの [requestedName]（Apple が初回のみ返す fullName。#193）→
+ * プロバイダの表示名 → email ローカル部の順で採用し、[User.MAX_NAME_LENGTH] を超える分は
  * ドメイン不変条件違反（即失敗）にせず切り詰める。
  */
 internal fun displayNameForSso(
+    requestedName: String?,
     displayName: String?,
     email: String?,
 ): String {
-    val name = displayName?.trim().orEmpty().ifBlank { displayNameFromEmail(email.orEmpty()) }
+    val name =
+        requestedName
+            ?.trim()
+            .orEmpty()
+            .ifBlank { displayName?.trim().orEmpty() }
+            .ifBlank { displayNameFromEmail(email.orEmpty()) }
     return name.take(User.MAX_NAME_LENGTH)
 }
 
