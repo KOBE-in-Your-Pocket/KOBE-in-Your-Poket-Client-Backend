@@ -7,9 +7,11 @@ import com.kobeinyourpocket.backend.application.evacuation.query.ShelterListView
 import com.kobeinyourpocket.backend.application.evacuation.query.ShelterView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.DisasterType
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
@@ -85,8 +87,9 @@ class ShelterControllerTest {
     private fun stub(
         language: Language,
         shelters: List<ShelterView>,
+        suitableFor: Set<DisasterType> = emptySet(),
     ) {
-        given(getShelterListService.getShelterList(language)).willReturn(ShelterListView(shelters, metadata))
+        given(getShelterListService.getShelterList(language, suitableFor)).willReturn(ShelterListView(shelters, metadata))
     }
 
     @Test
@@ -139,7 +142,7 @@ class ShelterControllerTest {
             .perform(get("/api/v1/evacuation/shelters?lang=en").header("Accept-Language", "ja"))
             .andExpect(status().isOk)
 
-        verify(getShelterListService).getShelterList(Language.EN)
+        verify(getShelterListService).getShelterList(Language.EN, emptySet())
     }
 
     @Test
@@ -150,7 +153,7 @@ class ShelterControllerTest {
             .perform(get("/api/v1/evacuation/shelters").header("Accept-Language", "ko-KR,ko;q=0.9,en;q=0.8"))
             .andExpect(status().isOk)
 
-        verify(getShelterListService).getShelterList(Language.KO)
+        verify(getShelterListService).getShelterList(Language.KO, emptySet())
     }
 
     @Test
@@ -159,7 +162,7 @@ class ShelterControllerTest {
 
         mockMvc.perform(get("/api/v1/evacuation/shelters?lang=fr")).andExpect(status().isOk)
 
-        verify(getShelterListService).getShelterList(Language.EN)
+        verify(getShelterListService).getShelterList(Language.EN, emptySet())
     }
 
     @Test
@@ -168,7 +171,52 @@ class ShelterControllerTest {
 
         mockMvc.perform(get("/api/v1/evacuation/shelters")).andExpect(status().isOk)
 
-        verify(getShelterListService).getShelterList(Language.EN)
+        verify(getShelterListService).getShelterList(Language.EN, emptySet())
+    }
+
+    @Test
+    fun `disaster をカンマ区切りで指定すると災害種別の集合として渡す`() {
+        stub(Language.EN, listOf(honjoPark), setOf(DisasterType.TSUNAMI, DisasterType.LARGE_FIRE))
+
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=en&disaster=tsunami,large-fire"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].id").value("kobe-099"))
+            // 絞り込んでも meta はデータセット全体のもの。
+            .andExpect(jsonPath("$.meta.updatedAt").value("2025-04-02T00:00:00Z"))
+
+        verify(getShelterListService).getShelterList(Language.EN, setOf(DisasterType.TSUNAMI, DisasterType.LARGE_FIRE))
+    }
+
+    @Test
+    fun `disaster は繰り返し指定もでき、大文字・重複は正規化する`() {
+        stub(Language.EN, emptyList(), setOf(DisasterType.FLOOD, DisasterType.LANDSLIDE))
+
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=en&disaster=FLOOD&disaster=landslide&disaster=flood"))
+            .andExpect(status().isOk)
+
+        verify(getShelterListService).getShelterList(Language.EN, setOf(DisasterType.FLOOD, DisasterType.LANDSLIDE))
+    }
+
+    @Test
+    fun `disaster が空なら絞り込まない`() {
+        stub(Language.EN, emptyList())
+
+        mockMvc.perform(get("/api/v1/evacuation/shelters?lang=en&disaster=")).andExpect(status().isOk)
+
+        verify(getShelterListService).getShelterList(Language.EN, emptySet())
+    }
+
+    @Test
+    fun `未知の disaster は 400 で、黙って全件を返さない`() {
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=en&disaster=tsunami,earthquake"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Unknown disaster type: earthquake"))
+
+        verifyNoInteractions(getShelterListService)
     }
 
     @Test

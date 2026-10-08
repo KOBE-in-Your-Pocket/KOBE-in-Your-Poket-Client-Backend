@@ -35,22 +35,22 @@ class ListSheltersServiceTest {
     @Test
     fun `要求言語を ShelterQuery port に渡して解決済み ShelterView を返す`() {
         val shelterQuery = mockk<ShelterQuery>()
-        every { shelterQuery.findAllResolved(Language.JA) } returns listOf(jaView)
+        every { shelterQuery.findAllResolved(Language.JA, emptySet()) } returns listOf(jaView)
 
         val result = ListSheltersService(shelterQuery).listShelters(Language.JA)
 
         assertEquals("東灘小学校", result.single().name)
-        verify(exactly = 1) { shelterQuery.findAllResolved(Language.JA) }
+        verify(exactly = 1) { shelterQuery.findAllResolved(Language.JA, emptySet()) }
     }
 
     @Test
     fun `ShelterQuery が返した ShelterView をそのまま返す`() {
         val shelterQuery = mockk<ShelterQuery>()
-        every { shelterQuery.findAllResolved(Language.KO) } returns listOf(enView)
+        every { shelterQuery.findAllResolved(Language.KO, emptySet()) } returns listOf(enView)
 
         val result = ListSheltersService(shelterQuery).listShelters(Language.KO)
 
         assertEquals(enView, result.single())
-        verify(exactly = 1) { shelterQuery.findAllResolved(Language.KO) }
+        verify(exactly = 1) { shelterQuery.findAllResolved(Language.KO, emptySet()) }
     }
 }
