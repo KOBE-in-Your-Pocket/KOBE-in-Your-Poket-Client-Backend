@@ -18,4 +18,9 @@ data class ReviewView(
     val authorUserId: String?,
     val createdAt: Instant,
     val language: String,
+    /**
+     * 運営が通報を承認し、非表示に同意した（不適切と判断した）口コミか。true なら Client はアプリ全体で非表示にする。
+     * 通報が却下された・まだ確認されていないだけの口コミは false。
+     */
+    val hiddenByReport: Boolean,
 )

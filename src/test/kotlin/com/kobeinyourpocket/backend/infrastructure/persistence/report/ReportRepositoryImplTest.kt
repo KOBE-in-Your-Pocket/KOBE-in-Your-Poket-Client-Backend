@@ -99,11 +99,11 @@ class ReportRepositoryImplTest {
         val operator = ReportHandlerId.of("33333333-3333-3333-3333-333333333333")
         val handledAt = Instant.parse("2026-10-07T03:00:00Z")
 
-        repository.saveAll(listOf(first.handle(ReportStatus.RESOLVED, operator, handledAt)))
+        repository.saveAll(listOf(first.handle(ReportStatus.APPROVED, operator, handledAt)))
 
         assertEquals(listOf(second.id), repository.findOpenByTarget(reviewTarget).map { it.id })
         val restored = reportJpa.findById(first.id.value).orElseThrow().toDomain()
-        assertEquals(ReportStatus.RESOLVED, restored.status)
+        assertEquals(ReportStatus.APPROVED, restored.status)
         assertEquals(operator, restored.handledBy)
         assertEquals(handledAt, restored.handledAt)
     }

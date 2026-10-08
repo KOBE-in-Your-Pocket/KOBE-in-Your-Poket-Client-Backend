@@ -34,7 +34,7 @@ class ReportModerationController(
     /**
      * 通報された口コミを、未対応の通報が多い順に返す。
      *
-     * `?status=OPEN` で未対応の通報がある口コミだけに絞る（`RESOLVED` / `DISMISSED` も可）。
+     * `?status=OPEN` で未対応の通報がある口コミだけに絞る（`APPROVED` / `DISMISSED` も可）。
      * `?lang=` はスポット名の解決にだけ効く。
      */
     @GetMapping
@@ -58,7 +58,8 @@ class ReportModerationController(
     }
 
     /**
-     * 口コミへの未対応の通報をまとめて対応済み（`RESOLVED`）か却下（`DISMISSED`）にする。
+     * 口コミへの未対応の通報をまとめて承認（`APPROVED`）か却下（`DISMISSED`）にする。
+     * 承認した口コミはレビュー取得で `hiddenByReport: true` になり、Client はアプリ全体で非表示にする。
      *
      * - 200: 更新した（全件対応済みなら `updatedCount: 0`）
      * - 400: `status` が不正、または `OPEN`

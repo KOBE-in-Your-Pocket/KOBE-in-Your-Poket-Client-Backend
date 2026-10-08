@@ -5,10 +5,13 @@ import com.kobeinyourpocket.backend.application.tourism.query.ReviewQuery
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewSummaryView
 import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
+import com.kobeinyourpocket.backend.domain.report.vo.ReportStatus
+import com.kobeinyourpocket.backend.domain.report.vo.ReportTarget
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import com.kobeinyourpocket.backend.infrastructure.query.common.JdbcTimestamps
 import com.kobeinyourpocket.backend.infrastructure.query.common.JdbcUuids
 import jakarta.persistence.EntityManager
+import jakarta.persistence.Query
 import org.springframework.stereotype.Repository
 
 /** [ReviewQuery] の JPA 実装。スポット別・言語別でレビューを取得する。 */
@@ -25,14 +28,17 @@ class ReviewQueryJpa(
             entityManager
                 .createNativeQuery(
                     """
-                    SELECT id, spot_id, rating, comment, author_name, author_icon_url, author_user_id, created_at, language
-                    FROM review
-                    WHERE spot_id = :spotId AND language = :language
-                    ORDER BY created_at DESC
+                    SELECT
+                        r.id, r.spot_id, r.rating, r.comment, r.author_name, r.author_icon_url, r.author_user_id,
+                        r.created_at, r.language, $HIDDEN_BY_REPORT
+                    FROM review r
+                    WHERE r.spot_id = :spotId AND r.language = :language
+                    ORDER BY r.created_at DESC
                     """.trimIndent(),
                 ).apply {
                     setParameter("spotId", spotId.value)
                     setParameter("language", language.code)
+                    bindHiddenByReport()
                 }.resultList as List<Array<Any?>>
 
         return rows.map(::toReviewView)
@@ -50,6 +56,7 @@ class ReviewQueryJpa(
                 .apply {
                     setParameter("language", language.code)
                     setParameter("fallback", Language.DEFAULT.code)
+                    bindHiddenByReport()
                     setParameter("limit", size)
                     setParameter("offset", page.toLong() * size)
                 }.resultList as List<Array<Any?>>
@@ -76,6 +83,7 @@ class ReviewQueryJpa(
             authorIconUrl = (row[6] as String).ifEmpty { null },
             createdAt = JdbcTimestamps.toInstant(row[7]),
             language = row[8] as String,
+            hiddenByReport = row[9] as Boolean,
         )
 
     private fun toReviewView(row: Array<Any?>): ReviewView =
@@ -89,9 +97,30 @@ class ReviewQueryJpa(
             authorUserId = JdbcUuids.toUuidStringOrNull(row[6]),
             createdAt = JdbcTimestamps.toInstant(row[7]),
             language = row[8] as String,
+            hiddenByReport = row[9] as Boolean,
         )
 
+    private fun Query.bindHiddenByReport(): Query =
+        setParameter("reportTargetType", ReportTarget.Type.REVIEW.name)
+            .setParameter("approvedReportStatus", ReportStatus.APPROVED.name)
+
     private companion object {
+        /**
+         * 運営が通報を承認し、非表示に同意したか（`review r` を前提にした SELECT 句の 1 列）。
+         *
+         * reports.target_id は文字列のため review.id（UUID）を文字列にして突き合わせる。
+         * 一意制約 uq_reports_target_reporter (target_type, target_id, ...) の先頭 2 列が索引として効く。
+         */
+        val HIDDEN_BY_REPORT =
+            """
+            EXISTS (
+                SELECT 1 FROM reports rp
+                WHERE rp.target_type = :reportTargetType
+                    AND rp.target_id = CAST(r.id AS VARCHAR)
+                    AND rp.status = :approvedReportStatus
+            ) AS hidden_by_report
+            """.trimIndent()
+
         /**
          * スポット名は要求言語 → en → spot_id の順で解決する（避難所一覧と同じ形）。
          *
@@ -118,7 +147,8 @@ class ReviewQueryJpa(
                 r.author_name,
                 r.author_icon_url,
                 r.created_at,
-                r.language
+                r.language,
+                $HIDDEN_BY_REPORT
             FROM review r
             LEFT JOIN spot_localization l_req
                 ON r.spot_id = l_req.spot_id AND l_req.language = :language

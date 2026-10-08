@@ -72,6 +72,7 @@ class ReviewControllerTest {
             authorUserId = requesterId.toString(),
             createdAt = now,
             language = "ja",
+            hiddenByReport = false,
         )
 
     @Test
@@ -87,6 +88,7 @@ class ReviewControllerTest {
             .andExpect(jsonPath("$[0].author.name").value("Alice"))
             .andExpect(jsonPath("$[0].author.iconUrl").value("https://example.com/alice.png"))
             .andExpect(jsonPath("$[0].language").value("ja"))
+            .andExpect(jsonPath("$[0].hiddenByReport").value(false))
 
         verify(listReviewsService).listReviews(spotId, Language.JA)
     }
