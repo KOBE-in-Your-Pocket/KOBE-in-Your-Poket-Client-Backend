@@ -173,6 +173,83 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.message").value("Invalid id token"))
     }
 
+    // --- apple (id_token) ---
+
+    @Test
+    fun `POST apple は 200 とセッション JSON を返す`() {
+        given(signInWithIdTokenService.execute("apple", "id-token", null, null)).willReturn(
+            AuthCommandResult(
+                session = session(),
+                user = PublicUser(id = userId, name = "Apple Taro"),
+            ),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.accessToken").value("access"))
+            .andExpect(jsonPath("$.user.id").value(userId.toString()))
+            .andExpect(jsonPath("$.user.name").value("Apple Taro"))
+    }
+
+    @Test
+    fun `POST apple は name をサービスへ渡す`() {
+        given(signInWithIdTokenService.execute("apple", "id-token", null, "n", "Apple Hanako")).willReturn(
+            AuthCommandResult(
+                session = session(),
+                user = PublicUser(id = userId, name = "Apple Hanako"),
+            ),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token","nonce":"n","name":"Apple Hanako"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.user.name").value("Apple Hanako"))
+    }
+
+    @Test
+    fun `POST apple で name が最大長を超えたら 400`() {
+        val tooLong = "x".repeat(User.MAX_NAME_LENGTH + 1)
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token","name":"$tooLong"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `POST apple で idToken が空なら 400`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":""}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `POST apple で AuthGateway の 400 は統一エラーになる`() {
+        given(signInWithIdTokenService.execute("apple", "bad", null, null)).willThrow(
+            AuthGatewayException(status = 400, message = "Invalid id token"),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"bad"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Invalid id token"))
+    }
+
     // --- refresh ---
 
     @Test

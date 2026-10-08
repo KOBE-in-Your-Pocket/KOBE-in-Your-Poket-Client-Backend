@@ -29,14 +29,17 @@ data class RefreshRequest(
 )
 
 /**
- * SSO の ID トークンサインイン（#89-c）。
- * Client がネイティブ SDK で取得した Google 等の ID トークンを backend が GoTrue へ中継する。
+ * SSO の ID トークンサインイン（#89-c / #192）。
+ * Client がネイティブ SDK で取得した Google / Apple 等の ID トークンを backend が GoTrue へ中継する。
  */
 data class IdTokenSignInRequest(
     @field:NotBlank
     val idToken: String,
     val accessToken: String? = null,
     val nonce: String? = null,
+    /** Apple が初回認証時のみ返す表示名（fullName）。プロフィール新規作成時のみ使い、既存の表示名は上書きしない（#193）。 */
+    @field:Size(max = User.MAX_NAME_LENGTH)
+    val name: String? = null,
 )
 
 data class AuthSessionResponse(

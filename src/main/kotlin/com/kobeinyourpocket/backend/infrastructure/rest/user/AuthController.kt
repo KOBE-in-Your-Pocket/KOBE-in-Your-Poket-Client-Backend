@@ -73,6 +73,25 @@ class AuthController(
                 idToken = request.idToken,
                 accessToken = request.accessToken,
                 nonce = request.nonce,
+                name = request.name,
+            ),
+        )
+
+    /**
+     * Apple ID トークンによるサインイン（#192）。
+     * Google と同じく初回ログイン時は GoTrue が Auth ユーザーを自動作成するため signup / login 兼用。
+     */
+    @PostMapping("/apple")
+    fun signInWithApple(
+        @Valid @RequestBody request: IdTokenSignInRequest,
+    ): AuthSessionResponse =
+        AuthSessionResponse.from(
+            signInWithIdTokenService.execute(
+                provider = "apple",
+                idToken = request.idToken,
+                accessToken = request.accessToken,
+                nonce = request.nonce,
+                name = request.name,
             ),
         )
 
