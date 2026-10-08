@@ -2,7 +2,9 @@ package com.kobeinyourpocket.backend.infrastructure.persistence.report
 
 import com.kobeinyourpocket.backend.domain.report.model.Report
 import com.kobeinyourpocket.backend.domain.report.repository.ReportRepository
+import com.kobeinyourpocket.backend.domain.report.vo.ReportHandlerId
 import com.kobeinyourpocket.backend.domain.report.vo.ReportReason
+import com.kobeinyourpocket.backend.domain.report.vo.ReportStatus
 import com.kobeinyourpocket.backend.domain.report.vo.ReportTarget
 import com.kobeinyourpocket.backend.domain.report.vo.ReporterId
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,5 +87,34 @@ class ReportRepositoryImplTest {
     @Test
     fun `通報が無い通報者を削除しても 0 件で成功する`() {
         assertEquals(0, repository.deleteByReporterId(alice))
+    }
+
+    @Test
+    fun `未対応の通報だけを対象ごとに引き、対応状況の変更を保存できる`() {
+        val first = report()
+        val second = report(reporterId = bob)
+        repository.saveIfNotReported(first)
+        repository.saveIfNotReported(second)
+        repository.saveIfNotReported(report(target = otherReviewTarget))
+        val operator = ReportHandlerId.of("33333333-3333-3333-3333-333333333333")
+        val handledAt = Instant.parse("2026-10-07T03:00:00Z")
+
+        repository.saveAll(listOf(first.handle(ReportStatus.RESOLVED, operator, handledAt)))
+
+        assertEquals(listOf(second.id), repository.findOpenByTarget(reviewTarget).map { it.id })
+        val restored = reportJpa.findById(first.id.value).orElseThrow().toDomain()
+        assertEquals(ReportStatus.RESOLVED, restored.status)
+        assertEquals(operator, restored.handledBy)
+        assertEquals(handledAt, restored.handledAt)
+    }
+
+    @Test
+    fun `対象への通報の有無を対応状況にかかわらず判定する`() {
+        assertFalse(repository.existsByTarget(reviewTarget))
+
+        repository.saveIfNotReported(report())
+
+        assertTrue(repository.existsByTarget(reviewTarget))
+        assertFalse(repository.existsByTarget(otherReviewTarget))
     }
 }
