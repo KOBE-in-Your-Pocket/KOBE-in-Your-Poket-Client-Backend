@@ -28,14 +28,12 @@ import java.time.Duration
  * 対になるバケット側の設定（AWS CLI で適用済み・コード管理外）:
  * ```
  * ID     : expire-staging-media
- * Filter : Prefix "uploads/" AND Tag status=staging
- * ID     : expire-staging-icons
- * Filter : Prefix "icons/"   AND Tag status=staging
+ * Filter : Prefix "uploads/" AND Tag status=staging（アイコンの uploads/icons/ も含む）
  * Expire : 1 日（S3 の評価は 1 日 1 回 UTC 0 時なので削除は最大 2 日ほど遅れる）
- * IAM    : 実行ロールに s3:PutObject / s3:PutObjectTagging / s3:DeleteObjectTagging
+ * IAM    : 実行ロールに uploads/ 配下への s3:PutObject / s3:PutObjectTagging / s3:DeleteObjectTagging
  * ```
- * 規則は [MediaKeyPrefix] の値ごとに 1 つ要る。prefix を増やして規則を足し忘れると、
- * その prefix の未確定メディアが消えずに溜まる。
+ * [MediaKeyPrefix] の値を `uploads/` の外に増やす場合は、その prefix の IAM 権限と規則も要る。
+ * 足し忘れると保存が Access Denied になるか、未確定メディアが消えずに溜まる。
  * [STAGING_TAG_KEY] / [STAGING_TAG_VALUE] を変えると規則に一致しなくなり、未確定の画像が
  * 消えなくなる。変更する場合はバケットのライフサイクル規則も同時に更新すること。
  */
