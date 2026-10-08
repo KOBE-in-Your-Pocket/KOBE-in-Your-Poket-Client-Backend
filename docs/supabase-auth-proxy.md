@@ -14,6 +14,7 @@ Client → POST /api/v1/auth/* → backend → {SUPABASE_URL}/auth/v1/*
 | POST | `/api/v1/auth/login` | `/auth/v1/token?grant_type=password` | |
 | POST | `/api/v1/auth/google` | `/auth/v1/token?grant_type=id_token` | Google ID トークンで signup / login 兼用（#89-c） |
 | POST | `/api/v1/auth/apple` | `/auth/v1/token?grant_type=id_token` | Apple ID トークンで signup / login 兼用（#192） |
+| POST | `/api/v1/auth/facebook` | `/auth/v1/token?grant_type=id_token` | Facebook ID トークンで signup / login 兼用（#196） |
 | POST | `/api/v1/auth/refresh` | `/auth/v1/token?grant_type=refresh_token` | |
 | POST | `/api/v1/auth/logout` | `/auth/v1/logout` | `Authorization: Bearer <access_token>` |
 
@@ -46,7 +47,7 @@ Auth ユーザー削除による補償は `service_role` Admin が必要なた�
 
 ## SSO
 
-Google / Apple はいずれも id_token グラント中継で対応済み（#89-c / #192）。
+Google / Apple / Facebook はいずれも id_token グラント中継で対応済み（#89-c / #192 / #196）。
 
 - リクエスト: `{"idToken": "...", "accessToken": null, "nonce": null, "name": null}`
   （`idToken` 必須。`nonce` はトークン取得時に使った場合のみ。`name` は任意で最大 100 文字、超過は 400）
@@ -112,5 +113,15 @@ Google / Apple はいずれも id_token グラント中継で対応済み（#89-
   レスポンスの access / refresh token も共有・記録しない。
 
   `aud` 不一致なら Client IDs、nonce 不一致ならハッシュ前後の取り違えを疑う
+
+### Facebook（`POST /api/v1/auth/facebook`）
+
+- 事前設定: Supabase の Facebook プロバイダ設定は #195 で行う（Meta アプリの作成は Client #553）
+- ネイティブで OIDC の id_token を得るには、iOS は Limited Login、Android は `openid` スコープが必要
+- Google / Apple と異なり、GoTrue は `id_token` に加えて `accessToken`（Facebook のアクセストークン）も
+  必須とする想定（#195 で確認する）。backend では必須チェックをせず、未指定で GoTrue が拒否した場合は
+  その 400 を統一エラー形式で返す
+- `email` パーミッションの拒否や電話番号だけのアカウントでは、メールが空になる場合がある。
+  表示名は `name` → `user_metadata` → email ローカル部 → `"user"` の順でフォールバックするため失敗はしない
 
 Kakao / LinkedIn / X は後続（`AuthGateway.signInWithIdToken` の provider 引数で拡張する）
