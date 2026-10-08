@@ -31,4 +31,12 @@ class ListReviewReportsServiceTest {
         verify { query.findPage(ReportStatus.OPEN, 0, ListReviewReportsService.MAX_SIZE, Language.JA) }
         verify { query.findPage(ReportStatus.OPEN, 2, 1, Language.JA) }
     }
+
+    @Test
+    fun `上限は他の運営向け一覧と同じ 200 件`() {
+        service.listReviewReports(Language.JA, size = 200)
+        service.listReviewReports(Language.JA, size = 201)
+
+        verify(exactly = 2) { query.findPage(null, 0, 200, Language.JA) }
+    }
 }

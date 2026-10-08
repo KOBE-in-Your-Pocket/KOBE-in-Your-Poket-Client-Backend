@@ -34,7 +34,12 @@ class ListReviewReportsService(
         /** 管理画面の 1 画面分として十分な件数。1 件に通報の明細を含むため口コミ一覧より少なめ。 */
         const val DEFAULT_SIZE = 20
 
-        /** 1 リクエストで返す上限。 */
-        const val MAX_SIZE = 100
+        /**
+         * 1 リクエストで返す上限。他の運営向け一覧（ListAllReviewsService / ListUsersService）と揃える（#205）。
+         *
+         * 管理画面は上限まで一括取得して画面側で絞り込むため、これを超えた分は画面に出ない。
+         * 総数は `meta.totalElements` で分かる。
+         */
+        const val MAX_SIZE = 200
     }
 }
