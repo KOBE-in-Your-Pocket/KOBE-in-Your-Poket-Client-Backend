@@ -39,14 +39,14 @@ class GetShelterListServiceTest {
     fun `ListSheltersService と GetShelterDatasetMetadataService を束ねて返す`() {
         val listSheltersService = mockk<ListSheltersService>()
         val getShelterDatasetMetadataService = mockk<GetShelterDatasetMetadataService>()
-        every { listSheltersService.listShelters(Language.JA) } returns listOf(shelterView)
+        every { listSheltersService.listShelters(Language.JA, emptySet()) } returns listOf(shelterView)
         every { getShelterDatasetMetadataService.getMetadata() } returns metadataView
 
         val result = GetShelterListService(listSheltersService, getShelterDatasetMetadataService).getShelterList(Language.JA)
 
         assertEquals(listOf(shelterView), result.shelters)
         assertEquals(metadataView, result.metadata)
-        verify(exactly = 1) { listSheltersService.listShelters(Language.JA) }
+        verify(exactly = 1) { listSheltersService.listShelters(Language.JA, emptySet()) }
         verify(exactly = 1) { getShelterDatasetMetadataService.getMetadata() }
     }
 }

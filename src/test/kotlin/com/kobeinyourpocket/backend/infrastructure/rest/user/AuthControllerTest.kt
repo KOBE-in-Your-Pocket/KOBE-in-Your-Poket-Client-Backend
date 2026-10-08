@@ -196,6 +196,36 @@ class AuthControllerTest {
     }
 
     @Test
+    fun `POST apple は name をサービスへ渡す`() {
+        given(signInWithIdTokenService.execute("apple", "id-token", null, "n", "Apple Hanako")).willReturn(
+            AuthCommandResult(
+                session = session(),
+                user = PublicUser(id = userId, name = "Apple Hanako"),
+            ),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token","nonce":"n","name":"Apple Hanako"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.user.name").value("Apple Hanako"))
+    }
+
+    @Test
+    fun `POST apple で name が最大長を超えたら 400`() {
+        val tooLong = "x".repeat(User.MAX_NAME_LENGTH + 1)
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token","name":"$tooLong"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
     fun `POST apple で idToken が空なら 400`() {
         mockMvc
             .perform(

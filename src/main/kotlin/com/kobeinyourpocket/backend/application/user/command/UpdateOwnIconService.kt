@@ -67,7 +67,7 @@ class UpdateOwnIconService(
         val current = userRepository.findById(userId) ?: throw UserNotFoundException(userId)
 
         val normalized = imageNormalizer.normalize(bytes, MAX_EDGE_PX)
-        // 運営が上げた画像（uploads/）と混ざらないよう、利用者のアイコンは icons/ 配下に置く。
+        // 運営が上げた画像（uploads/ 直下）と混ざらないよう、利用者のアイコンは uploads/icons/ 配下に置く。
         val key = MediaKeyPrefix.ICONS.keyFor("${UUID.randomUUID()}.${normalized.extension}")
         val iconUrl =
             mediaStorage.store(

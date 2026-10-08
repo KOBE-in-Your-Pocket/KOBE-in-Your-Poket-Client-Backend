@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.infrastructure.query.evacuation
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.model.EvacuationShelter
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.repository.ShelterRepository
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.DisasterType
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.PetAcceptance
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterCoordinates
 import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.ShelterLocalization
@@ -85,7 +86,7 @@ class ShelterQueryJpaTest {
     fun `要求言語で解決した ShelterView を返す`() {
         shelterRepository.save(higashinadaElementary)
 
-        val result = shelterQuery.findAllResolved(Language.JA).single()
+        val result = shelterQuery.findAllResolved(Language.JA, emptySet()).single()
 
         assertEquals("kobe-001", result.id)
         assertEquals("東灘小学校", result.name)
@@ -107,7 +108,7 @@ class ShelterQueryJpaTest {
     fun `要求言語のローカライズが無ければ en へフォールバックする`() {
         shelterRepository.save(honjoPark)
 
-        val result = shelterQuery.findAllResolved(Language.KO).single()
+        val result = shelterQuery.findAllResolved(Language.KO, emptySet()).single()
 
         assertEquals("Honjo Park", result.name)
         assertEquals("Somewhere", result.address)
@@ -117,7 +118,7 @@ class ShelterQueryJpaTest {
     fun `電話番号・備考が無い避難所は null で返す`() {
         shelterRepository.save(honjoPark)
 
-        val result = shelterQuery.findAllResolved(Language.EN).single()
+        val result = shelterQuery.findAllResolved(Language.EN, emptySet()).single()
 
         assertNull(result.phoneNumber)
         assertNull(result.note)
@@ -128,7 +129,7 @@ class ShelterQueryJpaTest {
         // 備考は避難の判断に関わるため、名称・住所と同じく言語別に解決する必要がある。
         shelterRepository.save(higashinadaElementary)
 
-        val result = shelterQuery.findAllResolved(Language.EN).single()
+        val result = shelterQuery.findAllResolved(Language.EN, emptySet()).single()
 
         assertEquals("In case of flood, evacuate to another site.", result.note)
     }
@@ -138,8 +139,37 @@ class ShelterQueryJpaTest {
         shelterRepository.save(honjoPark)
         shelterRepository.save(higashinadaElementary)
 
-        val result = shelterQuery.findAllResolved(Language.EN)
+        val result = shelterQuery.findAllResolved(Language.EN, emptySet())
 
         assertEquals(listOf("kobe-001", "kobe-099"), result.map { it.id })
+    }
+
+    private fun idsSuitableFor(vararg types: DisasterType): List<String> {
+        shelterRepository.save(higashinadaElementary)
+        shelterRepository.save(honjoPark)
+        return shelterQuery.findAllResolved(Language.EN, types.toSet()).map { it.id }
+    }
+
+    @Test
+    fun `災害種別を指定すると、その種別で ○ の避難所だけを返す`() {
+        assertEquals(listOf("kobe-001"), idsSuitableFor(DisasterType.LANDSLIDE))
+        assertEquals(listOf("kobe-099"), idsSuitableFor(DisasterType.TSUNAMI))
+    }
+
+    @Test
+    fun `△（条件付き）と ×・対象外は絞り込みに含めない`() {
+        // 東灘小は洪水 △、本庄公園は洪水 対象外。
+        assertEquals(emptyList(), idsSuitableFor(DisasterType.FLOOD))
+    }
+
+    @Test
+    fun `複数の種別はいずれかで ○ なら含める（OR）`() {
+        assertEquals(listOf("kobe-001", "kobe-099"), idsSuitableFor(DisasterType.LANDSLIDE, DisasterType.TSUNAMI))
+        assertEquals(listOf("kobe-099"), idsSuitableFor(DisasterType.FLOOD, DisasterType.LARGE_FIRE))
+    }
+
+    @Test
+    fun `種別を指定しなければ全件を返す`() {
+        assertEquals(listOf("kobe-001", "kobe-099"), idsSuitableFor())
     }
 }

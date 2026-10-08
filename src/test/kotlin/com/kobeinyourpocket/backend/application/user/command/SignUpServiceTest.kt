@@ -206,6 +206,51 @@ class SignInWithIdTokenServiceTest {
     }
 
     @Test
+    fun `リクエストの name はプロバイダの表示名より優先する`() {
+        every { authGateway.signInWithIdToken("apple", "id-token", null, null) } returns session()
+        every { userRepository.findById(userId) } returns null
+
+        val result = service.execute(provider = "apple", idToken = "id-token", name = "  Apple Hanako  ")
+
+        assertEquals("Apple Hanako", result.user!!.name)
+        verify(exactly = 1) { userRepository.save(match { it.id == userId && it.name == "Apple Hanako" }) }
+    }
+
+    @Test
+    fun `リクエストの name が空白なら従来のフォールバックに落ちる`() {
+        every { authGateway.signInWithIdToken("apple", "id-token", null, null) } returns
+            session(displayName = null)
+        every { userRepository.findById(userId) } returns null
+
+        val result = service.execute(provider = "apple", idToken = "id-token", name = "   ")
+
+        assertEquals("taro", result.user!!.name)
+    }
+
+    @Test
+    fun `リクエストの name が最大長を超えたら切り詰める`() {
+        every { authGateway.signInWithIdToken("apple", "id-token", null, null) } returns session()
+        every { userRepository.findById(userId) } returns null
+
+        val result =
+            service.execute(provider = "apple", idToken = "id-token", name = "x".repeat(User.MAX_NAME_LENGTH + 10))
+
+        assertEquals(User.MAX_NAME_LENGTH, result.user!!.name.length)
+    }
+
+    @Test
+    fun `既存プロフィールがあればリクエストの name で上書きしない`() {
+        val existing = User.create(id = userId, name = "Existing")
+        every { authGateway.signInWithIdToken("apple", "id-token", null, null) } returns session()
+        every { userRepository.findById(userId) } returns existing
+
+        val result = service.execute(provider = "apple", idToken = "id-token", name = "Apple Hanako")
+
+        assertEquals("Existing", result.user!!.name)
+        verify(exactly = 0) { userRepository.save(any()) }
+    }
+
+    @Test
     fun `accessToken と nonce は authGateway へそのまま渡す`() {
         every { authGateway.signInWithIdToken("google", "id-token", "at", "n") } returns session()
         every { userRepository.findById(userId) } returns null
