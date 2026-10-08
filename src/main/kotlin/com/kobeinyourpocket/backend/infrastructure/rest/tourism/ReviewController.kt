@@ -46,11 +46,11 @@ class ReviewController(
         @PathVariable spotId: String,
         @RequestParam(name = "lang", required = false) lang: String?,
         @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
-    ): List<ReviewResponse> {
+    ): List<ReviewListItemResponse> {
         val language = LanguageResolver.resolve(lang, acceptLanguage)
         return listReviewsService
             .listReviews(SpotId.of(spotId), language)
-            .map(ReviewResponse::from)
+            .map(ReviewListItemResponse::from)
     }
 
     @PostMapping

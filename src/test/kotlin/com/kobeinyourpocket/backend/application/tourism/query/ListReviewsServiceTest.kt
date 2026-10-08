@@ -27,6 +27,7 @@ class ListReviewsServiceTest {
             authorUserId = "11111111-1111-1111-1111-111111111111",
             createdAt = now,
             language = "ja",
+            hiddenByReport = false,
         )
 
     @Test

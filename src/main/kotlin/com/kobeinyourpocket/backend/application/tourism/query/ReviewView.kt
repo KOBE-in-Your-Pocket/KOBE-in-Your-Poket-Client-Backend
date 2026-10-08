@@ -18,4 +18,6 @@ data class ReviewView(
     val authorUserId: String?,
     val createdAt: Instant,
     val language: String,
+    /** 通報が運営に承認された口コミか。true なら Client は非表示にする。 */
+    val hiddenByReport: Boolean,
 )

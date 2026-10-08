@@ -211,6 +211,27 @@ class ReportModerationApiIntegrationTest {
     }
 
     @Test
+    fun `通報が承認された口コミだけ、レビュー取得で hiddenByReport が true になる`() {
+        handle(reviewA, """{ "status": "RESOLVED" }""").andExpect(status().isOk)
+        handle(reviewB, """{ "status": "DISMISSED" }""").andExpect(status().isOk)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[?(@.id == '$reviewA')].hiddenByReport").value(true))
+            .andExpect(jsonPath("$[?(@.id == '$reviewB')].hiddenByReport").value(false))
+    }
+
+    @Test
+    fun `未対応の通報しか無い口コミは hiddenByReport が false`() {
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[?(@.id == '$reviewA')].hiddenByReport").value(false))
+            .andExpect(jsonPath("$[?(@.id == '$reviewB')].hiddenByReport").value(false))
+    }
+
+    @Test
     fun `運営が口コミを削除すると未対応の通報は対応済みになり、通報は履歴として残る`() {
         mockMvc
             .perform(delete("/api/v1/tourism/reviews/$reviewA").with(withRole(Role.OPERATOR, OPERATOR)))
