@@ -250,6 +250,69 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.message").value("Invalid id token"))
     }
 
+    // --- facebook (id_token) ---
+
+    @Test
+    fun `POST facebook は 200 とセッション JSON を返す`() {
+        given(signInWithIdTokenService.execute("facebook", "id-token", "fb-access", null)).willReturn(
+            AuthCommandResult(
+                session = session(),
+                user = PublicUser(id = userId, name = "Facebook Taro"),
+            ),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/facebook")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token","accessToken":"fb-access"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.accessToken").value("access"))
+            .andExpect(jsonPath("$.user.id").value(userId.toString()))
+            .andExpect(jsonPath("$.user.name").value("Facebook Taro"))
+    }
+
+    @Test
+    fun `POST facebook で idToken が空なら 400`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/facebook")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"","accessToken":"fb-access"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `POST facebook で accessToken 未指定なら GoTrue の 400 を統一エラーで返す`() {
+        // accessToken の要否は backend で検証せず GoTrue に任せる（#196）
+        given(signInWithIdTokenService.execute("facebook", "id-token", null, null)).willThrow(
+            AuthGatewayException(status = 400, message = "access_token is required"),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/facebook")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("access_token is required"))
+    }
+
+    @Test
+    fun `POST facebook で AuthGateway の 400 は統一エラーになる`() {
+        given(signInWithIdTokenService.execute("facebook", "bad", "fb-access", null)).willThrow(
+            AuthGatewayException(status = 400, message = "Invalid id token"),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/facebook")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"bad","accessToken":"fb-access"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Invalid id token"))
+    }
+
     // --- refresh ---
 
     @Test
