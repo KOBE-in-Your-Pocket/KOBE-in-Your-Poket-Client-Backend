@@ -56,7 +56,6 @@ class ReviewQueryJpa(
                 .apply {
                     setParameter("language", language.code)
                     setParameter("fallback", Language.DEFAULT.code)
-                    bindHiddenByReport()
                     setParameter("limit", size)
                     setParameter("offset", page.toLong() * size)
                 }.resultList as List<Array<Any?>>
@@ -83,7 +82,6 @@ class ReviewQueryJpa(
             authorIconUrl = (row[6] as String).ifEmpty { null },
             createdAt = JdbcTimestamps.toInstant(row[7]),
             language = row[8] as String,
-            hiddenByReport = row[9] as Boolean,
         )
 
     private fun toReviewView(row: Array<Any?>): ReviewView =
@@ -147,8 +145,7 @@ class ReviewQueryJpa(
                 r.author_name,
                 r.author_icon_url,
                 r.created_at,
-                r.language,
-                $HIDDEN_BY_REPORT
+                r.language
             FROM review r
             LEFT JOIN spot_localization l_req
                 ON r.spot_id = l_req.spot_id AND l_req.language = :language

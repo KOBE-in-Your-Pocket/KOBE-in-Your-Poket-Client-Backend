@@ -220,11 +220,11 @@ class ReportModerationApiIntegrationTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[?(@.id == '$reviewA')].hiddenByReport").value(true))
             .andExpect(jsonPath("$[?(@.id == '$reviewB')].hiddenByReport").value(false))
+        // 運営向け一覧には載せない。通報の段階は GET /api/v1/reports/reviews で確認する。
         mockMvc
             .perform(get("/api/v1/tourism/reviews?lang=ja").with(withRole(Role.OPERATOR, OPERATOR)))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data[?(@.id == '$reviewA')].hiddenByReport").value(true))
-            .andExpect(jsonPath("$.data[?(@.id == '$reviewB')].hiddenByReport").value(false))
+            .andExpect(jsonPath("$.data[0].hiddenByReport").doesNotExist())
     }
 
     @Test

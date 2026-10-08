@@ -45,8 +45,6 @@ data class ReviewSummaryResponse(
     val author: ReviewResponse.AuthorResponse,
     val postedAt: Instant,
     val language: String,
-    /** 運営が通報を承認し、非表示に同意した口コミか。Client 側では非表示になる。 */
-    val hiddenByReport: Boolean,
 ) {
     companion object {
         fun from(view: ReviewSummaryView): ReviewSummaryResponse =
@@ -66,7 +64,6 @@ data class ReviewSummaryResponse(
                     ),
                 postedAt = view.createdAt,
                 language = view.language,
-                hiddenByReport = view.hiddenByReport,
             )
     }
 }

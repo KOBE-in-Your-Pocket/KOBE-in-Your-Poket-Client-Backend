@@ -22,6 +22,4 @@ data class ReviewSummaryView(
     val authorIconUrl: String?,
     val createdAt: Instant,
     val language: String,
-    /** 運営が通報を承認し、非表示に同意した（不適切と判断した）口コミか。Client 側では非表示になる。 */
-    val hiddenByReport: Boolean,
 )
