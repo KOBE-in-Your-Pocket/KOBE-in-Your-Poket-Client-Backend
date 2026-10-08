@@ -100,11 +100,12 @@ class ReviewQueryJpa(
 
     private fun Query.bindHiddenByReport(): Query =
         setParameter("reportTargetType", ReportTarget.Type.REVIEW.name)
-            .setParameter("approvedReportStatus", ReportStatus.APPROVED.name)
+            .setParameter("resolvedReportStatus", ReportStatus.RESOLVED.name)
 
     private companion object {
         /**
          * 運営が通報を承認し、非表示に同意したか（`review r` を前提にした SELECT 句の 1 列）。
+         * 承認は通報の状態 RESOLVED で表す（却下は DISMISSED、未対応は OPEN）。
          *
          * reports.target_id は文字列のため review.id（UUID）を文字列にして突き合わせる。
          * 一意制約 uq_reports_target_reporter (target_type, target_id, ...) の先頭 2 列が索引として効く。
@@ -115,7 +116,7 @@ class ReviewQueryJpa(
                 SELECT 1 FROM reports rp
                 WHERE rp.target_type = :reportTargetType
                     AND rp.target_id = CAST(r.id AS VARCHAR)
-                    AND rp.status = :approvedReportStatus
+                    AND rp.status = :resolvedReportStatus
             ) AS hidden_by_report
             """.trimIndent()
 

@@ -14,7 +14,7 @@ import java.time.Instant
  * 口コミへの通報に運営が対応するユースケース（#145）。
  *
  * 運営向け一覧は口コミ単位でまとめて表示するため、更新も口コミ単位で行う。その口コミへの
- * **未対応（OPEN）の通報をまとめて** [ReportStatus.APPROVED] か [ReportStatus.DISMISSED] にする。
+ * **未対応（OPEN）の通報をまとめて** [ReportStatus.RESOLVED] か [ReportStatus.DISMISSED] にする。
  * すでに対応済みの通報は触らない（担当者・日時の履歴を上書きしない）。
  *
  * 口コミ自体の存在は問わない。削除済みの口コミへの通報も、一覧に残っていれば閉じられる。
@@ -40,19 +40,19 @@ class HandleReviewReportsService(
     }
 
     /**
-     * 運営がモデレーション削除した口コミへの未対応の通報を、承認（[ReportStatus.APPROVED]）にする（#145）。
+     * 運営がモデレーション削除した口コミへの未対応の通報を、対応済みにする（#145）。
      *
      * 削除したのに一覧へ「未対応」として残り続けるのを防ぐ。通報が無い口コミの削除でも
      * 呼ばれるため、0 件でも例外にしない。
      */
     @Transactional
-    fun approveOnReviewDeleted(
+    fun resolveOnReviewDeleted(
         reviewId: ReviewId,
         handledBy: ReportHandlerId,
         handledAt: Instant = Instant.now(),
     ): Int {
         val target = ReportTarget(type = ReportTarget.Type.REVIEW, id = reviewId.value.toString())
-        return handleOpenReports(target, ReportStatus.APPROVED, handledBy, handledAt)
+        return handleOpenReports(target, ReportStatus.RESOLVED, handledBy, handledAt)
     }
 
     private fun handleOpenReports(

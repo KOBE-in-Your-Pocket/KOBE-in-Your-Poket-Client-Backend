@@ -56,7 +56,7 @@ class HandleReviewReportsServiceTest {
         every { repository.existsByTarget(target) } returns true
         every { repository.findOpenByTarget(target) } returns emptyList()
 
-        assertEquals(0, service.execute(reviewId, ReportStatus.APPROVED, operator, now))
+        assertEquals(0, service.execute(reviewId, ReportStatus.RESOLVED, operator, now))
 
         verify(exactly = 0) { repository.saveAll(any()) }
     }
@@ -65,14 +65,14 @@ class HandleReviewReportsServiceTest {
     fun `通報が 1 件も無い口コミは ReportsNotFoundException`() {
         every { repository.existsByTarget(target) } returns false
 
-        assertFailsWith<ReportsNotFoundException> { service.execute(reviewId, ReportStatus.APPROVED, operator, now) }
+        assertFailsWith<ReportsNotFoundException> { service.execute(reviewId, ReportStatus.RESOLVED, operator, now) }
     }
 
     @Test
     fun `口コミ削除時は未対応の通報を対応済みにし、通報が無くても例外にしない`() {
         every { repository.findOpenByTarget(target) } returns emptyList()
 
-        assertEquals(0, service.approveOnReviewDeleted(reviewId, operator, now))
+        assertEquals(0, service.resolveOnReviewDeleted(reviewId, operator, now))
 
         verify(exactly = 0) { repository.existsByTarget(any()) }
     }

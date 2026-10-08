@@ -78,9 +78,9 @@ class ReportDomainTest {
 
     @Test
     fun `未対応の通報を対応済みにすると担当者と日時を記録する`() {
-        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.APPROVED, operator, handledAt)
+        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.RESOLVED, operator, handledAt)
 
-        assertEquals(ReportStatus.APPROVED, handled.status)
+        assertEquals(ReportStatus.RESOLVED, handled.status)
         assertEquals(operator, handled.handledBy)
         assertEquals(handledAt, handled.handledAt)
     }
@@ -95,7 +95,7 @@ class ReportDomainTest {
 
     @Test
     fun `対応済みの通報は再度閉じられない（履歴を上書きしない）`() {
-        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.APPROVED, operator, handledAt)
+        val handled = create(ReportReason.SPAM, null).handle(ReportStatus.RESOLVED, operator, handledAt)
 
         assertFailsWith<IllegalStateException> { handled.handle(ReportStatus.DISMISSED, operator, handledAt) }
     }
@@ -111,7 +111,7 @@ class ReportDomainTest {
     fun `対応状況と担当者・日時の組み合わせが矛盾する通報は作れない`() {
         val open = create(ReportReason.SPAM, null)
 
-        assertFailsWith<IllegalArgumentException> { open.copy(status = ReportStatus.APPROVED) }
+        assertFailsWith<IllegalArgumentException> { open.copy(status = ReportStatus.RESOLVED) }
         assertFailsWith<IllegalArgumentException> { open.copy(handledBy = operator, handledAt = handledAt) }
     }
 }

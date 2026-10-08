@@ -57,7 +57,7 @@ class ReviewModerationController(
     /**
      * 不適切なレビューを削除する（要件表 C-9）。投稿者本人かどうかは問わない。
      *
-     * そのレビューへの未対応の通報は、削除した運営の対応として承認（`APPROVED`）になる（#145）。
+     * そのレビューへの未対応の通報は、削除した運営の対応として対応済みになる（#145）。
      */
     @DeleteMapping("/{reviewId}")
     @PreAuthorize("hasRole('OPERATOR')")

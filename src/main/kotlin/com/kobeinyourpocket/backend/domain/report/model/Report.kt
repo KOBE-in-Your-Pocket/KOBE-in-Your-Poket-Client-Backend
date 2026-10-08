@@ -47,7 +47,7 @@ data class Report(
     }
 
     /**
-     * 運営が通報に対応する（#145）。未対応の通報だけを [ReportStatus.APPROVED] か
+     * 運営が通報に対応する（#145）。未対応の通報だけを [ReportStatus.RESOLVED] か
      * [ReportStatus.DISMISSED] にできる。対応済みの通報を再度閉じると、記録した担当者・日時が
      * 上書きされて履歴が失われるため弾く。
      */

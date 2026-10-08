@@ -190,7 +190,7 @@ class ReportModerationApiIntegrationTest {
 
     @Test
     fun `同じ口コミをもう一度閉じても 0 件で成功する`() {
-        handle(reviewA, """{ "status": "APPROVED" }""").andExpect(jsonPath("$.updatedCount").value(2))
+        handle(reviewA, """{ "status": "RESOLVED" }""").andExpect(jsonPath("$.updatedCount").value(2))
 
         handle(reviewA, """{ "status": "DISMISSED" }""")
             .andExpect(status().isOk)
@@ -201,8 +201,8 @@ class ReportModerationApiIntegrationTest {
     fun `対応状況の更新は不正な値・未対応への戻し・通報の無い口コミ・一般ロールを弾く`() {
         handle(reviewA, """{ "status": "OPEN" }""").andExpect(status().isBadRequest)
         handle(reviewA, """{ "status": "DONE" }""").andExpect(status().isBadRequest)
-        handle(UUID.randomUUID().toString(), """{ "status": "APPROVED" }""").andExpect(status().isNotFound)
-        handle(reviewA, """{ "status": "APPROVED" }""", role = Role.GENERAL).andExpect(status().isForbidden)
+        handle(UUID.randomUUID().toString(), """{ "status": "RESOLVED" }""").andExpect(status().isNotFound)
+        handle(reviewA, """{ "status": "RESOLVED" }""", role = Role.GENERAL).andExpect(status().isForbidden)
     }
 
     @Test
@@ -212,7 +212,7 @@ class ReportModerationApiIntegrationTest {
 
     @Test
     fun `通報が承認された口コミだけ、レビュー取得で hiddenByReport が true になる`() {
-        handle(reviewA, """{ "status": "APPROVED" }""").andExpect(status().isOk)
+        handle(reviewA, """{ "status": "RESOLVED" }""").andExpect(status().isOk)
         handle(reviewB, """{ "status": "DISMISSED" }""").andExpect(status().isOk)
 
         mockMvc
@@ -245,11 +245,11 @@ class ReportModerationApiIntegrationTest {
         list("&status=OPEN")
             .andExpect(jsonPath("$.data.length()").value(1))
             .andExpect(jsonPath("$.data[0].reviewId").value(reviewB))
-        list("&status=APPROVED")
+        list("&status=RESOLVED")
             .andExpect(jsonPath("$.data[0].reviewId").value(reviewA))
             .andExpect(jsonPath("$.data[0].review").doesNotExist())
             .andExpect(jsonPath("$.data[0].reportCount").value(2))
-            .andExpect(jsonPath("$.data[0].reports[0].status").value("APPROVED"))
+            .andExpect(jsonPath("$.data[0].reports[0].status").value("RESOLVED"))
             .andExpect(jsonPath("$.data[0].reports[0].handledBy").value(OPERATOR))
     }
 
