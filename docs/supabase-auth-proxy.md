@@ -72,9 +72,12 @@ Google / Apple はいずれも id_token グラント中継で対応済み（#89-
   | Secret Key (for OAuth) | 空欄 | Web の OAuth 方式専用。ネイティブ方式のみのため未設定 |
   | Allow users without an email | オフ | Apple はメール非公開時もリレーアドレスを返す |
 
-  - Secret Key は `.p8` から生成する JWT で、最長 6 か月で失効する。Web の OAuth 方式を追加する場合は
-    Services ID / Team ID / Key ID とあわせて登録し、6 か月ごとに更新する。秘密鍵・Key ID はリポジトリや
-    `.env.example` に入れず、Supabase ダッシュボードのみで保持する
+  - Web の OAuth 方式を追加する場合は次のとおり設定する
+    - Client IDs: **Services ID を先頭**に置き、後ろにネイティブの Bundle ID を続ける
+      （例: `<Services ID>,com.kobeinyourpocket.client`。OAuth には先頭の値が使われる）
+    - Secret Key: Team ID / Key ID / 秘密鍵（`.p8`）から生成した client secret（JWT）を設定する。
+      `.p8` 自体は登録しない。JWT は最長 6 か月で失効するため、6 か月ごとに再生成して更新する
+    - `.p8`・Key ID・生成した JWT はリポジトリや `.env.example` に入れない
   - Expo Go で取得した id_token は `aud` が Expo Go の Bundle ID（`host.exp.Exponent`）になるため、
     Expo Go で動作確認する場合は Client IDs にカンマ区切りで追記する（現在は未登録）
 - Apple のネイティブサインインは nonce を使う。Client が nonce を付けた場合は `nonce` が必須（未指定だと GoTrue が 400）
@@ -86,19 +89,27 @@ Google / Apple はいずれも id_token グラント中継で対応済み（#89-
     Client は backend の成功まで `fullName` を保持して再送する
 - メールアドレスが非公開リレー（`@privaterelay.appleid.com`）になる場合がある。
   `name` が無いとローカル部（ランダム文字列）が表示名になるため、ユーザーは `PATCH /api/v1/users/me` で変更する
-- 動作確認: 実機の Apple サインインで得た `identityToken` と raw nonce を使う
+- 動作確認: 実機の Apple サインインで得た `identityToken` と raw nonce を使う。
+  トークンがシェル履歴に残らないよう、コマンドに直接書かず `read -rs` で変数に入れる
 
   ```bash
+  read -rsp 'identityToken: ' ID_TOKEN; echo
+  read -rsp 'raw nonce: ' RAW_NONCE; echo
+
   # GoTrue へ直接（backend を介さない切り分け用）
   curl -s -X POST "$SUPABASE_URL/auth/v1/token?grant_type=id_token" \
     -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" \
-    -d '{"provider":"apple","id_token":"<identityToken>","nonce":"<raw nonce>"}'
+    -d "{\"provider\":\"apple\",\"id_token\":\"$ID_TOKEN\",\"nonce\":\"$RAW_NONCE\"}"
 
   # backend 経由
   curl -s -X POST http://localhost:8080/api/v1/auth/apple \
     -H "Content-Type: application/json" \
-    -d '{"idToken":"<identityToken>","nonce":"<raw nonce>","name":"<fullName>"}'
+    -d "{\"idToken\":\"$ID_TOKEN\",\"nonce\":\"$RAW_NONCE\"}"
+
+  unset ID_TOKEN RAW_NONCE
   ```
+
+  レスポンスの access / refresh token も共有・記録しない。
 
   `aud` 不一致なら Client IDs、nonce 不一致ならハッシュ前後の取り違えを疑う
 
