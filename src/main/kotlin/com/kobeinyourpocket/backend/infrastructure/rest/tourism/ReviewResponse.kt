@@ -16,9 +16,9 @@ data class ReviewResponse(
     val postedAt: Instant,
     val language: String,
     /**
-     * 運営が通報を承認し、非表示に同意した（不適切と判断した）口コミか。true なら Client はアプリ全体で非表示にする。
+     * 通報が運営に承認された口コミか。true なら Client は非表示にする。
      *
-     * 判定は読み取り（GET）でのみ行う。POST / PUT の応答は書き込んだ集約から作るため常に false。
+     * POST / PUT のレスポンスでは常に false（通報の状態を見ていないため）。
      */
     val hiddenByReport: Boolean,
 ) {
