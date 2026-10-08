@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.application.evacuation.query
 
 import com.kobeinyourpocket.backend.domain.common.localization.Language
+import com.kobeinyourpocket.backend.domain.evacuation.evacuationshelter.vo.DisasterType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
@@ -17,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional
  * PostgreSQL の既定分離レベル（READ COMMITTED）は同一トランザクション内でも
  * 文ごとに新しいスナップショットを見るため、REPEATABLE_READ まで上げて
  * 両方を同一スナップショットから取得する。
+ *
+ * 災害種別で絞り込んでも meta はデータセット全体のもの（絞り込み結果の版ではない）。
+ * 絞り込み結果を Client の SQLite に全件として保存すると、残りの避難所を取りこぼす。
  */
 @Service
 class GetShelterListService(
@@ -24,9 +28,12 @@ class GetShelterListService(
     private val getShelterDatasetMetadataService: GetShelterDatasetMetadataService,
 ) {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
-    fun getShelterList(language: Language): ShelterListView =
+    fun getShelterList(
+        language: Language,
+        suitableFor: Set<DisasterType> = emptySet(),
+    ): ShelterListView =
         ShelterListView(
-            shelters = listSheltersService.listShelters(language),
+            shelters = listSheltersService.listShelters(language, suitableFor),
             metadata = getShelterDatasetMetadataService.getMetadata(),
         )
 }

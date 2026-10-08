@@ -221,6 +221,43 @@ class ShelterApiIntegrationTest {
     }
 
     @Test
+    fun `GET disaster で ○ の避難所だけに絞り、meta は全体のまま返す`() {
+        seedShelters()
+        seedMetadata()
+
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=ja&disaster=landslide"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.length()").value(1))
+            .andExpect(jsonPath("$.data[0].id").value("kobe-001"))
+            .andExpect(jsonPath("$.meta.updatedAt").value("2025-04-02T00:00:00Z"))
+    }
+
+    @Test
+    fun `GET disaster は △ を含めず、複数指定はいずれかで ○ なら含める`() {
+        seedShelters()
+        seedMetadata()
+
+        // 東灘小の洪水は △ なので含めない。
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=ja&disaster=flood"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.length()").value(0))
+
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?lang=ja&disaster=flood,tsunami,landslide"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.length()").value(2))
+    }
+
+    @Test
+    fun `GET disaster に未知の種別があれば 400`() {
+        mockMvc
+            .perform(get("/api/v1/evacuation/shelters?disaster=earthquake"))
+            .andExpect(status().isBadRequest)
+    }
+
+    @Test
     fun `DELETE は未認証だと 401`() {
         seedShelters()
 
