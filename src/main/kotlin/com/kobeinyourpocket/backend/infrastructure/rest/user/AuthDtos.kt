@@ -29,8 +29,8 @@ data class RefreshRequest(
 )
 
 /**
- * SSO の ID トークンサインイン（#89-c / #192）。
- * Client がネイティブ SDK で取得した Google / Apple 等の ID トークンを backend が GoTrue へ中継する。
+ * SSO の ID トークンサインイン（#89-c / #192 / #196）。
+ * Client がネイティブ SDK で取得した Google / Apple / Facebook 等の ID トークンを backend が GoTrue へ中継する。
  */
 data class IdTokenSignInRequest(
     @field:NotBlank
