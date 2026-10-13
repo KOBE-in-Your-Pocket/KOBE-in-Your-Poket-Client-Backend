@@ -1,7 +1,10 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.jayway.jsonpath.JsonPath
+import com.kobeinyourpocket.backend.domain.user.model.User
+import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
 import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.domain.user.vo.UserIcon
 import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -11,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -32,6 +36,9 @@ import kotlin.test.Test
 class ReviewApiIntegrationTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
+
+    @Autowired
+    private lateinit var userRepository: UserRepository
 
     private val spotBody =
         """
@@ -344,11 +351,67 @@ class ReviewApiIntegrationTest {
             ).andExpect(status().isBadRequest)
     }
 
+    // ---- 一覧の投稿者アイコンは現在のプロフィールから返す（#209）----
+
+    /** [OWNER] のプロフィールを保存（既にあれば上書き）する。[iconUrl] が null ならアイコン未設定。 */
+    private fun saveOwnerProfile(iconUrl: String?) {
+        val id = User.Id.of(OWNER)
+        val icon = iconUrl?.let(UserIcon::of)
+        val user = userRepository.findById(id)?.updateProfile(name = "Alice", icon = icon) ?: User.create(id, "Alice", icon)
+        userRepository.save(user)
+    }
+
+    @Test
+    fun `アイコン変更後は他のアカウントや未ログインから見た既存レビューも変更後のアイコンになる`() {
+        val spotId = registerSpot()
+        saveOwnerProfile(ICON_BEFORE)
+        postReview(spotId)
+
+        saveOwnerProfile(ICON_AFTER)
+
+        mockMvc
+            .perform(
+                get("/api/v1/tourism/spots/$spotId/reviews?lang=ja").with(withRole(Role.GENERAL, OTHER_USER)),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].author.iconUrl").value(ICON_AFTER))
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].author.iconUrl").value(ICON_AFTER))
+        mockMvc
+            .perform(get("/api/v1/tourism/reviews?lang=ja").with(withRole(Role.OPERATOR)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data[0].author.iconUrl").value(ICON_AFTER))
+    }
+
+    @Test
+    fun `アイコンを未設定に戻すと既存レビューの投稿者アイコンも未設定になる`() {
+        val spotId = registerSpot()
+        saveOwnerProfile(ICON_BEFORE)
+        postReview(spotId)
+
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .with(withRole(Role.GENERAL, OWNER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{ "iconUrl": "" }"""),
+            ).andExpect(status().isOk)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].author.iconUrl").doesNotExist())
+    }
+
     private companion object {
         /** 投稿者本人の Supabase user id（JWT `sub`）。 */
         const val OWNER = "00000000-0000-0000-0000-0000000000a1"
 
         /** 投稿者ではない別ユーザー。 */
         const val OTHER_USER = "00000000-0000-0000-0000-0000000000a2"
+
+        const val ICON_BEFORE = "https://example.com/icons/before.webp"
+        const val ICON_AFTER = "https://example.com/icons/after.webp"
     }
 }
