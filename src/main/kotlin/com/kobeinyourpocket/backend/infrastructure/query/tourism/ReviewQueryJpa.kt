@@ -29,9 +29,10 @@ class ReviewQueryJpa(
                 .createNativeQuery(
                     """
                     SELECT
-                        r.id, r.spot_id, r.rating, r.comment, r.author_name, r.author_icon_url, r.author_user_id,
+                        r.id, r.spot_id, r.rating, r.comment, r.author_name, $AUTHOR_ICON_URL, r.author_user_id,
                         r.created_at, r.language, $HIDDEN_BY_REPORT
                     FROM review r
+                    $JOIN_AUTHOR
                     WHERE r.spot_id = :spotId AND r.language = :language
                     ORDER BY r.created_at DESC
                     """.trimIndent(),
@@ -104,6 +105,33 @@ class ReviewQueryJpa(
 
     private companion object {
         /**
+         * 投稿者の現在のプロフィール（`users`）。`review r` を前提にした結合句（#208）。
+         *
+         * `LEFT JOIN` なのは、`author_user_id` が NULL の旧レビュー（V17 以前）や
+         * プロフィール行が無い投稿者のレビューを一覧から**黙って消さない**ため。
+         * `users.id` は主キーなので追加の索引は要らず、1 クエリで解決するため N+1 にもならない。
+         */
+        val JOIN_AUTHOR =
+            """
+            LEFT JOIN users u ON u.id = r.author_user_id
+            """.trimIndent()
+
+        /**
+         * 投稿者アイコン（SELECT 句の 1 列 / #208）。
+         *
+         * `review.author_icon_url` は投稿時点のスナップショットで、アイコンを変えても追従しない。
+         * プロフィール行があれば常に `users.icon_url` を返し、無いときだけスナップショットに戻す。
+         *
+         * 判定は「行があるか」（`u.id IS NOT NULL`）で行い、`icon_url` の値では見ない。
+         * `COALESCE(NULLIF(u.icon_url, ''), ...)` にすると、アイコンを未設定に戻した利用者の
+         * 旧アイコンがスナップショットから復活してしまう。空文字 → null は Kotlin 側で変換する。
+         */
+        val AUTHOR_ICON_URL =
+            """
+            CASE WHEN u.id IS NOT NULL THEN u.icon_url ELSE r.author_icon_url END AS author_icon_url
+            """.trimIndent()
+
+        /**
          * 運営が通報を承認し、非表示に同意したか（`review r` を前提にした SELECT 句の 1 列）。
          *
          * reports.target_id は文字列のため review.id（UUID）を文字列にして突き合わせる。
@@ -143,10 +171,11 @@ class ReviewQueryJpa(
                 r.rating,
                 r.comment,
                 r.author_name,
-                r.author_icon_url,
+                $AUTHOR_ICON_URL,
                 r.created_at,
                 r.language
             FROM review r
+            $JOIN_AUTHOR
             LEFT JOIN spot_localization l_req
                 ON r.spot_id = l_req.spot_id AND l_req.language = :language
             LEFT JOIN spot_localization l_fallback
