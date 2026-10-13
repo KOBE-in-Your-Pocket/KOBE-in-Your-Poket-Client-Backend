@@ -95,6 +95,25 @@ class AuthController(
             ),
         )
 
+    /**
+     * Facebook ID トークンによるサインイン（#196）。
+     * Google / Apple と同じく初回ログイン時は GoTrue が Auth ユーザーを自動作成するため signup / login 兼用。
+     * `accessToken` の要否は GoTrue に任せ、未指定で拒否された場合は GoTrue の 400 を統一エラーで返す。
+     */
+    @PostMapping("/facebook")
+    fun signInWithFacebook(
+        @Valid @RequestBody request: IdTokenSignInRequest,
+    ): AuthSessionResponse =
+        AuthSessionResponse.from(
+            signInWithIdTokenService.execute(
+                provider = "facebook",
+                idToken = request.idToken,
+                accessToken = request.accessToken,
+                nonce = request.nonce,
+                name = request.name,
+            ),
+        )
+
     @PostMapping("/refresh")
     fun refresh(
         @Valid @RequestBody request: RefreshRequest,

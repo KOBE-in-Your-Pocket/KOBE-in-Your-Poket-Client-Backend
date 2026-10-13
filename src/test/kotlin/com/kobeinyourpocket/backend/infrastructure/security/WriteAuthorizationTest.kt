@@ -136,12 +136,12 @@ class WriteAuthorizationTest {
             .andExpect(status().isOk)
     }
 
-    // ---- 認証の入り口（signup, login, google, apple, refresh）は公開 ----
+    // ---- 認証の入り口（signup, login, google, apple, facebook, refresh）は公開 ----
 
     @Test
     fun `auth の入り口 POST は未認証でも Security を通過する`() {
         // 空ボディで 400（バリデーション）まで到達する = 401 で拒否されていない
-        listOf("signup", "login", "google", "apple", "refresh").forEach { path ->
+        listOf("signup", "login", "google", "apple", "facebook", "refresh").forEach { path ->
             mockMvc
                 .perform(
                     post("/api/v1/auth/$path")
