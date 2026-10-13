@@ -6,6 +6,7 @@ import com.kobeinyourpocket.backend.application.manner.command.InvalidMannerTitl
 import com.kobeinyourpocket.backend.application.manner.command.MannerItemNotFoundException
 import com.kobeinyourpocket.backend.application.report.AlreadyReportedException
 import com.kobeinyourpocket.backend.application.report.CannotReportOwnContentException
+import com.kobeinyourpocket.backend.application.report.ReportsNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.GenreInUseException
 import com.kobeinyourpocket.backend.application.tourism.GenreNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
@@ -53,6 +54,11 @@ class GlobalExceptionHandler {
     @ExceptionHandler(CannotReportOwnContentException::class)
     fun handleCannotReportOwnContent(ex: CannotReportOwnContentException): ResponseEntity<ApiErrorResponse> =
         badRequest(message = ex.message ?: "Cannot report own content")
+
+    /** 通報の無い口コミの対応状況を変えようとした（#145）。ID の取り違えを運営に知らせる。 */
+    @ExceptionHandler(ReportsNotFoundException::class)
+    fun handleReportsNotFound(ex: ReportsNotFoundException): ResponseEntity<ApiErrorResponse> =
+        notFound(message = ex.message ?: "Reports not found")
 
     @ExceptionHandler(ShelterNotFoundException::class)
     fun handleShelterNotFound(ex: ShelterNotFoundException): ResponseEntity<ApiErrorResponse> =

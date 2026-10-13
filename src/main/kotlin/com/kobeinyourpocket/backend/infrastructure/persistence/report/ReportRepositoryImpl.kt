@@ -2,6 +2,8 @@ package com.kobeinyourpocket.backend.infrastructure.persistence.report
 
 import com.kobeinyourpocket.backend.domain.report.model.Report
 import com.kobeinyourpocket.backend.domain.report.repository.ReportRepository
+import com.kobeinyourpocket.backend.domain.report.vo.ReportStatus
+import com.kobeinyourpocket.backend.domain.report.vo.ReportTarget
 import com.kobeinyourpocket.backend.domain.report.vo.ReporterId
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Repository
@@ -33,6 +35,22 @@ class ReportRepositoryImpl(
         } catch (e: DataIntegrityViolationException) {
             false
         }
+    }
+
+    override fun existsByTarget(target: ReportTarget): Boolean =
+        reportJpa.existsByTargetTypeAndTargetId(targetType = target.type.name, targetId = target.id)
+
+    override fun findOpenByTarget(target: ReportTarget): List<Report> =
+        reportJpa
+            .findByTargetTypeAndTargetIdAndStatus(
+                targetType = target.type.name,
+                targetId = target.id,
+                status = ReportStatus.OPEN.name,
+            ).map { it.toDomain() }
+
+    @Transactional
+    override fun saveAll(reports: List<Report>) {
+        reportJpa.saveAll(reports.map(ReportEntity::fromDomain))
     }
 
     @Transactional

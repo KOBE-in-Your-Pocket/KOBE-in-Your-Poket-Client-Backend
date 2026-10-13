@@ -53,10 +53,10 @@ class S3MediaStorageTest {
 
     @Test
     fun `アイコン用プレフィクスのキーも解決できる`() {
-        // 利用者のアイコンは icons/ 配下（#184）。ここが外れると旧アイコンを清理できない。
+        // 利用者のアイコンは uploads/icons/ 配下（#184）。ここが外れると旧アイコンを清理できない。
         assertEquals(
-            "icons/abc.jpg",
-            storage().keyOf("https://$bucket.s3.$region.amazonaws.com/icons/abc.jpg"),
+            "uploads/icons/abc.jpg",
+            storage().keyOf("https://$bucket.s3.$region.amazonaws.com/uploads/icons/abc.jpg"),
         )
     }
 

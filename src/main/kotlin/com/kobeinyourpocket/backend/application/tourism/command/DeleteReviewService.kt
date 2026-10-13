@@ -1,9 +1,12 @@
 package com.kobeinyourpocket.backend.application.tourism.command
 
+import com.kobeinyourpocket.backend.application.report.command.HandleReviewReportsService
 import com.kobeinyourpocket.backend.application.tourism.ReviewNotFoundException
+import com.kobeinyourpocket.backend.domain.report.vo.ReportHandlerId
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * 運営によるレビュー削除ユースケース（モデレーション / 要件表 C-9・#165）。
@@ -14,13 +17,23 @@ import org.springframework.stereotype.Service
  *
  * レビュー集約に子は無いため、関連の連鎖削除は無い。スポットごと削除した場合は
  * `review` が `ON DELETE CASCADE`（V2）で連動して消える。
+ *
+ * 削除したレビューへの未対応の通報は、削除した運営の対応として承認（APPROVED）にする（#145）。
+ * 通報そのものは対応履歴として残す。削除と同じトランザクションで行い、
+ * 「消えたのに通報は未対応のまま」という状態を作らない。
  */
 @Service
 class DeleteReviewService(
     private val reviewRepository: ReviewRepository,
+    private val handleReviewReportsService: HandleReviewReportsService,
 ) {
-    fun execute(id: ReviewId) {
+    @Transactional
+    fun execute(
+        id: ReviewId,
+        operatorId: ReportHandlerId,
+    ) {
         if (!reviewRepository.existsById(id)) throw ReviewNotFoundException(id)
         reviewRepository.deleteById(id)
+        handleReviewReportsService.approveOnReviewDeleted(id, operatorId)
     }
 }

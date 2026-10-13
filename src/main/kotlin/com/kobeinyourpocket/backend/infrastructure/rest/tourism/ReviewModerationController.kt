@@ -2,10 +2,13 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.kobeinyourpocket.backend.application.tourism.command.DeleteReviewService
 import com.kobeinyourpocket.backend.application.tourism.query.ListAllReviewsService
+import com.kobeinyourpocket.backend.domain.report.vo.ReportHandlerId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import com.kobeinyourpocket.backend.infrastructure.rest.common.LanguageResolver
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -51,13 +54,19 @@ class ReviewModerationController(
         return ReviewListResponse.from(listAllReviewsService.listReviews(language, page, size))
     }
 
-    /** 不適切なレビューを削除する（要件表 C-9）。投稿者本人かどうかは問わない。 */
+    /**
+     * 不適切なレビューを削除する（要件表 C-9）。投稿者本人かどうかは問わない。
+     *
+     * そのレビューへの未対応の通報は、削除した運営の対応として承認（APPROVED）になる（#145）。
+     */
     @DeleteMapping("/{reviewId}")
     @PreAuthorize("hasRole('OPERATOR')")
     fun deleteReview(
         @PathVariable reviewId: String,
+        @AuthenticationPrincipal jwt: Jwt,
     ): ResponseEntity<Void> {
-        deleteReviewService.execute(ReviewId.of(reviewId))
+        val operatorId = ReportHandlerId.of(requireNotNull(jwt.subject) { "JWT subject is missing" })
+        deleteReviewService.execute(ReviewId.of(reviewId), operatorId)
         return ResponseEntity.noContent().build()
     }
 }
