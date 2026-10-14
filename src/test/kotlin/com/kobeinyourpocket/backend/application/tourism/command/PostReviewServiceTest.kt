@@ -6,6 +6,9 @@ import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepos
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
+import com.kobeinyourpocket.backend.domain.user.model.User
+import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
+import com.kobeinyourpocket.backend.domain.user.vo.UserIcon
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -16,10 +19,23 @@ import kotlin.test.assertNull
 
 class PostReviewServiceTest {
     private val repository = mockk<ReviewRepository>()
-    private val service = PostReviewService(repository)
+    private val userRepository = mockk<UserRepository>()
+    private val service = PostReviewService(repository, ReviewAuthorIconResolver(userRepository))
 
     private val spotId = SpotId.of("kobe-port-tower")
     private val authorUserId = ReviewAuthorId.of("11111111-1111-1111-1111-111111111111")
+    private val profileId = User.Id.of(authorUserId.value)
+
+    init {
+        // 既定はアイコン未設定のプロフィール。アイコンを見るテストだけ上書きする。
+        every { userRepository.findById(profileId) } returns User.create(profileId, "Alice")
+    }
+
+    private fun post(): Review {
+        val saved = slot<Review>()
+        every { repository.save(capture(saved)) } answers { saved.captured }
+        return service.postReview(spotId, ReviewRating.of(4), "素晴らしい景色", "Alice", authorUserId, Language.JA)
+    }
 
     @Test
     fun `postReview は Review を採番して保存し返す`() {
@@ -78,5 +94,29 @@ class PostReviewServiceTest {
             service.postReview(spotId, ReviewRating.of(3), "Okay", "Carol", authorUserId, Language.EN)
 
         assert(r1.id != r2.id) { "採番した ID は毎回異なるはず" }
+    }
+
+    // ---- 投稿者アイコン（#210）----
+
+    @Test
+    fun `postReview は投稿者のプロフィールのアイコンを投稿者アイコンにする`() {
+        every { userRepository.findById(profileId) } returns
+            User.create(profileId, "Alice", UserIcon.of("https://example.com/icon.webp"))
+
+        val result = post()
+
+        assertEquals("https://example.com/icon.webp", result.author.iconUrl)
+    }
+
+    @Test
+    fun `postReview はプロフィールのアイコンが未設定なら投稿者アイコンなし`() {
+        assertNull(post().author.iconUrl)
+    }
+
+    @Test
+    fun `postReview はプロフィール行が無くても投稿でき投稿者アイコンなし`() {
+        every { userRepository.findById(profileId) } returns null
+
+        assertNull(post().author.iconUrl)
     }
 }
