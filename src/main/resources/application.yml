@@ -57,6 +57,16 @@ supabase:
   jwt:
     secret: ${SUPABASE_JWT_SECRET:}
 
+# Sign in with Apple の REST API（#213）。退会時に Apple のトークンを失効させるために使う。
+# Team ID / Key ID / 秘密鍵のどれかが空なら、refresh token の保存と失効を行わない（起動は妨げない）。
+# 秘密鍵は .p8 の中身を、改行を \n と書いた 1 行にして渡す。詳細: docs/supabase-auth-proxy.md
+apple:
+  sign-in:
+    client-id: ${APPLE_CLIENT_ID:com.kobeinyourpocket.client}
+    team-id: ${APPLE_TEAM_ID:}
+    key-id: ${APPLE_KEY_ID:}
+    private-key: ${APPLE_PRIVATE_KEY:}
+
 # 画像アップロード（S3 代理保存 / #86）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）。
 # bucket / region 未設定時は起動は妨げず、初回アップロードで例外にする。
 # public-base-url を設定すると返却 URL のベースにする（CloudFront 等）。空なら S3 仮想ホスト URL。

@@ -6,6 +6,7 @@ import com.kobeinyourpocket.backend.application.user.command.AuthCommandResult
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.RefreshSessionService
 import com.kobeinyourpocket.backend.application.user.command.SignInService
+import com.kobeinyourpocket.backend.application.user.command.SignInWithAppleService
 import com.kobeinyourpocket.backend.application.user.command.SignInWithIdTokenService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.application.user.command.SignUpService
@@ -46,6 +47,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private lateinit var signInWithIdTokenService: SignInWithIdTokenService
+
+    @MockitoBean
+    private lateinit var signInWithAppleService: SignInWithAppleService
 
     @MockitoBean
     private lateinit var refreshSessionService: RefreshSessionService
@@ -177,7 +181,7 @@ class AuthControllerTest {
 
     @Test
     fun `POST apple は 200 とセッション JSON を返す`() {
-        given(signInWithIdTokenService.execute("apple", "id-token", null, null)).willReturn(
+        given(signInWithAppleService.execute("id-token", null, null, null, null)).willReturn(
             AuthCommandResult(
                 session = session(),
                 user = PublicUser(id = userId, name = "Apple Taro"),
@@ -197,7 +201,7 @@ class AuthControllerTest {
 
     @Test
     fun `POST apple は name をサービスへ渡す`() {
-        given(signInWithIdTokenService.execute("apple", "id-token", null, "n", "Apple Hanako")).willReturn(
+        given(signInWithAppleService.execute("id-token", null, "n", "Apple Hanako", null)).willReturn(
             AuthCommandResult(
                 session = session(),
                 user = PublicUser(id = userId, name = "Apple Hanako"),
@@ -236,8 +240,40 @@ class AuthControllerTest {
     }
 
     @Test
+    fun `POST apple は authorizationCode をサービスへ渡す`() {
+        given(signInWithAppleService.execute("id-token", null, "n", null, "auth-code")).willReturn(
+            AuthCommandResult(
+                session = session(),
+                user = PublicUser(id = userId, name = "Apple Taro"),
+            ),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token","nonce":"n","authorizationCode":"auth-code"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.accessToken").value("access"))
+
+        verify(signInWithAppleService).execute("id-token", null, "n", null, "auth-code")
+    }
+
+    @Test
+    fun `POST apple で authorizationCode が最大長を超えたら 400`() {
+        val tooLong = "x".repeat(IdTokenSignInRequest.AUTHORIZATION_CODE_MAX_LENGTH + 1)
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/apple")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"idToken":"id-token","authorizationCode":"$tooLong"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
+    @Test
     fun `POST apple で AuthGateway の 400 は統一エラーになる`() {
-        given(signInWithIdTokenService.execute("apple", "bad", null, null)).willThrow(
+        given(signInWithAppleService.execute("bad", null, null, null, null)).willThrow(
             AuthGatewayException(status = 400, message = "Invalid id token"),
         )
 

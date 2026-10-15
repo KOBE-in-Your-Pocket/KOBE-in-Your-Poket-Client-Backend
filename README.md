@@ -182,6 +182,10 @@ CD（ECR + SSM）の説明は [`docs/infrastructure/cd-ecr-ssm.md`](./docs/infra
 | `SUPABASE_ANON_KEY` | （未設定） | anon / public API key |
 | `SUPABASE_SERVICE_ROLE_KEY` | （未設定） | service_role（backend 専用） |
 | `SUPABASE_JWT_SECRET` | （未設定） | JWT 検証用 secret |
+| `APPLE_CLIENT_ID` | `com.kobeinyourpocket.client` | Sign in with Apple の Bundle ID（#213） |
+| `APPLE_TEAM_ID` | （未設定） | Apple Developer の Team ID（#213） |
+| `APPLE_KEY_ID` | （未設定） | Sign in with Apple の Key ID（#213） |
+| `APPLE_PRIVATE_KEY` | （未設定） | 上記 Key の .p8。改行を `\n` にした 1 行（#213） |
 
 ---
 
