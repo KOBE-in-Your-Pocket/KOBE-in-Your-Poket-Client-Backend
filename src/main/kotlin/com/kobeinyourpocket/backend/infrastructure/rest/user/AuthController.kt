@@ -3,6 +3,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.user
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.RefreshSessionService
 import com.kobeinyourpocket.backend.application.user.command.SignInService
+import com.kobeinyourpocket.backend.application.user.command.SignInWithAppleService
 import com.kobeinyourpocket.backend.application.user.command.SignInWithIdTokenService
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.application.user.command.SignUpService
@@ -31,6 +32,7 @@ class AuthController(
     private val signUpService: SignUpService,
     private val signInService: SignInService,
     private val signInWithIdTokenService: SignInWithIdTokenService,
+    private val signInWithAppleService: SignInWithAppleService,
     private val refreshSessionService: RefreshSessionService,
     private val signOutService: SignOutService,
     private val deleteUserService: DeleteUserService,
@@ -80,18 +82,19 @@ class AuthController(
     /**
      * Apple ID トークンによるサインイン（#192）。
      * Google と同じく初回ログイン時は GoTrue が Auth ユーザーを自動作成するため signup / login 兼用。
+     * `authorizationCode` があれば refresh token に交換して保存し、退会時の失効に使う（#213）。
      */
     @PostMapping("/apple")
     fun signInWithApple(
         @Valid @RequestBody request: IdTokenSignInRequest,
     ): AuthSessionResponse =
         AuthSessionResponse.from(
-            signInWithIdTokenService.execute(
-                provider = "apple",
+            signInWithAppleService.execute(
                 idToken = request.idToken,
                 accessToken = request.accessToken,
                 nonce = request.nonce,
                 name = request.name,
+                authorizationCode = request.authorizationCode,
             ),
         )
 
