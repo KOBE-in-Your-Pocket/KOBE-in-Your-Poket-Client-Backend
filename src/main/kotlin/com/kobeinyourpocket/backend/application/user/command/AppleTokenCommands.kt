@@ -73,6 +73,8 @@ class SignInWithAppleService(
  *
  * Apple 側でアプリと Apple ID の連携が解除される（App Store 審査の要件）。
  * 失効に失敗しても退会は止めない。Apple 側の一時的な失敗で退会できなくなるのを避けるため。
+ * 失敗しても再試行はせず保存値も消す（プロフィール行の削除で外部キーにより消えるため残せない）。
+ * 連携が残ったユーザーを後から追えるよう、失敗は例外ごと error で記録する。
  * 保存値が無い（この対応より前にサインインした・Apple 以外のユーザー）場合は何もしない。
  */
 @Service
@@ -87,7 +89,8 @@ class RevokeAppleTokenService(
         try {
             appleTokenGateway.revokeRefreshToken(refreshToken)
         } catch (ex: RuntimeException) {
-            logger.warn("Apple のトークンを失効できなかった: userId={}, reason={}", userId, ex.message)
+            // 例外のメッセージ・原因に token は含まれない（AppleTokenException / Apple のエラー本文のみ）。
+            logger.error("Apple のトークンを失効できなかった（連携が残っている）: userId={}", userId, ex)
         }
         appleRefreshTokenRepository.deleteByUserId(userId)
     }

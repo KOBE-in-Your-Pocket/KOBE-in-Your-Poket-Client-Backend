@@ -160,9 +160,10 @@ class AppleSignInClient internal constructor(
                 .builder()
                 .baseUrl(APPLE_ISSUER)
                 .requestFactory(
+                    // サインインの応答を Apple の遅延で長く止めないよう短めにする（失敗してもサインインは成功させる）。
                     SimpleClientHttpRequestFactory().apply {
-                        setConnectTimeout(Duration.ofSeconds(5))
-                        setReadTimeout(Duration.ofSeconds(10))
+                        setConnectTimeout(Duration.ofSeconds(3))
+                        setReadTimeout(Duration.ofSeconds(5))
                     },
                 ).build()
 

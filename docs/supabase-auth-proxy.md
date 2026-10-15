@@ -102,6 +102,10 @@ Google / Apple / Facebook はいずれも id_token グラント中継で対応�
   - 交換・保存・失効に失敗しても、サインイン・退会は失敗させない（ログに残す）。
     `authorizationCode` は 5 分・1 回限りで送り直せないため。この対応より前にサインインし、
     その後一度もサインインしていないユーザーは保存値が無く、失効を省略する
+  - 失効に失敗しても**再試行しない**。保存値はプロフィール行と一緒に消えるため、Apple との連携が残る。
+    失敗は `RevokeAppleTokenService` が error ログ（`Apple のトークンを失効できなかった`、userId 付き）に
+    例外ごと残すので、ログから対象ユーザーを追う
+  - Apple の呼び出しはサインインの応答を止めないよう、タイムアウトを短くしている（接続 3 秒・読み取り 5 秒）
   - 環境変数: `APPLE_TEAM_ID` / `APPLE_KEY_ID` / `APPLE_PRIVATE_KEY`（`APPLE_CLIENT_ID` は既定で Bundle ID）。
     Apple Developer → Keys で「Sign in with Apple」を有効にし、Primary App ID を
     `com.kobeinyourpocket.client` にした Key を作る。`.p8` の中身は改行を `\n` と書いた 1 行にして
