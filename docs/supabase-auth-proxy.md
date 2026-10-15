@@ -49,8 +49,9 @@ Auth ユーザー削除による補償は `service_role` Admin が必要なた�
 
 Google / Apple / Facebook はいずれも id_token グラント中継で対応済み（#89-c / #192 / #196）。
 
-- リクエスト: `{"idToken": "...", "accessToken": null, "nonce": null, "name": null}`
-  （`idToken` 必須。`nonce` はトークン取得時に使った場合のみ。`name` は任意で最大 100 文字、超過は 400）
+- リクエスト: `{"idToken": "...", "accessToken": null, "nonce": null, "name": null, "authorizationCode": null}`
+  （`idToken` 必須。`nonce` はトークン取得時に使った場合のみ。`name` は任意で最大 100 文字、超過は 400。
+  `authorizationCode` は Apple のみで使い、最大 1024 文字）
 - 初回ログイン時は GoTrue が Auth ユーザーを自動作成（signup / login の区別なし）。
   プロフィール行は login と同じく冪等補完し、表示名はリクエストの `name` → `user_metadata.full_name` →
   `user_metadata.name` → email ローカル部 → `"user"`
@@ -90,6 +91,23 @@ Google / Apple / Facebook はいずれも id_token グラント中継で対応�
     Client は backend の成功まで `fullName` を保持して再送する
 - メールアドレスが非公開リレー（`@privaterelay.appleid.com`）になる場合がある。
   `name` が無いとローカル部（ランダム文字列）が表示名になるため、ユーザーは `PATCH /api/v1/users/me` で変更する
+- 退会時のトークン失効（#213）: App Store 審査では、Sign in with Apple を使うアプリは退会時に
+  Apple の `/auth/revoke` でトークンを失効させる必要がある（Supabase のユーザー削除だけでは失効しない）
+  - Client は `signInAsync` が返す `authorizationCode` をリクエストの `authorizationCode` に入れて送る
+  - backend は GoTrue でのサインイン成功後、Apple の `/auth/token` でコードを refresh token に交換し、
+    `apple_refresh_tokens` に保存する（1 ユーザー 1 件。サインインのたびに置き換える）
+  - 交換に使ったコードの ID トークンの `sub` が、サインインに使った ID トークンの `sub` と違えば保存しない
+  - 退会（`DELETE /api/v1/users/me`・運営による削除）では、Supabase Auth の削除後に `/auth/revoke` を呼び、
+    保存値を消す。Apple ID とアプリの連携が解除され、次回は初回扱い（`fullName` が再び返る）になる
+  - 交換・保存・失効に失敗しても、サインイン・退会は失敗させない（ログに残す）。
+    `authorizationCode` は 5 分・1 回限りで送り直せないため。この対応より前にサインインし、
+    その後一度もサインインしていないユーザーは保存値が無く、失効を省略する
+  - 環境変数: `APPLE_TEAM_ID` / `APPLE_KEY_ID` / `APPLE_PRIVATE_KEY`（`APPLE_CLIENT_ID` は既定で Bundle ID）。
+    Apple Developer → Keys で「Sign in with Apple」を有効にし、Primary App ID を
+    `com.kobeinyourpocket.client` にした Key を作る。`.p8` の中身は改行を `\n` と書いた 1 行にして
+    `app.env` / Secrets Manager に置く（リポジトリには入れない）。未設定なら保存も失効もしない
+  - refresh token は平文で保存する。この token だけでは Apple の API を呼べず（`.p8` で署名した
+    client secret が要る）、Apple はこの token で取得できる利用者データも提供しないため
 - 動作確認: 実機の Apple サインインで得た `identityToken` と raw nonce を使う。
   トークンがシェル履歴に残らないよう、コマンドに直接書かず `read -rs` で変数に入れる
 

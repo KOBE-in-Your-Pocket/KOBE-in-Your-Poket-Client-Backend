@@ -40,7 +40,17 @@ data class IdTokenSignInRequest(
     /** Apple が初回認証時のみ返す表示名（fullName）。プロフィール新規作成時のみ使い、既存の表示名は上書きしない（#193）。 */
     @field:Size(max = User.MAX_NAME_LENGTH)
     val name: String? = null,
-)
+    /**
+     * Apple の `authorizationCode`（#213）。refresh token に交換して保存し、退会時の失効に使う。
+     * Apple 以外のプロバイダでは使わない。
+     */
+    @field:Size(max = AUTHORIZATION_CODE_MAX_LENGTH)
+    val authorizationCode: String? = null,
+) {
+    companion object {
+        const val AUTHORIZATION_CODE_MAX_LENGTH = 1024
+    }
+}
 
 data class AuthSessionResponse(
     val accessToken: String?,

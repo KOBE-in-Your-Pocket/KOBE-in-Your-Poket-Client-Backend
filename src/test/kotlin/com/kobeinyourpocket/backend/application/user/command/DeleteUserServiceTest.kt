@@ -19,10 +19,11 @@ import kotlin.test.assertFailsWith
 
 class DeleteUserServiceTest {
     private val authGateway = mockk<AuthGateway>()
+    private val revokeAppleTokenService = mockk<RevokeAppleTokenService>()
     private val userRepository = mockk<UserRepository>()
     private val reviewRepository = mockk<ReviewRepository>()
     private val reportRepository = mockk<ReportRepository>()
-    private val service = DeleteUserService(authGateway, userRepository, reviewRepository, reportRepository)
+    private val service = DeleteUserService(authGateway, revokeAppleTokenService, userRepository, reviewRepository, reportRepository)
 
     private val userId = User.Id.of(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
     private val authorId = ReviewAuthorId.of(userId.value)
@@ -30,9 +31,10 @@ class DeleteUserServiceTest {
     private val existingUser = User.create(id = userId, name = "Alice")
 
     @Test
-    fun `存在するユーザーを削除すると Auth の後に本人のレビュー・通報と DB プロフィールを削除する`() {
+    fun `存在するユーザーを削除すると Auth の後に Apple の失効・本人のレビュー・通報と DB プロフィールを削除する`() {
         every { userRepository.findById(userId) } returns existingUser
         justRun { authGateway.deleteUser(userId) }
+        justRun { revokeAppleTokenService.execute(userId) }
         every { reviewRepository.deleteByAuthorId(authorId) } returns 2
         every { reportRepository.deleteByReporterId(reporterId) } returns 1
         justRun { userRepository.deleteById(userId) }
@@ -44,6 +46,7 @@ class DeleteUserServiceTest {
         verifyOrder {
             userRepository.findById(userId)
             authGateway.deleteUser(userId)
+            revokeAppleTokenService.execute(userId)
             reviewRepository.deleteByAuthorId(authorId)
             reportRepository.deleteByReporterId(reporterId)
             userRepository.deleteById(userId)
@@ -54,6 +57,7 @@ class DeleteUserServiceTest {
     fun `レビューも通報も 1 件も無くても削除は成功する`() {
         every { userRepository.findById(userId) } returns existingUser
         justRun { authGateway.deleteUser(userId) }
+        justRun { revokeAppleTokenService.execute(userId) }
         every { reviewRepository.deleteByAuthorId(authorId) } returns 0
         every { reportRepository.deleteByReporterId(reporterId) } returns 0
         justRun { userRepository.deleteById(userId) }
@@ -72,6 +76,7 @@ class DeleteUserServiceTest {
         }
 
         verify(exactly = 0) { authGateway.deleteUser(any()) }
+        verify(exactly = 0) { revokeAppleTokenService.execute(any()) }
         verify(exactly = 0) { reviewRepository.deleteByAuthorId(any()) }
         verify(exactly = 0) { reportRepository.deleteByReporterId(any()) }
         verify(exactly = 0) { userRepository.deleteById(any()) }
@@ -87,7 +92,8 @@ class DeleteUserServiceTest {
             service.execute(userId)
         }
 
-        // 退会が成立していないのにレビュー・通報だけ消える状態を作らない。
+        // 退会が成立していないのに Apple の連携・レビュー・通報だけ消える状態を作らない。
+        verify(exactly = 0) { revokeAppleTokenService.execute(any()) }
         verify(exactly = 0) { reviewRepository.deleteByAuthorId(any()) }
         verify(exactly = 0) { reportRepository.deleteByReporterId(any()) }
         verify(exactly = 0) { userRepository.deleteById(any()) }

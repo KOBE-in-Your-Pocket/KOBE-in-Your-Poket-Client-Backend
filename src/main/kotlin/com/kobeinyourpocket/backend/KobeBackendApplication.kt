@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend
 
+import com.kobeinyourpocket.backend.infrastructure.apple.AppleSignInProperties
 import com.kobeinyourpocket.backend.infrastructure.security.SupabaseJwtProperties
 import com.kobeinyourpocket.backend.infrastructure.storage.MediaStorageProperties
 import com.kobeinyourpocket.backend.infrastructure.supabase.SupabaseAuthProperties
@@ -12,6 +13,7 @@ import org.springframework.boot.runApplication
     SupabaseAuthProperties::class,
     SupabaseJwtProperties::class,
     MediaStorageProperties::class,
+    AppleSignInProperties::class,
 )
 class KobeBackendApplication
 
