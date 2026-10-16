@@ -1,13 +1,21 @@
 package com.kobeinyourpocket.backend.application.tourism.query
 
 import com.kobeinyourpocket.backend.domain.common.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 
 /** read 専用 port。application が定義し infrastructure.query が実装する。 */
 interface ReviewQuery {
+    /**
+     * スポット別・言語別のレビューを新しい順に返す。
+     *
+     * [viewerId] を渡すと、その閲覧者がブロック中の投稿者のレビューを除く（#215）。
+     * 未ログインの閲覧では null で、従来どおり全件を返す。
+     */
     fun findBySpot(
         spotId: SpotId,
         language: Language,
+        viewerId: ReviewAuthorId? = null,
     ): List<ReviewView>
 
     /**
