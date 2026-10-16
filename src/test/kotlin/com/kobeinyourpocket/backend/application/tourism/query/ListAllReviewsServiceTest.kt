@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.application.tourism.query
 
 import com.kobeinyourpocket.backend.domain.common.localization.Language
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,6 +21,7 @@ class ListAllReviewsServiceTest {
         override fun findBySpot(
             spotId: SpotId,
             language: Language,
+            viewerId: ReviewAuthorId?,
         ): List<ReviewView> = emptyList()
 
         override fun findPage(

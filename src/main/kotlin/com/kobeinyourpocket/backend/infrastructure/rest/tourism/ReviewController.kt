@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import java.security.Principal
 
 /**
  * Review の REST inbound adapter（§8）。application 経由のみ（persistence 直叩き禁止 / §2）。
@@ -41,15 +42,27 @@ class ReviewController(
     private val updateReviewService: UpdateReviewService,
     private val deleteOwnReviewService: DeleteOwnReviewService,
 ) {
+    /**
+     * スポットのレビュー一覧。閲覧は未ログインでもできる。
+     *
+     * ログイン中（Bearer 付き）なら、本人がブロック中の投稿者のレビューを除いて返す（#215）。
+     * GET は SecurityConfig で公開のままだが、Bearer があれば検証されて [principal] に入る。
+     *
+     * 書き込み系と違い `@AuthenticationPrincipal Jwt` ではなく [Principal] で受ける。未ログインを
+     * null として扱える必要があり、Spring MVC 標準の解決（`request.userPrincipal`）なら
+     * Security を外したスライステストでも null に解決されるため。名前は JWT の `sub`。
+     */
     @GetMapping
     fun listReviews(
         @PathVariable spotId: String,
         @RequestParam(name = "lang", required = false) lang: String?,
         @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
+        principal: Principal?,
     ): List<ReviewListItemResponse> {
         val language = LanguageResolver.resolve(lang, acceptLanguage)
+        val viewerId = principal?.let { ReviewAuthorId.of(it.name) }
         return listReviewsService
-            .listReviews(SpotId.of(spotId), language)
+            .listReviews(SpotId.of(spotId), language, viewerId)
             .map(ReviewListItemResponse::from)
     }
 

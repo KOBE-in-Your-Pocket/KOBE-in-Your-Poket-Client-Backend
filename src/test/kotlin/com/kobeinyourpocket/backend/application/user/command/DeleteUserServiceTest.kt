@@ -7,6 +7,7 @@ import com.kobeinyourpocket.backend.domain.report.vo.ReporterId
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.user.model.User
+import com.kobeinyourpocket.backend.domain.user.repository.UserBlockRepository
 import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
 import io.mockk.every
 import io.mockk.justRun
@@ -23,7 +24,9 @@ class DeleteUserServiceTest {
     private val userRepository = mockk<UserRepository>()
     private val reviewRepository = mockk<ReviewRepository>()
     private val reportRepository = mockk<ReportRepository>()
-    private val service = DeleteUserService(authGateway, revokeAppleTokenService, userRepository, reviewRepository, reportRepository)
+    private val userBlockRepository = mockk<UserBlockRepository>()
+    private val service =
+        DeleteUserService(authGateway, revokeAppleTokenService, userRepository, reviewRepository, reportRepository, userBlockRepository)
 
     private val userId = User.Id.of(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
     private val authorId = ReviewAuthorId.of(userId.value)
@@ -31,12 +34,13 @@ class DeleteUserServiceTest {
     private val existingUser = User.create(id = userId, name = "Alice")
 
     @Test
-    fun `存在するユーザーを削除すると Auth の後に Apple の失効・本人のレビュー・通報と DB プロフィールを削除する`() {
+    fun `存在するユーザーを削除すると Auth の後に Apple の失効・本人のレビュー・通報・ブロックと DB プロフィールを削除する`() {
         every { userRepository.findById(userId) } returns existingUser
         justRun { authGateway.deleteUser(userId) }
         justRun { revokeAppleTokenService.execute(userId) }
         every { reviewRepository.deleteByAuthorId(authorId) } returns 2
         every { reportRepository.deleteByReporterId(reporterId) } returns 1
+        every { userBlockRepository.deleteByUserId(userId) } returns 2
         justRun { userRepository.deleteById(userId) }
 
         service.execute(userId)
@@ -49,17 +53,19 @@ class DeleteUserServiceTest {
             revokeAppleTokenService.execute(userId)
             reviewRepository.deleteByAuthorId(authorId)
             reportRepository.deleteByReporterId(reporterId)
+            userBlockRepository.deleteByUserId(userId)
             userRepository.deleteById(userId)
         }
     }
 
     @Test
-    fun `レビューも通報も 1 件も無くても削除は成功する`() {
+    fun `レビューも通報もブロックも 1 件も無くても削除は成功する`() {
         every { userRepository.findById(userId) } returns existingUser
         justRun { authGateway.deleteUser(userId) }
         justRun { revokeAppleTokenService.execute(userId) }
         every { reviewRepository.deleteByAuthorId(authorId) } returns 0
         every { reportRepository.deleteByReporterId(reporterId) } returns 0
+        every { userBlockRepository.deleteByUserId(userId) } returns 0
         justRun { userRepository.deleteById(userId) }
 
         service.execute(userId)
@@ -92,10 +98,11 @@ class DeleteUserServiceTest {
             service.execute(userId)
         }
 
-        // 退会が成立していないのに Apple の連携・レビュー・通報だけ消える状態を作らない。
+        // 退会が成立していないのに Apple の連携・レビュー・通報・ブロックだけ消える状態を作らない。
         verify(exactly = 0) { revokeAppleTokenService.execute(any()) }
         verify(exactly = 0) { reviewRepository.deleteByAuthorId(any()) }
         verify(exactly = 0) { reportRepository.deleteByReporterId(any()) }
+        verify(exactly = 0) { userBlockRepository.deleteByUserId(any()) }
         verify(exactly = 0) { userRepository.deleteById(any()) }
     }
 }
