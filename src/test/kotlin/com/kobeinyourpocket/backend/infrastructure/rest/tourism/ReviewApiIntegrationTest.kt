@@ -404,6 +404,55 @@ class ReviewApiIntegrationTest {
             .andExpect(jsonPath("$[0].author.iconUrl").doesNotExist())
     }
 
+    // ---- 投稿・編集レスポンスの投稿者アイコンも現在のプロフィールから返す（#210）----
+
+    @Test
+    fun `POST のレスポンスの投稿者アイコンは投稿者のプロフィールのアイコン`() {
+        val spotId = registerSpot()
+        saveOwnerProfile(ICON_BEFORE)
+
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots/$spotId/reviews")
+                    .with(withRole(Role.GENERAL, OWNER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(reviewBody(5, "最高の景色")),
+            ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.author.iconUrl").value(ICON_BEFORE))
+    }
+
+    @Test
+    fun `POST はプロフィール行が無い投稿者でもアイコンなしで 201`() {
+        val spotId = registerSpot()
+
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots/$spotId/reviews")
+                    .with(withRole(Role.GENERAL, OWNER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(reviewBody(5, "最高の景色")),
+            ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.author.iconUrl").doesNotExist())
+    }
+
+    @Test
+    fun `アイコン変更後に編集すると PUT のレスポンスも変更後のアイコンになる`() {
+        val spotId = registerSpot()
+        saveOwnerProfile(ICON_BEFORE)
+        val reviewId = postReview(spotId)
+
+        saveOwnerProfile(ICON_AFTER)
+
+        mockMvc
+            .perform(
+                put("/api/v1/tourism/spots/$spotId/reviews/$reviewId")
+                    .with(withRole(Role.GENERAL, OWNER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{ "rating": 5, "comment": "やっぱり最高" }"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.author.iconUrl").value(ICON_AFTER))
+    }
+
     private companion object {
         /** 投稿者本人の Supabase user id（JWT `sub`）。 */
         const val OWNER = "00000000-0000-0000-0000-0000000000a1"
