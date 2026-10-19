@@ -103,6 +103,12 @@ class SecurityConfig(
                     // 運営による削除は DELETE /api/v1/auth/users/{id} と別パスで ADMIN 限定のまま。
                     .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me")
                     .authenticated()
+                    // 本人によるブロック・解除（#215）。ブロックする側は JWT の subject から決まり
+                    // 他人のブロックを操作する余地が無いため、一般ロールで許可する。
+                    .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/blocks/*")
+                    .authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/blocks/*")
+                    .authenticated()
                     // 上記以外（GET 以外の未分類リクエスト全て）は運営ロール必須。
                     // ADMIN 専用の DELETE /api/v1/auth/users/{id} もここを通過し、
                     // メソッドセキュリティ（@PreAuthorize）で ADMIN に絞る。

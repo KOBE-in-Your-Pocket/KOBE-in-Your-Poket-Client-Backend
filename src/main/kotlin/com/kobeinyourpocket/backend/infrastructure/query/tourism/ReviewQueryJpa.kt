@@ -7,6 +7,7 @@ import com.kobeinyourpocket.backend.application.tourism.query.ReviewView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.report.vo.ReportStatus
 import com.kobeinyourpocket.backend.domain.report.vo.ReportTarget
+import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 import com.kobeinyourpocket.backend.infrastructure.query.common.JdbcTimestamps
 import com.kobeinyourpocket.backend.infrastructure.query.common.JdbcUuids
@@ -22,7 +23,12 @@ class ReviewQueryJpa(
     override fun findBySpot(
         spotId: SpotId,
         language: Language,
+        viewerId: ReviewAuthorId?,
     ): List<ReviewView> {
+        // null を `:viewerId IS NULL OR ...` で受けると、PostgreSQL が null パラメータの型を
+        // 決められずに失敗する。未ログインのときは条件ごと付けない。
+        val excludeBlocked = if (viewerId != null) "AND $NOT_BLOCKED_BY_VIEWER" else ""
+
         @Suppress("UNCHECKED_CAST")
         val rows =
             entityManager
@@ -34,12 +40,14 @@ class ReviewQueryJpa(
                     FROM review r
                     $JOIN_AUTHOR
                     WHERE r.spot_id = :spotId AND r.language = :language
+                    $excludeBlocked
                     ORDER BY r.created_at DESC
                     """.trimIndent(),
                 ).apply {
                     setParameter("spotId", spotId.value)
                     setParameter("language", language.code)
                     bindHiddenByReport()
+                    if (viewerId != null) setParameter("viewerId", viewerId.value)
                 }.resultList as List<Array<Any?>>
 
         return rows.map(::toReviewView)
@@ -145,6 +153,22 @@ class ReviewQueryJpa(
                     AND rp.target_id = CAST(r.id AS VARCHAR)
                     AND rp.status = :approvedReportStatus
             ) AS hidden_by_report
+            """.trimIndent()
+
+        /**
+         * 閲覧者（`:viewerId`）がブロック中の投稿者のレビューを除く条件（#215）。`review r` を前提にする。
+         *
+         * `author_user_id` が NULL の旧レビュー（V17 以前）は誰がブロックしても特定できないため残る
+         * （`NOT EXISTS` の中の比較が NULL になり、除外されない）。
+         * 主キー (blocker_user_id, blocked_user_id) がそのまま索引として効く。
+         */
+        val NOT_BLOCKED_BY_VIEWER =
+            """
+            NOT EXISTS (
+                SELECT 1 FROM user_blocks ub
+                WHERE ub.blocker_user_id = :viewerId
+                    AND ub.blocked_user_id = r.author_user_id
+            )
             """.trimIndent()
 
         /**
