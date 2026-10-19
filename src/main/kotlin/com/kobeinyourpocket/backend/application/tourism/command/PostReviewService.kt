@@ -15,10 +15,14 @@ import org.springframework.stereotype.Service
  * 表示名（[authorName]）はリクエストボディ由来だが、[authorUserId] は REST 層が JWT の
  * `sub` から渡す（クライアントの自己申告ではない）。この id が後の本人編集・本人削除
  * （#86）の判定根拠になるため、投稿時に必ず記録する。
+ *
+ * 投稿者アイコンはリクエストでは受け取らず、投稿者の現在のプロフィールから解決する（#210）。
+ * 一覧は常にプロフィールから引くため、レビュー行に残す値はプロフィール行が無い場合の控えにすぎない。
  */
 @Service
 class PostReviewService(
     private val reviewRepository: ReviewRepository,
+    private val authorIconResolver: ReviewAuthorIconResolver,
 ) {
     fun postReview(
         spotId: SpotId,
@@ -33,7 +37,12 @@ class PostReviewService(
                 spotId = spotId,
                 rating = rating,
                 comment = comment,
-                author = ReviewAuthor(name = authorName, userId = authorUserId),
+                author =
+                    ReviewAuthor(
+                        name = authorName,
+                        iconUrl = authorIconResolver.resolve(authorUserId, snapshot = null),
+                        userId = authorUserId,
+                    ),
                 language = language,
             )
         return reviewRepository.save(review)
