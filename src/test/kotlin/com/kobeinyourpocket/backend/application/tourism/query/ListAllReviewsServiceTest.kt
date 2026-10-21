@@ -20,7 +20,7 @@ class ListAllReviewsServiceTest {
 
         override fun findBySpot(
             spotId: SpotId,
-            language: Language,
+            language: Language?,
             viewerId: ReviewAuthorId?,
         ): List<ReviewView> = emptyList()
 

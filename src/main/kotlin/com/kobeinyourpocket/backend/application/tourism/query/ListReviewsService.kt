@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 /**
  * レビュー一覧取得ユースケース（read）。domain 集約を経由せず [ReviewQuery] port へ委譲する。
  *
+ * [language] が null なら全言語のレビューを返す。
  * ログイン中の閲覧なら [viewerId] を渡す。閲覧者がブロック中の投稿者のレビューは返さない（#215）。
  */
 @Service
@@ -16,7 +17,7 @@ class ListReviewsService(
 ) {
     fun listReviews(
         spotId: SpotId,
-        language: Language,
+        language: Language?,
         viewerId: ReviewAuthorId? = null,
     ): List<ReviewView> = reviewQuery.findBySpot(spotId, language, viewerId)
 }
