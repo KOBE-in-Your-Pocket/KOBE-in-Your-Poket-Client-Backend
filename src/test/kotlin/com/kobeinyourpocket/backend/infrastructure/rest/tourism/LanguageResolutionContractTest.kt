@@ -163,7 +163,7 @@ class LanguageResolutionContractTest {
     // GET /api/v1/tourism/spots/{spotId}/reviews --------------------------------------------
 
     @Test
-    fun `GET reviews一覧 lang を優先して解決する`() {
+    fun `GET reviews一覧 lang を指定すればその言語に絞る（Accept-Language は見ない）`() {
         given(listReviewsService.listReviews(spotId, Language.EN)).willReturn(emptyList())
 
         mockMvc
@@ -174,34 +174,34 @@ class LanguageResolutionContractTest {
     }
 
     @Test
-    fun `GET reviews一覧 lang が無ければ Accept-Language を解決する`() {
-        given(listReviewsService.listReviews(spotId, Language.KO)).willReturn(emptyList())
+    fun `GET reviews一覧 lang が無ければ Accept-Language があっても全言語を返す`() {
+        given(listReviewsService.listReviews(spotId, null)).willReturn(emptyList())
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/$spotId/reviews").header("Accept-Language", "ko-KR,ko;q=0.9,en;q=0.8"))
             .andExpect(status().isOk)
 
-        verify(listReviewsService).listReviews(spotId, Language.KO)
+        verify(listReviewsService).listReviews(spotId, null)
     }
 
     @Test
-    fun `GET reviews一覧 非対応 lang は Accept-Language へフォールバックする`() {
-        given(listReviewsService.listReviews(spotId, Language.ZH)).willReturn(emptyList())
+    fun `GET reviews一覧 非対応 lang は全言語を返す`() {
+        given(listReviewsService.listReviews(spotId, null)).willReturn(emptyList())
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=fr").header("Accept-Language", "zh-CN"))
             .andExpect(status().isOk)
 
-        verify(listReviewsService).listReviews(spotId, Language.ZH)
+        verify(listReviewsService).listReviews(spotId, null)
     }
 
     @Test
-    fun `GET reviews一覧 lang も Accept-Language も無ければ en へフォールバックする`() {
-        given(listReviewsService.listReviews(spotId, Language.EN)).willReturn(emptyList())
+    fun `GET reviews一覧 lang も Accept-Language も無ければ全言語を返す`() {
+        given(listReviewsService.listReviews(spotId, null)).willReturn(emptyList())
 
         mockMvc.perform(get("/api/v1/tourism/spots/$spotId/reviews")).andExpect(status().isOk)
 
-        verify(listReviewsService).listReviews(spotId, Language.EN)
+        verify(listReviewsService).listReviews(spotId, null)
     }
 
     private fun spotViewOf(language: Language) =

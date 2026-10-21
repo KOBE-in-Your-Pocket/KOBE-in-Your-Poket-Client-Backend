@@ -15,18 +15,19 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.Query
 import org.springframework.stereotype.Repository
 
-/** [ReviewQuery] の JPA 実装。スポット別・言語別でレビューを取得する。 */
+/** [ReviewQuery] の JPA 実装。スポット別（言語の指定があればその言語だけ）でレビューを取得する。 */
 @Repository
 class ReviewQueryJpa(
     private val entityManager: EntityManager,
 ) : ReviewQuery {
     override fun findBySpot(
         spotId: SpotId,
-        language: Language,
+        language: Language?,
         viewerId: ReviewAuthorId?,
     ): List<ReviewView> {
-        // null を `:viewerId IS NULL OR ...` で受けると、PostgreSQL が null パラメータの型を
-        // 決められずに失敗する。未ログインのときは条件ごと付けない。
+        // null パラメータは PostgreSQL が型を決められないため、言語の指定が無いときは条件ごと付けない。
+        val filterLanguage = if (language != null) "AND r.language = :language" else ""
+        // 同じ理由で、未ログインのときもブロックの条件ごと付けない。
         val excludeBlocked = if (viewerId != null) "AND $NOT_BLOCKED_BY_VIEWER" else ""
 
         @Suppress("UNCHECKED_CAST")
@@ -39,13 +40,14 @@ class ReviewQueryJpa(
                         r.created_at, r.language, $HIDDEN_BY_REPORT
                     FROM review r
                     $JOIN_AUTHOR
-                    WHERE r.spot_id = :spotId AND r.language = :language
+                    WHERE r.spot_id = :spotId
+                    $filterLanguage
                     $excludeBlocked
                     ORDER BY r.created_at DESC
                     """.trimIndent(),
                 ).apply {
                     setParameter("spotId", spotId.value)
-                    setParameter("language", language.code)
+                    if (language != null) setParameter("language", language.code)
                     bindHiddenByReport()
                     if (viewerId != null) setParameter("viewerId", viewerId.value)
                 }.resultList as List<Array<Any?>>

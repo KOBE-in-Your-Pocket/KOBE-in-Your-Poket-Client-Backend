@@ -9,7 +9,6 @@ import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewId
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewRating
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
-import com.kobeinyourpocket.backend.infrastructure.rest.common.LanguageResolver
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -45,6 +43,11 @@ class ReviewController(
     /**
      * スポットのレビュー一覧。閲覧は未ログインでもできる。
      *
+     * `lang` を指定したときだけ、その言語で投稿されたレビューに絞る。未指定（または非対応の値）なら
+     * 全言語を返す。レビューは利用者の投稿で翻訳されないため、スポット本文のように `Accept-Language`
+     * で絞ると、端末の言語が違う人の投稿が見えなくなる（Android は既定で送らないため常に en だけになり、
+     * iPhone で日本語で投稿したレビューが Android に出なかった）。言語での絞り込みは Client が行う。
+     *
      * ログイン中（Bearer 付き）なら、本人がブロック中の投稿者のレビューを除いて返す（#215）。
      * GET は SecurityConfig で公開のままだが、Bearer があれば検証されて [principal] に入る。
      *
@@ -56,10 +59,9 @@ class ReviewController(
     fun listReviews(
         @PathVariable spotId: String,
         @RequestParam(name = "lang", required = false) lang: String?,
-        @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
         principal: Principal?,
     ): List<ReviewListItemResponse> {
-        val language = LanguageResolver.resolve(lang, acceptLanguage)
+        val language = lang?.let { Language.of(it) }
         val viewerId = principal?.let { ReviewAuthorId.of(it.name) }
         return listReviewsService
             .listReviews(SpotId.of(spotId), language, viewerId)

@@ -89,6 +89,7 @@ class ReviewQueryJpaTest {
     private fun saveReview(
         authorUserId: UUID?,
         authorIconUrl: String,
+        language: Language = Language.JA,
     ) {
         reviewJpaRepository.save(
             ReviewEntity(
@@ -99,7 +100,7 @@ class ReviewQueryJpaTest {
                 authorName = "Alice",
                 authorIconUrl = authorIconUrl,
                 authorUserId = authorUserId,
-                language = Language.JA.code,
+                language = language.code,
                 createdAt = postedAt,
             ),
         )
@@ -190,5 +191,28 @@ class ReviewQueryJpaTest {
         val page = query.findPage(page = 0, size = 10, language = Language.JA)
         assertEquals(3, page.reviews.size)
         assertEquals(3, page.totalElements)
+    }
+
+    @Test
+    fun `言語を指定しなければ全言語のレビューを返す`() {
+        saveSpot()
+        saveReview(authorUserId = null, authorIconUrl = "", language = Language.JA)
+        saveReview(authorUserId = null, authorIconUrl = "", language = Language.EN)
+        saveReview(authorUserId = null, authorIconUrl = "", language = Language.KO)
+
+        val all = query.findBySpot(SpotId.of(spotId), language = null)
+
+        assertEquals(setOf("ja", "en", "ko"), all.map { it.language }.toSet())
+    }
+
+    @Test
+    fun `言語を指定するとその言語のレビューだけを返す`() {
+        saveSpot()
+        saveReview(authorUserId = null, authorIconUrl = "", language = Language.JA)
+        saveReview(authorUserId = null, authorIconUrl = "", language = Language.EN)
+
+        val ja = query.findBySpot(SpotId.of(spotId), Language.JA)
+
+        assertEquals(listOf("ja"), ja.map { it.language })
     }
 }
