@@ -64,3 +64,11 @@ fi
 
 echo "deployed ${APP_IMAGE}"
 docker compose -f "${APP_DIR}/compose.yaml" ps
+
+# デプロイのたびに pull したイメージ（約 380MB）が残り、10GB のディスクが満杯になった（#219）。
+# 動いているコンテナが使っていないイメージはここで消す。ロールバック用のイメージは ECR に
+# 残っているため、EC2 側に溜めておく必要はない。デプロイ自体は済んでいるので、
+# 片付けに失敗してもデプロイは失敗扱いにしない。
+echo "prune unused images"
+docker image prune -a -f || echo "docker image prune に失敗しました（デプロイは完了済み）" >&2
+df -h / | tail -1
