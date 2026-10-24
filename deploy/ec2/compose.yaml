@@ -3,8 +3,12 @@ services:
     image: ${APP_IMAGE:-kobe-backend:local}
     container_name: kobe-backend
     restart: unless-stopped
+    # 外からの入り口は Caddy（443）だけにする。以前は全インターフェースに公開していたため、
+    # Caddy を通らずに平文の 9090 番へ直接届き、外から隠している /actuator も見えていた（#221）。
+    # Caddy は compose の内部ネットワーク（app:9090）で繋ぐのでこの公開は使わない。
+    # localhost にだけ残すのは、CD の health check を EC2 の中から行うため。
     ports:
-      - "${SERVER_PORT:-9090}:${SERVER_PORT:-9090}"
+      - "127.0.0.1:${SERVER_PORT:-9090}:${SERVER_PORT:-9090}"
     # 起動時に host 上の app.env をコンテナ env へ取り込む。
     # Secrets Manager モードでは deploy.sh が up 直後に app.env を削除する（平文を残さない）。
     env_file:
