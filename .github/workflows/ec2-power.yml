@@ -33,7 +33,6 @@ concurrency:
 env:
   AWS_REGION: ap-northeast-1
   EC2_INSTANCE_ID: i-033fbb6ce4e9f49ae
-  EC2_HOST: 18.181.34.28
   APP_PORT: "9090"
 
 jobs:
@@ -41,6 +40,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # health check のスクリプト（.github/scripts/）を使うため。
+      - name: Checkout
+        if: inputs.action == 'start'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -54,16 +60,12 @@ jobs:
           aws ec2 wait instance-running --instance-ids "${EC2_INSTANCE_ID}"
           # コンテナは restart: unless-stopped + docker の自動起動で復帰するため、
           # デプロイし直す必要は無い。アプリが応答するまで待つ。
-          for i in $(seq 1 36); do
-            if curl -fsS "http://${EC2_HOST}:${APP_PORT}/actuator/health"; then
-              echo ""
-              echo "起動しました（JST $(TZ=Asia/Tokyo date '+%F %H:%M')）"
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "EC2 は起動したがアプリが応答しない" >&2
-          exit 1
+          # 9090 番は EC2 の localhost にだけ公開しているため、SSM で EC2 の中から確認する（#221）。
+          if ! bash .github/scripts/ec2-health-check.sh; then
+            echo "EC2 は起動したがアプリが応答しない" >&2
+            exit 1
+          fi
+          echo "起動しました（JST $(TZ=Asia/Tokyo date '+%F %H:%M')）"
 
       - name: Stop EC2
         if: inputs.action == 'stop'

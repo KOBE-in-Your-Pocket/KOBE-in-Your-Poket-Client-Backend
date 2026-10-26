@@ -21,7 +21,6 @@ env:
   AWS_REGION: ap-northeast-1
   ECR_REPOSITORY: kobe-backend
   EC2_INSTANCE_ID: i-033fbb6ce4e9f49ae
-  EC2_HOST: 18.181.34.28
   APP_PORT: "9090"
 
 jobs:
@@ -219,18 +218,9 @@ jobs:
             --query 'Status' --output text)
           [[ "${FINAL}" == "Success" ]]
 
+      # 9090 番は EC2 の localhost にだけ公開しているため、SSM で EC2 の中から確認する（#221）。
       - name: Health check
-        run: |
-          for i in $(seq 1 36); do
-            if curl -fsS "http://${EC2_HOST}:${APP_PORT}/actuator/health"; then
-              echo ""
-              echo "health OK"
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "health check failed" >&2
-          exit 1
+        run: bash .github/scripts/ec2-health-check.sh
 
       # 開発環境の EC2 は EventBridge Scheduler で平日 9:00 起動 / 18:00 停止。
       # 時間外の push で CD が起動すると、次の停止（平日 18:00）まで動き続ける。

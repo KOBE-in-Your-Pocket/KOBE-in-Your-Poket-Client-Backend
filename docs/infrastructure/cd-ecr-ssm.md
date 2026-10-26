@@ -18,7 +18,7 @@ SSH（22番）をインターネットに開けず、GitHub Actions から EC2 �
                      EC2 が ECR から pull → compose 再起動
                               │
                               ▼
-                     Health check（HTTP :9090）
+                     Health check（SSM で EC2 内から localhost:9090。9090 番は外に公開しない #221）
 ```
 
 ## なぜこの構成か
