@@ -10,6 +10,14 @@
 # 当たりうるため、compose のボリュームごと消さないこと。
 
 18-181-34-28.sslip.io {
+	# アクセスログ。リクエストごとに JSON 1 行を stdout へ出し、docker logs で読む。
+	# Authorization / Cookie は Caddy の既定で伏せ字になるため、トークンは残らない。
+	# 見るとき: docker logs -f kobe-caddy 2>&1 | grep '"http.log.access'
+	log {
+		output stdout
+		format json
+	}
+
 	# 公開するのは API と API 契約（Swagger）のみ。/actuator（health 含む）は外から触らせない。
 	# 監視は EC2 内部（localhost:9090）から行う。
 	handle /api/* {
