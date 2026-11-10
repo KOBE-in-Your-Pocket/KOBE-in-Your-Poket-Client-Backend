@@ -67,6 +67,12 @@ apple:
     key-id: ${APPLE_KEY_ID:}
     private-key: ${APPLE_PRIVATE_KEY:}
 
+# Yahoo! 気象情報API（#229）。天気の取得バッチ（15 分ごと）で使う。
+# Client ID が空なら天気の取得を行わない（起動は妨げない）。詳細: docs/weather.md
+yahoo:
+  weather:
+    client-id: ${YAHOO_CLIENT_ID:}
+
 # 画像アップロード（S3 代理保存 / #86）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）。
 # bucket / region 未設定時は起動は妨げず、初回アップロードで例外にする。
 # public-base-url を設定すると返却 URL のベースにする（CloudFront 等）。空なら S3 仮想ホスト URL。

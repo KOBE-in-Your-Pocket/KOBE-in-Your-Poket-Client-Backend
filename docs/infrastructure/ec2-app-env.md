@@ -22,7 +22,8 @@ USE_SECRETS_MANAGER=false bash /opt/kobe-backend/deploy.sh
 
 したがって **初回〜開発中は、CD の前に EC2 へ `app.env` を置いておく必要がある。**
 
-入れるキー（`SUPABASE_*` / DB URL など）は [`../supabase-env.md`](../supabase-env.md) と [`Supabase接続メモ.md`](./Supabase接続メモ.md) を参照。
+入れるキー（`SUPABASE_*` / DB URL など）は [`../supabase-env.md`](../supabase-env.md) と [`Supabase接続メモ.md`](./Supabase接続メモ.md) を参照。  
+天気の取得に使う `YAHOO_CLIENT_ID` は [`../weather.md`](../weather.md) を参照。
 
 ### bootstrap で app.env を配置する
 
