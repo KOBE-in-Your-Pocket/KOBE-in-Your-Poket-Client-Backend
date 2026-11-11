@@ -45,6 +45,29 @@ Secrets Manager モードの場合はシークレット（既定 `kobe/backend/p
 YAHOO_CLIENT_ID=取得した Client ID
 ```
 
+## 取得バッチ（#232）
+
+`WeatherRefreshScheduler` が、起動 30 秒後に 1 回目、以降 15 分ごとに天気を取得して保存する（`RefreshWeatherService`）。
+
+- 対象は神戸の中心 1 地点（`WeatherPoint.KOBE_CENTER`。神戸市役所・三宮付近）
+- 保存先は `weather_readings`。地点ごとに最新の取得分だけを残す（#231）
+- 取得に失敗したとき（API エラー・タイムアウト・想定外の応答）は保存せず、前回のデータを残す
+- `YAHOO_CLIENT_ID` が未設定なら取得しない
+
+| 変数 | 既定 | 説明 |
+| --- | --- | --- |
+| `WEATHER_REFRESH_ENABLED` | `true` | `false` でバッチを止める（テストでは止めている） |
+| `WEATHER_REFRESH_INITIAL_DELAY` | `PT30S` | 起動から 1 回目までの待ち時間（ISO-8601） |
+| `WEATHER_REFRESH_INTERVAL` | `PT15M` | 取得の間隔（ISO-8601） |
+
+動いているかはログで確かめる（`天気を保存した（1 地点）` / `天気を取得できなかったため、前回のデータを残す`）。
+
+```bash
+docker logs kobe-backend 2>&1 | grep 天気
+```
+
+今は EC2 1 台で動かすため、二重に実行されることはない。台数を増やすときは、1 台だけで動くようにする仕組み（ロックなど）が必要。
+
 ## クレジット表示・利用条件
 
 Yahoo! のクレジット表示（https://developer.yahoo.co.jp/attribution/ ）と商用利用の条件は #234 で確認する。
