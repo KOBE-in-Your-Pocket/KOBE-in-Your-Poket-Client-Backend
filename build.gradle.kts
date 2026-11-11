@@ -34,8 +34,8 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
     // 画像アップロード（S3）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）に委ねる。
-    // sync HTTP クライアント（apache-client）は s3 が transitive で持つため明示追加しない。
-    implementation(platform("software.amazon.awssdk:bom:2.28.0"))
+    // sync HTTP クライアント（apache5-client）は s3 が transitive で持つため明示追加しない。
+    implementation(platform("software.amazon.awssdk:bom:2.57.12"))
     implementation("software.amazon.awssdk:s3")
 
     // ユーザーアイコンの縮小・再エンコード（#184）。JDK の ImageIO だけでは EXIF の
