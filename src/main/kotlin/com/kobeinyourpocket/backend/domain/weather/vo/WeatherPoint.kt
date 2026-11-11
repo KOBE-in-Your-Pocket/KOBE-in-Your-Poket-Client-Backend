@@ -15,8 +15,15 @@ data class WeatherPoint(
         require(longitude in LONGITUDE_RANGE) { "longitude must be between -180 and 180, got $longitude" }
     }
 
-    private companion object {
-        val LATITUDE_RANGE = -90.0..90.0
-        val LONGITUDE_RANGE = -180.0..180.0
+    companion object {
+        private val LATITUDE_RANGE = -90.0..90.0
+        private val LONGITUDE_RANGE = -180.0..180.0
+
+        /**
+         * 神戸の中心（神戸市役所・三宮付近）。天気を取得する地点（#231）。
+         *
+         * 今は神戸の中心 1 地点だけを取得する。エリアを増やすときは地点の一覧に置き換える。
+         */
+        val KOBE_CENTER = WeatherPoint(latitude = 34.690083, longitude = 135.195511)
     }
 }

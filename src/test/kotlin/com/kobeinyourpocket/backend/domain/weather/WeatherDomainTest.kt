@@ -35,4 +35,12 @@ class WeatherDomainTest {
 
         assertEquals(0.0, reading.mmPerHour)
     }
+
+    @Test
+    fun `神戸の中心の地点は神戸市役所付近を指す`() {
+        val kobe = WeatherPoint.KOBE_CENTER
+
+        assertEquals(34.690083, kobe.latitude)
+        assertEquals(135.195511, kobe.longitude)
+    }
 }
