@@ -55,6 +55,11 @@ GoTrue の IP 単位の制限は全ユーザー共通の 1 枠になってしま
 | `AUTH_IP_MAX_ATTEMPTS` | `30` |
 | `AUTH_IP_WINDOW` | `15m` |
 
+## パスワード（#244）
+
+- signup のパスワードは 8〜128 文字（`SignUpRequest`）。Supabase ダッシュボードの最小パスワード長（Authentication → Providers → Email → Minimum password length）も 8 に揃える
+- login には長さ制約を付けない。下限を上げる前に 6〜7 文字で登録したユーザーもログインできるようにするため
+
 ## レスポンス（セッション）
 
 ```json
