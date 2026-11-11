@@ -22,6 +22,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
+import kotlin.math.abs
 
 /**
  * Yahoo! 気象情報API のクライアント（#230）。
@@ -103,10 +104,9 @@ class YahooWeatherClient internal constructor(
             )
         }
 
-        // Feature は coordinates に渡した順で返る。
         val weathers =
             try {
-                points.zip(features) { point, feature -> PointWeather(point, feature.toReadings()) }
+                matchFeatures(points, features).map { (point, feature) -> PointWeather(point, feature.toReadings()) }
             } catch (ex: InvalidYahooWeatherResponse) {
                 return failure(WeatherFetchFailureReason.INVALID_RESPONSE, ex.message.orEmpty())
             } catch (ex: IllegalArgumentException) {
@@ -115,6 +115,32 @@ class YahooWeatherClient internal constructor(
                 return failure(WeatherFetchFailureReason.INVALID_RESPONSE, ex.message.orEmpty())
             }
         return WeatherFetchResult.Success(weathers)
+    }
+
+    /**
+     * 地点ごとに、その地点の Feature を対応づける。
+     *
+     * 並び順だけで対応づけると、順番がずれても件数は合うため、エラーにならずに別の地点のデータが入ってしまう。
+     * Yahoo! のドキュメントは「渡した順に返す」と保証していないので、Feature の `Geometry.Coordinates` を
+     * 数値に直し、送った地点と [COORDINATE_TOLERANCE] の範囲で一致するもので対応づける。
+     * 文字列で比べないのは、Yahoo! の桁数・丸め方が変わっても正しく対応づけるため。
+     *
+     * 一度対応づけた Feature は使い回さない（同じ地点を 2 回渡されても、それぞれ別の Feature に対応づける）。
+     * 対応する Feature が無い地点があれば [InvalidYahooWeatherResponse]。件数は事前に一致を確かめているので、
+     * すべての地点が対応づけば、余る Feature は無い。
+     */
+    private fun matchFeatures(
+        points: List<WeatherPoint>,
+        features: List<Feature>,
+    ): List<Pair<WeatherPoint, Feature>> {
+        val remaining = features.map { it to it.coordinates() }.toMutableList()
+        return points.map { point ->
+            val index = remaining.indexOfFirst { (_, coordinates) -> coordinates.matches(point) }
+            if (index < 0) {
+                throw InvalidYahooWeatherResponse("no Feature for point ${point.toQueryValue()}")
+            }
+            point to remaining.removeAt(index).first
+        }
     }
 
     private fun failure(
@@ -138,14 +164,44 @@ class YahooWeatherClient internal constructor(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class Feature(
+        @JsonProperty("Geometry") val geometry: Geometry? = null,
         @JsonProperty("Property") val property: Property? = null,
     ) {
+        /** `Geometry.Coordinates`（「経度,緯度」の文字列）を数値に直す。 */
+        fun coordinates(): FeatureCoordinates {
+            val raw =
+                geometry?.coordinates
+                    ?: throw InvalidYahooWeatherResponse("Feature has no Geometry.Coordinates")
+            val parts = raw.split(",").map { it.trim().toDoubleOrNull() }
+            val longitude = parts.getOrNull(0)
+            val latitude = parts.getOrNull(1)
+            if (parts.size != 2 || longitude == null || latitude == null) {
+                throw InvalidYahooWeatherResponse("invalid Geometry.Coordinates: $raw")
+            }
+            return FeatureCoordinates(longitude = longitude, latitude = latitude)
+        }
+
         fun toReadings(): List<RainfallReading> {
             val weathers =
                 property?.weatherList?.weathers
                     ?: throw InvalidYahooWeatherResponse("Feature has no WeatherList")
             return weathers.map { it.toReading() }.sortedBy { it.at }
         }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class Geometry(
+        @JsonProperty("Coordinates") val coordinates: String? = null,
+    )
+
+    /** Feature の地点（応答の `Geometry.Coordinates` を数値に直したもの）。 */
+    data class FeatureCoordinates(
+        val longitude: Double,
+        val latitude: Double,
+    ) {
+        fun matches(point: WeatherPoint): Boolean =
+            abs(longitude - point.longitude) <= COORDINATE_TOLERANCE &&
+                abs(latitude - point.latitude) <= COORDINATE_TOLERANCE
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -193,6 +249,12 @@ class YahooWeatherClient internal constructor(
         private const val BASE_URL = "https://map.yahooapis.jp"
         private const val PLACE_PATH = "/weather/V1/place"
         private const val INTERVAL_MINUTES = 10
+
+        /**
+         * 応答の座標と送った地点を同じとみなす誤差（度）。送るときは小数 6 桁に丸めるため、
+         * その丸め（最大 0.0000005）より少し大きくする。地点どうしは十分離れている前提（約 0.1 m）。
+         */
+        private const val COORDINATE_TOLERANCE = 0.000001
 
         /** `Date` は日本時間の `YYYYMMDDHHMI`。 */
         private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm")
