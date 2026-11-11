@@ -8,7 +8,7 @@ import java.time.Instant
  * [mmPerHour] は気象レーダーの降水の強さを時間雨量（mm/h）に換算した値で、実際の雨量とは異なる。
  *
  * 不変条件:
- * - [mmPerHour] は 0 以上
+ * - [mmPerHour] は 0 以上の有限の値（NaN・無限大は不可）
  */
 data class RainfallReading(
     val type: RainfallReadingType,
@@ -16,6 +16,8 @@ data class RainfallReading(
     val mmPerHour: Double,
 ) {
     init {
-        require(mmPerHour >= 0.0) { "mmPerHour must not be negative, got $mmPerHour" }
+        require(mmPerHour.isFinite() && mmPerHour >= 0.0) {
+            "mmPerHour must be a finite non-negative value, got $mmPerHour"
+        }
     }
 }
