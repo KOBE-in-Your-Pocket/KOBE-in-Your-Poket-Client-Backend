@@ -36,7 +36,7 @@ class ReviewQueryJpa(
                 .createNativeQuery(
                     """
                     SELECT
-                        r.id, r.spot_id, r.rating, r.comment, r.author_name, $AUTHOR_ICON_URL, r.author_user_id,
+                        r.id, r.spot_id, r.rating, r.comment, $AUTHOR_NAME, $AUTHOR_ICON_URL, r.author_user_id,
                         r.created_at, r.language, $HIDDEN_BY_REPORT
                     FROM review r
                     $JOIN_AUTHOR
@@ -81,7 +81,7 @@ class ReviewQueryJpa(
         )
     }
 
-    /** スポット名だけ要求言語で解決する。レビュー本文・投稿者名は投稿時の言語のまま返す（#165）。 */
+    /** スポット名だけ要求言語で解決する。レビュー本文は投稿時の言語のまま返す（#165）。 */
     private fun toSummaryView(row: Array<Any?>): ReviewSummaryView =
         ReviewSummaryView(
             id = JdbcUuids.toUuidString(row[0]),
@@ -124,6 +124,19 @@ class ReviewQueryJpa(
         val JOIN_AUTHOR =
             """
             LEFT JOIN users u ON u.id = r.author_user_id
+            """.trimIndent()
+
+        /**
+         * 投稿者の表示名（SELECT 句の 1 列 / #93）。
+         *
+         * `review.author_name` は投稿時点の控えで、表示名を変えても追従しない。アイコン
+         * （[AUTHOR_ICON_URL]）と同じく、プロフィール行があれば常に `users.name` を返し、
+         * 無いとき（V17 以前の投稿・プロフィール行が無い投稿者）だけ控えに戻す。
+         * `users.name` は NOT NULL のため、行があれば null にはならない。
+         */
+        val AUTHOR_NAME =
+            """
+            CASE WHEN u.id IS NOT NULL THEN u.name ELSE r.author_name END AS author_name
             """.trimIndent()
 
         /**
@@ -196,7 +209,7 @@ class ReviewQueryJpa(
                 COALESCE(l_req.name, l_fallback.name, r.spot_id) AS spot_name,
                 r.rating,
                 r.comment,
-                r.author_name,
+                $AUTHOR_NAME,
                 $AUTHOR_ICON_URL,
                 r.created_at,
                 r.language

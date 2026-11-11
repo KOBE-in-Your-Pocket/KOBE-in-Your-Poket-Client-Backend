@@ -5,6 +5,7 @@ import com.kobeinyourpocket.backend.domain.user.model.User
 import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
 import com.kobeinyourpocket.backend.domain.user.vo.Role
 import com.kobeinyourpocket.backend.domain.user.vo.UserIcon
+import com.kobeinyourpocket.backend.infrastructure.security.DEFAULT_SUBJECT
 import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 /**
@@ -39,6 +41,14 @@ class ReviewApiIntegrationTest {
 
     @Autowired
     private lateinit var userRepository: UserRepository
+
+    /** 投稿者名はプロフィールから決まるため、投稿するユーザーにはプロフィール行が要る（#93）。 */
+    @BeforeTest
+    fun saveProfiles() {
+        userRepository.save(User.create(User.Id.of(OWNER), "Alice"))
+        userRepository.save(User.create(User.Id.of(OTHER_USER), "Bob"))
+        userRepository.save(User.create(User.Id.of(DEFAULT_SUBJECT), "Alice"))
+    }
 
     private val spotBody =
         """
@@ -422,7 +432,7 @@ class ReviewApiIntegrationTest {
     }
 
     @Test
-    fun `POST はプロフィール行が無い投稿者でもアイコンなしで 201`() {
+    fun `POST はプロフィールのアイコンが未設定ならアイコンなしで 201`() {
         val spotId = registerSpot()
 
         mockMvc
@@ -433,6 +443,83 @@ class ReviewApiIntegrationTest {
                     .content(reviewBody(5, "最高の景色")),
             ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.author.iconUrl").doesNotExist())
+    }
+
+    // ---- 投稿者名は JWT の sub に紐づくプロフィールから決める（#93）----
+
+    @Test
+    fun `POST はリクエストの author name を使わずプロフィールの表示名で投稿する`() {
+        val spotId = registerSpot()
+
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots/$spotId/reviews")
+                    .with(withRole(Role.GENERAL, OTHER_USER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    // 他人（Alice）の名前をかたっても、保存・表示されるのは本人の表示名。
+                    .content(reviewBody(1, "なりすまし")),
+            ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.author.name").value("Bob"))
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].author.name").value("Bob"))
+    }
+
+    @Test
+    fun `POST は author を省略しても 201`() {
+        val spotId = registerSpot()
+
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots/$spotId/reviews")
+                    .with(withRole(Role.GENERAL, OWNER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{ "rating": 4, "comment": "良い", "language": "ja" }"""),
+            ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.author.name").value("Alice"))
+    }
+
+    @Test
+    fun `POST はプロフィール行が無い投稿者だと 404 でレビューを作らない`() {
+        val spotId = registerSpot()
+
+        mockMvc
+            .perform(
+                post("/api/v1/tourism/spots/$spotId/reviews")
+                    .with(withRole(Role.GENERAL, NO_PROFILE_USER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(reviewBody(5, "最高の景色")),
+            ).andExpect(status().isNotFound)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(0))
+    }
+
+    @Test
+    fun `表示名を変更すると既存レビューの投稿者名も変更後になる`() {
+        val spotId = registerSpot()
+        postReview(spotId)
+
+        mockMvc
+            .perform(
+                patch("/api/v1/users/me")
+                    .with(withRole(Role.GENERAL, OWNER))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{ "name": "Alice Renamed" }"""),
+            ).andExpect(status().isOk)
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId/reviews?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].author.name").value("Alice Renamed"))
+        mockMvc
+            .perform(get("/api/v1/tourism/reviews?lang=ja").with(withRole(Role.OPERATOR)))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data[0].author.name").value("Alice Renamed"))
     }
 
     @Test
@@ -459,6 +546,9 @@ class ReviewApiIntegrationTest {
 
         /** 投稿者ではない別ユーザー。 */
         const val OTHER_USER = "00000000-0000-0000-0000-0000000000a2"
+
+        /** プロフィール行を持たないユーザー（サインイン時に作られるため通常は起きない異常系）。 */
+        const val NO_PROFILE_USER = "00000000-0000-0000-0000-0000000000a9"
 
         const val ICON_BEFORE = "https://example.com/icons/before.webp"
         const val ICON_AFTER = "https://example.com/icons/after.webp"

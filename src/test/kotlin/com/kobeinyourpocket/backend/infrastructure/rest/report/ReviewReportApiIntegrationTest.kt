@@ -1,6 +1,8 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.report
 
 import com.jayway.jsonpath.JsonPath
+import com.kobeinyourpocket.backend.domain.user.model.User
+import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
 import com.kobeinyourpocket.backend.domain.user.vo.Role
 import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,6 +17,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 /**
@@ -30,6 +33,15 @@ import kotlin.test.Test
 class ReviewReportApiIntegrationTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
+
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    /** 投稿者名はプロフィールから決まるため、投稿者にはプロフィール行が要る（#93）。 */
+    @BeforeTest
+    fun saveAuthorProfile() {
+        userRepository.save(User.create(User.Id.of(AUTHOR), "Alice"))
+    }
 
     private val spotBody =
         """
@@ -71,7 +83,7 @@ class ReviewReportApiIntegrationTest {
                     post("/api/v1/tourism/spots/$spotId/reviews")
                         .with(withRole(Role.GENERAL, AUTHOR))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{ "rating": 1, "comment": "宣伝です", "author": { "name": "Alice" }, "language": "ja" }"""),
+                        .content("""{ "rating": 1, "comment": "宣伝です", "language": "ja" }"""),
                 ).andExpect(status().isCreated)
                 .andReturn()
         return JsonPath.read(result.response.contentAsString, "$.id")

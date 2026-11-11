@@ -26,7 +26,7 @@ import kotlin.test.assertNull
 class UpdateReviewServiceTest {
     private val repository = mockk<ReviewRepository>()
     private val userRepository = mockk<UserRepository>()
-    private val service = UpdateReviewService(repository, ReviewAuthorIconResolver(userRepository))
+    private val service = UpdateReviewService(repository, ReviewAuthorResolver(userRepository))
 
     private val reviewId = ReviewId.of("00000000-0000-0000-0000-000000000001")
     private val author = ReviewAuthorId.of("11111111-1111-1111-1111-111111111111")
@@ -63,8 +63,11 @@ class UpdateReviewServiceTest {
 
     private val profileId = User.Id.of(author.value)
 
-    private fun givenProfile(icon: String?) {
-        every { userRepository.findById(profileId) } returns User.create(profileId, "Alice", icon?.let(UserIcon::of))
+    private fun givenProfile(
+        icon: String?,
+        name: String = "Alice",
+    ) {
+        every { userRepository.findById(profileId) } returns User.create(profileId, name, icon?.let(UserIcon::of))
     }
 
     private fun update(): Review {
@@ -88,11 +91,26 @@ class UpdateReviewServiceTest {
     }
 
     @Test
-    fun `updateReview はプロフィール行が無ければ投稿時点のアイコンを保つ`() {
+    fun `updateReview はプロフィール行が無ければ投稿時点の表示名とアイコンを保つ`() {
         // 一覧もプロフィール行が無いときは投稿時点の値を返すため、編集直後と再取得後をそろえる。
         every { userRepository.findById(profileId) } returns null
 
-        assertEquals("https://example.com/before.webp", update().author.iconUrl)
+        val result = update()
+
+        assertEquals("Alice", result.author.name)
+        assertEquals("https://example.com/before.webp", result.author.iconUrl)
+    }
+
+    // ---- 投稿者の表示名（#93）----
+
+    @Test
+    fun `updateReview は投稿後に変更した表示名を投稿者名にする`() {
+        givenProfile(icon = "https://example.com/before.webp", name = "Alice Renamed")
+
+        val result = update()
+
+        assertEquals("Alice Renamed", result.author.name)
+        assertEquals(author, result.author.userId)
     }
 
     @Test

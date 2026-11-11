@@ -30,7 +30,8 @@ import java.security.Principal
  * Review の REST inbound adapter（§8）。application 経由のみ（persistence 直叩き禁止 / §2）。
  *
  * 書き込み（POST / PUT / DELETE）は SecurityConfig で認証必須。投稿者は JWT の `sub` から
- * 取り、リクエストボディの自己申告は使わない（#86）。本人かどうかの判定は application 側。
+ * 取り、リクエストボディの自己申告は使わない（#86）。表示名・アイコンも `sub` に紐づく
+ * プロフィールから決める（#93）。本人かどうかの判定は application 側。
  */
 @RestController
 @RequestMapping("/api/v1/tourism/spots/{spotId}/reviews")
@@ -80,7 +81,6 @@ class ReviewController(
                 spotId = SpotId.of(spotId),
                 rating = ReviewRating.of(request.rating),
                 comment = request.comment,
-                authorName = request.author.name,
                 authorUserId = requesterId(jwt),
                 language = Language.of(request.language) ?: Language.DEFAULT,
             )
