@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.application.user.command
 
 import com.kobeinyourpocket.backend.application.user.auth.AuthGateway
 import com.kobeinyourpocket.backend.application.user.auth.AuthSession
+import com.kobeinyourpocket.backend.application.user.auth.LoginAttemptLimiter
 import com.kobeinyourpocket.backend.domain.user.model.PublicUser
 import com.kobeinyourpocket.backend.domain.user.model.User
 import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
@@ -113,18 +114,26 @@ class SignUpService(
  *
  * Auth は存在するがプロフィール行が欠ける（signup 時の保存失敗など）場合は、
  * [session.userId] で冪等にプロフィールを補完する（再 signup 不要）。
+ *
+ * 総当たり対策（#244）: GoTrue を呼ぶ前に利用者 IP × email の試行を数え、
+ * 上限に達していれば [com.kobeinyourpocket.backend.application.user.auth.TooManyAuthAttemptsException]。
+ * 成功したら回数を消すため、実質「連続失敗の回数」で制限がかかる。
  */
 @Service
 class SignInService(
     private val authGateway: AuthGateway,
     private val ensureUserProfileService: EnsureUserProfileService,
+    private val loginAttemptLimiter: LoginAttemptLimiter,
 ) {
     fun execute(
         email: String,
         password: String,
+        clientIp: String,
     ): AuthCommandResult {
         val trimmedEmail = email.trim()
+        loginAttemptLimiter.acquire(clientIp = clientIp, email = trimmedEmail)
         val session = authGateway.signInWithPassword(email = trimmedEmail, password = password)
+        loginAttemptLimiter.reset(clientIp = clientIp, email = trimmedEmail)
         val fallbackName = displayNameFromEmail(trimmedEmail)
         val user =
             ensureUserProfileResilient(

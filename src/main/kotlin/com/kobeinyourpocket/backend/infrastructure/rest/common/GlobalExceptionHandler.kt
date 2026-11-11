@@ -14,7 +14,9 @@ import com.kobeinyourpocket.backend.application.tourism.ReviewNotOwnedException
 import com.kobeinyourpocket.backend.application.tourism.SpotNotFoundException
 import com.kobeinyourpocket.backend.application.tourism.command.InvalidGenreLabelException
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
+import com.kobeinyourpocket.backend.application.user.auth.TooManyAuthAttemptsException
 import com.kobeinyourpocket.backend.application.user.command.UserNotFoundException
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -95,6 +97,24 @@ class GlobalExceptionHandler {
     @ExceptionHandler(IncompleteMannerLocalizationsException::class)
     fun handleIncompleteMannerLocalizations(ex: IncompleteMannerLocalizationsException): ResponseEntity<ApiErrorResponse> =
         badRequest(message = ex.message ?: "Manner item localizations are incomplete")
+
+    /**
+     * ログインの連続失敗が上限を超えた（#244）。
+     *
+     * IP 単位の制限（`AuthIpRateLimitFilter`）と同じ本文にし、どちらで止めたかを区別させない。
+     */
+    @ExceptionHandler(TooManyAuthAttemptsException::class)
+    fun handleTooManyAuthAttempts(ex: TooManyAuthAttemptsException): ResponseEntity<ApiErrorResponse> =
+        ResponseEntity
+            .status(HttpStatus.TOO_MANY_REQUESTS)
+            .header(HttpHeaders.RETRY_AFTER, retryAfterSeconds(ex.retryAfter).toString())
+            .body(
+                ApiErrorResponse(
+                    status = HttpStatus.TOO_MANY_REQUESTS.value(),
+                    error = HttpStatus.TOO_MANY_REQUESTS.reasonPhrase,
+                    message = TooManyAuthAttemptsException.MESSAGE,
+                ),
+            )
 
     @ExceptionHandler(AuthGatewayException::class)
     fun handleAuthGateway(ex: AuthGatewayException): ResponseEntity<ApiErrorResponse> {
