@@ -1,0 +1,56 @@
+name: Security Scan
+
+# Trivy で依存ライブラリの既知脆弱性を検査する。
+# ローカルで毎回回すと遅いので、PR ごとに CI（Lint / Test）とは別ワークフローで並列に走らせる。
+#
+# 対象は bootJar（実際にデプロイされる依存一式）。Gradle はロックファイルが無いと
+# `trivy fs` で依存を検出できないため、jar をビルドして rootfs スキャンする。
+# ベースイメージ（OS パッケージ）は対象外。本 PR の変更と無関係な理由で落ちるのを避けるため。
+#
+# trivy-action は 2026-03 にタグが書き換えられる事件があったため、コミット SHA で固定している。
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: security-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build bootJar
+        run: ./gradlew bootJar -x test --no-daemon
+
+      - name: Trivy scan (bootJar)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.1
+          scan-type: rootfs
+          scan-ref: build/libs
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+          format: table
+          hide-progress: true
