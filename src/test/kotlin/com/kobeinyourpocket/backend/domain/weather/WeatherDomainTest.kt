@@ -1,5 +1,8 @@
 package com.kobeinyourpocket.backend.domain.weather
 
+import com.kobeinyourpocket.backend.domain.weather.vo.RainfallReading
+import com.kobeinyourpocket.backend.domain.weather.vo.RainfallReadingType
+import com.kobeinyourpocket.backend.domain.weather.vo.WeatherPoint
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.kobeinyourpocket.backend.application.weather.WeatherFetchFailureReason
 import com.kobeinyourpocket.backend.application.weather.WeatherFetchResult
 import com.kobeinyourpocket.backend.application.weather.WeatherGateway
-import com.kobeinyourpocket.backend.domain.weather.PointWeather
-import com.kobeinyourpocket.backend.domain.weather.RainfallReading
-import com.kobeinyourpocket.backend.domain.weather.RainfallReadingType
-import com.kobeinyourpocket.backend.domain.weather.WeatherPoint
+import com.kobeinyourpocket.backend.domain.weather.model.PointWeather
+import com.kobeinyourpocket.backend.domain.weather.vo.RainfallReading
+import com.kobeinyourpocket.backend.domain.weather.vo.RainfallReadingType
+import com.kobeinyourpocket.backend.domain.weather.vo.WeatherPoint
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component

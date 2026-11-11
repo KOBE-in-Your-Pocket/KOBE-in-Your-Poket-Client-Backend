@@ -2,8 +2,8 @@ package com.kobeinyourpocket.backend.infrastructure.weather
 
 import com.kobeinyourpocket.backend.application.weather.WeatherFetchFailureReason
 import com.kobeinyourpocket.backend.application.weather.WeatherFetchResult
-import com.kobeinyourpocket.backend.domain.weather.RainfallReadingType
-import com.kobeinyourpocket.backend.domain.weather.WeatherPoint
+import com.kobeinyourpocket.backend.domain.weather.vo.RainfallReadingType
+import com.kobeinyourpocket.backend.domain.weather.vo.WeatherPoint
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType

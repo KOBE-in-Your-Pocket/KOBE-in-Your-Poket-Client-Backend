@@ -1,7 +1,7 @@
 package com.kobeinyourpocket.backend.application.weather
 
-import com.kobeinyourpocket.backend.domain.weather.PointWeather
-import com.kobeinyourpocket.backend.domain.weather.WeatherPoint
+import com.kobeinyourpocket.backend.domain.weather.model.PointWeather
+import com.kobeinyourpocket.backend.domain.weather.vo.WeatherPoint
 
 /**
  * 外部の気象情報 API（Yahoo! 気象情報API）への outbound port（#230）。
