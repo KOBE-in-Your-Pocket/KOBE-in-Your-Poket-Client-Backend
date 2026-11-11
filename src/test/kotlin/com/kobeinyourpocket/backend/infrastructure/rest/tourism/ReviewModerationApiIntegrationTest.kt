@@ -1,7 +1,10 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.jayway.jsonpath.JsonPath
+import com.kobeinyourpocket.backend.domain.user.model.User
+import com.kobeinyourpocket.backend.domain.user.repository.UserRepository
 import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.infrastructure.security.DEFAULT_SUBJECT
 import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -16,6 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 /**
@@ -34,6 +38,15 @@ import kotlin.test.Test
 class ReviewModerationApiIntegrationTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
+
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    /** 投稿者名はプロフィールから決まるため、投稿者（既定の `sub`）にはプロフィール行が要る（#93）。 */
+    @BeforeTest
+    fun saveAuthorProfile() {
+        userRepository.save(User.create(User.Id.of(DEFAULT_SUBJECT), "Alice"))
+    }
 
     private fun spotBody(
         ja: String,
@@ -77,12 +90,10 @@ class ReviewModerationApiIntegrationTest {
         rating: Int = 5,
         comment: String = "最高の景色",
         language: String = "ja",
-        author: String = "Alice",
     ): String {
         val body =
             """
-            { "rating": $rating, "comment": "$comment",
-              "author": { "name": "$author" }, "language": "$language" }
+            { "rating": $rating, "comment": "$comment", "language": "$language" }
             """.trimIndent()
         val result =
             mockMvc
@@ -235,7 +246,7 @@ class ReviewModerationApiIntegrationTest {
     @Test
     fun `DELETE した運営は投稿者本人でなくてよい`() {
         val spotId = registerSpot()
-        val reviewId = postReview(spotId, author = "他人")
+        val reviewId = postReview(spotId)
 
         // モデレーションは本人判定を行わない（#86 の本人削除とは別経路）
         mockMvc

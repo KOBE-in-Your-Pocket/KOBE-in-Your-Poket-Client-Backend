@@ -643,7 +643,6 @@ class WriteAuthorizationTest {
                 spotId = SpotId.of("kobe-port-tower"),
                 rating = ReviewRating.of(4),
                 comment = "素晴らしい",
-                authorName = "Alice",
                 authorUserId = ReviewAuthorId.of(REQUESTER_ID),
                 language = Language.JA,
             ),

@@ -65,6 +65,8 @@ class ReportModerationApiIntegrationTest {
 
     @BeforeTest
     fun setUp() {
+        // 投稿者名はプロフィールから決まるため、投稿者にはプロフィール行が要る（#93）。
+        userRepository.save(User.create(id = User.Id.of(AUTHOR), name = "Alice"))
         userRepository.save(User.create(id = User.Id.of(REPORTER_1), name = "Bob"))
         // REPORTER_2 はプロフィール行を持たない（名前は null で返る）。
         spotId = registerSpot()
@@ -95,7 +97,7 @@ class ReportModerationApiIntegrationTest {
                     post("/api/v1/tourism/spots/$spotId/reviews")
                         .with(withRole(Role.GENERAL, AUTHOR))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{ "rating": 1, "comment": "$comment", "author": { "name": "Alice" }, "language": "ja" }"""),
+                        .content("""{ "rating": 1, "comment": "$comment", "language": "ja" }"""),
                 ).andExpect(status().isCreated)
                 .andReturn()
         return JsonPath.read(result.response.contentAsString, "$.id")
