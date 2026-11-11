@@ -42,6 +42,10 @@ dependencies {
     // Orientation を見ないため、縦向きで撮った写真が横倒しになる。依存は無し（単一 jar）。
     implementation("net.coobird:thumbnailator:0.4.20")
 
+    // ログイン・サインアップのレート制限（#244）。カウンタの期限切れと保持キー数の上限に使う。
+    // バージョンは Spring Boot の依存管理に任せる。
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
     // DB スキーマ管理 (Spring Boot 4 は starter が必要)
     implementation("org.springframework.boot:spring-boot-starter-flyway")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")

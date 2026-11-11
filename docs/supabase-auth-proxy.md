@@ -28,6 +28,33 @@ Client → POST /api/v1/auth/* → backend → {SUPABASE_URL}/auth/v1/*
 
 `service_role` は本プロキシの Email フローでは使わない（Admin 操作用に別途保持）。
 
+## レート制限（#244）
+
+backend が GoTrue を中継するため、Supabase から見るとアクセス元はすべて EC2 の IP 1 つになる。
+GoTrue の IP 単位の制限は全ユーザー共通の 1 枠になってしまうので、利用者ごとの制限は backend でかける。
+
+| 制限 | キー | 数えるもの | 既定 | 実装 |
+| --- | --- | --- | --- | --- |
+| 連続ログイン失敗 | 利用者 IP × email | `POST /login` の試行（成功で消える） | 5 回 / 15 分 | `SignInService` → `LoginAttemptLimiter` |
+| IP 単位（保険） | 利用者 IP | `POST /login`・`POST /signup` の全リクエスト | 30 回 / 15 分 | `AuthIpRateLimitFilter` |
+
+- 上限に達した時点から 15 分間、`429 Too Many Requests` + `Retry-After`（秒）を返す。本文は統一エラー形式で、どちらの制限で止めたかは区別しない
+- email 単体では数えない（第三者が被害者のアカウントをわざとロックできてしまうため）。email は小文字化・前後空白除去してから数える
+- 利用者 IP は `request.remoteAddr`。本番は Caddy が付ける `X-Forwarded-For` を Tomcat（`server.forward-headers-strategy: native`）が解釈した実 IP になる
+- カウンタはインメモリ（EC2 1 台構成のため）。再起動で消える
+- IP は `remoteAddr` の文字列をそのままキーにする。現状 EC2 は IPv6 で到達できない（AAAA なし・Docker の IPv6 無効）ため。IPv6 を有効にするときは、利用者が `/64` 単位でアドレスを変えられるので `/64` に丸めて数える必要がある
+- SSO（`/google` など）と `/refresh` は対象外
+- GoTrue が 5xx を返した試行も 1 回として数える（試行は GoTrue 呼び出し前に数えるため）
+
+閾値は環境変数で変えられる。
+
+| 変数 | 既定 |
+| --- | --- |
+| `AUTH_LOGIN_FAILURE_MAX_ATTEMPTS` | `5` |
+| `AUTH_LOGIN_FAILURE_WINDOW` | `15m` |
+| `AUTH_IP_MAX_ATTEMPTS` | `30` |
+| `AUTH_IP_WINDOW` | `15m` |
+
 ## レスポンス（セッション）
 
 ```json
