@@ -10,12 +10,22 @@ import jakarta.validation.constraints.Size
 data class SignUpRequest(
     @field:NotBlank @field:Email
     val email: String,
-    @field:NotBlank @field:Size(min = 6, max = 128)
+    /** 下限 8 文字（#244）。Supabase 側の最小パスワード長も 8 に揃える。 */
+    @field:NotBlank @field:Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     val password: String,
     @field:NotBlank @field:Size(max = User.MAX_NAME_LENGTH)
     val name: String,
-)
+) {
+    companion object {
+        const val PASSWORD_MIN_LENGTH = 8
+        const val PASSWORD_MAX_LENGTH = 128
+    }
+}
 
+/**
+ * ログインには長さ制約を付けない（#244）。下限を上げる前に 6〜7 文字で登録したユーザーも
+ * ログインできるようにするため。可否の判定は GoTrue に任せる。
+ */
 data class SignInRequest(
     @field:NotBlank @field:Email
     val email: String,
