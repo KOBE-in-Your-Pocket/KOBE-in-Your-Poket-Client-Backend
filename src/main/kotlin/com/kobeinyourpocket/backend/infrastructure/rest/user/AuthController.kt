@@ -8,6 +8,7 @@ import com.kobeinyourpocket.backend.application.user.command.SignInWithIdTokenSe
 import com.kobeinyourpocket.backend.application.user.command.SignOutService
 import com.kobeinyourpocket.backend.application.user.command.SignUpService
 import com.kobeinyourpocket.backend.domain.user.model.User
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -50,14 +51,17 @@ class AuthController(
         return ResponseEntity.status(HttpStatus.CREATED).body(AuthSessionResponse.from(result))
     }
 
+    /** 利用者 IP × email の連続失敗で 429 を返す（#244）。IP は Caddy 経由の実 IP（`remoteAddr`）。 */
     @PostMapping("/login")
     fun login(
         @Valid @RequestBody request: SignInRequest,
+        httpRequest: HttpServletRequest,
     ): AuthSessionResponse =
         AuthSessionResponse.from(
             signInService.execute(
                 email = request.email,
                 password = request.password,
+                clientIp = httpRequest.remoteAddr,
             ),
         )
 

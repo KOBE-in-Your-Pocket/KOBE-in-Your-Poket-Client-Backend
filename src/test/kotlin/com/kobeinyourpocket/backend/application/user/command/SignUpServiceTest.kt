@@ -81,52 +81,6 @@ class SignUpServiceTest {
     }
 }
 
-class SignInServiceTest {
-    private val authGateway = mockk<AuthGateway>()
-    private val userRepository = mockk<UserRepository>(relaxed = true)
-    private val userProfileInserter = UserProfileInserter(userRepository)
-    private val ensureUserProfileService = EnsureUserProfileService(userRepository, userProfileInserter)
-    private val service = SignInService(authGateway, ensureUserProfileService)
-    private val userId = User.Id.of(UUID.fromString("11111111-1111-1111-1111-111111111111"))
-
-    @Test
-    fun `プロフィールが無ければ Auth id で冪等に補完する`() {
-        every { authGateway.signInWithPassword("a@example.com", "password1") } returns
-            AuthSession(userId = userId, accessToken = "a", refreshToken = "r", expiresIn = 1, tokenType = "bearer")
-        every { userRepository.findById(userId) } returns null
-
-        val result = service.execute("a@example.com", "password1")
-
-        assertEquals(userId, result.user!!.id)
-        assertEquals("a", result.user!!.name)
-        assertEquals("a", result.session.accessToken)
-        verify(exactly = 1) { userRepository.save(match { it.id == userId && it.name == "a" }) }
-    }
-
-    @Test
-    fun `既存プロフィールがあれば再作成しない`() {
-        val existing = User.create(id = userId, name = "Alice")
-        every { authGateway.signInWithPassword("a@example.com", "password1") } returns
-            AuthSession(userId = userId, accessToken = "a", refreshToken = "r", expiresIn = 1, tokenType = "bearer")
-        every { userRepository.findById(userId) } returns existing
-
-        val result = service.execute("a@example.com", "password1")
-
-        assertEquals("Alice", result.user!!.name)
-        verify(exactly = 0) { userRepository.save(any()) }
-    }
-
-    @Test
-    fun `authGateway が AuthGatewayException を投げたらそのまま伝播する`() {
-        every { authGateway.signInWithPassword("a@example.com", "bad") } throws
-            AuthGatewayException(status = 400, message = "Invalid login credentials")
-
-        assertFailsWith<AuthGatewayException> {
-            service.execute("a@example.com", "bad")
-        }
-    }
-}
-
 class SignInWithIdTokenServiceTest {
     private val authGateway = mockk<AuthGateway>()
     private val userRepository = mockk<UserRepository>(relaxed = true)

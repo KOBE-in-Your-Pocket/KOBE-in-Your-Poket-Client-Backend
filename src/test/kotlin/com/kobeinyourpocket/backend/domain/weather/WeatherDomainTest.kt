@@ -1,8 +1,10 @@
 package com.kobeinyourpocket.backend.domain.weather
 
+import com.kobeinyourpocket.backend.domain.weather.model.PointWeather
 import com.kobeinyourpocket.backend.domain.weather.vo.RainfallReading
 import com.kobeinyourpocket.backend.domain.weather.vo.RainfallReadingType
 import com.kobeinyourpocket.backend.domain.weather.vo.WeatherPoint
+import java.time.Duration
 import java.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -65,5 +67,62 @@ class WeatherDomainTest {
 
         assertEquals(34.690083, kobe.latitude)
         assertEquals(135.195511, kobe.longitude)
+    }
+
+    private val kobe = WeatherPoint.KOBE_CENTER
+    private val t0 = Instant.parse("2026-11-11T04:45:00Z")
+
+    private fun reading(
+        type: RainfallReadingType,
+        minutesLater: Long,
+    ) = RainfallReading(type, t0.plus(Duration.ofMinutes(minutesLater)), mmPerHour = 0.0)
+
+    @Test
+    fun `観測値 1 件と予測値を時刻順に持つ天気は作れる`() {
+        val weather =
+            PointWeather(
+                kobe,
+                listOf(
+                    reading(RainfallReadingType.OBSERVATION, 0),
+                    reading(RainfallReadingType.FORECAST, 10),
+                    reading(RainfallReadingType.FORECAST, 20),
+                ),
+            )
+
+        assertEquals(3, weather.readings.size)
+    }
+
+    @Test
+    fun `観測値だけの天気は作れる`() {
+        PointWeather(kobe, listOf(reading(RainfallReadingType.OBSERVATION, 0)))
+    }
+
+    @Test
+    fun `観測値が無い天気（空・予測値だけ）は作れない`() {
+        assertFailsWith<IllegalArgumentException> { PointWeather(kobe, emptyList()) }
+        assertFailsWith<IllegalArgumentException> {
+            PointWeather(kobe, listOf(reading(RainfallReadingType.FORECAST, 10), reading(RainfallReadingType.FORECAST, 20)))
+        }
+    }
+
+    @Test
+    fun `観測値が 2 件ある天気は作れない`() {
+        assertFailsWith<IllegalArgumentException> {
+            PointWeather(kobe, listOf(reading(RainfallReadingType.OBSERVATION, 0), reading(RainfallReadingType.OBSERVATION, 10)))
+        }
+    }
+
+    @Test
+    fun `時刻順に並んでいない天気は作れない`() {
+        assertFailsWith<IllegalArgumentException> {
+            PointWeather(kobe, listOf(reading(RainfallReadingType.FORECAST, 10), reading(RainfallReadingType.OBSERVATION, 0)))
+        }
+    }
+
+    @Test
+    fun `同じ時刻の値が 2 件ある天気は作れない`() {
+        assertFailsWith<IllegalArgumentException> {
+            PointWeather(kobe, listOf(reading(RainfallReadingType.OBSERVATION, 0), reading(RainfallReadingType.FORECAST, 0)))
+        }
     }
 }

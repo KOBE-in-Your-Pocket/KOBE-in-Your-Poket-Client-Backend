@@ -109,6 +109,10 @@ class YahooWeatherClient internal constructor(
                 points.zip(features) { point, feature -> PointWeather(point, feature.toReadings()) }
             } catch (ex: InvalidYahooWeatherResponse) {
                 return failure(WeatherFetchFailureReason.INVALID_RESPONSE, ex.message.orEmpty())
+            } catch (ex: IllegalArgumentException) {
+                // ドメインの不変条件（観測値がちょうど 1 件・時刻の重複なし など）を満たさない応答。
+                // 例外ではなく Failure で返し、#232 のバッチが前回のデータを空で上書きしないようにする。
+                return failure(WeatherFetchFailureReason.INVALID_RESPONSE, ex.message.orEmpty())
             }
         return WeatherFetchResult.Success(weathers)
     }
@@ -140,13 +144,7 @@ class YahooWeatherClient internal constructor(
             val weathers =
                 property?.weatherList?.weathers
                     ?: throw InvalidYahooWeatherResponse("Feature has no WeatherList")
-            val readings = weathers.map { it.toReading() }.sortedBy { it.at }
-            // 観測値が 1 件も無い応答（空の Weather 配列・予測値のみ）は、取得バッチ（#232）が
-            // 前回の正しいデータを空で上書きしないよう INVALID_RESPONSE 扱いにする。
-            if (readings.none { it.type == RainfallReadingType.OBSERVATION }) {
-                throw InvalidYahooWeatherResponse("no observation reading")
-            }
-            return readings
+            return weathers.map { it.toReading() }.sortedBy { it.at }
         }
     }
 
