@@ -116,7 +116,58 @@ class AuthControllerTest {
             ).andExpect(status().isBadRequest)
     }
 
+    @Test
+    fun `POST signup でパスワードが 7 文字なら 400`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/signup")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"a@example.com","password":"1234567","name":"Alice"}"""),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.violations[0].field").value("password"))
+    }
+
+    @Test
+    fun `POST signup でパスワードが 8 文字なら 201`() {
+        given(signUpService.execute("a@example.com", "12345678", "Alice")).willReturn(
+            AuthCommandResult(session = session(), user = PublicUser(id = userId, name = "Alice")),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/signup")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"a@example.com","password":"12345678","name":"Alice"}"""),
+            ).andExpect(status().isCreated)
+    }
+
+    @Test
+    fun `POST signup でパスワードが最大長を超えたら 400`() {
+        val tooLong = "x".repeat(SignUpRequest.PASSWORD_MAX_LENGTH + 1)
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/signup")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"a@example.com","password":"$tooLong","name":"Alice"}"""),
+            ).andExpect(status().isBadRequest)
+    }
+
     // --- login ---
+
+    @Test
+    fun `POST login は 8 文字未満のパスワードでも弾かずにサービスへ渡す（既存ユーザー向け）`() {
+        given(signInService.execute("a@example.com", "123456", "127.0.0.1")).willReturn(
+            AuthCommandResult(session = session(), user = PublicUser(id = userId, name = "Alice")),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"a@example.com","password":"123456"}"""),
+            ).andExpect(status().isOk)
+    }
 
     @Test
     fun `POST login で AuthGateway の 400 は統一エラーになる`() {
