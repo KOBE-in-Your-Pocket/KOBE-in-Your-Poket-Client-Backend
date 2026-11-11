@@ -61,7 +61,15 @@ class WeatherDomainTest {
         assertEquals(0.0, reading.mmPerHour)
     }
 
-    private val kobe = WeatherPoint(latitude = 34.690083, longitude = 135.195511)
+    @Test
+    fun `神戸の中心の地点は神戸市役所付近を指す`() {
+        val kobe = WeatherPoint.KOBE_CENTER
+
+        assertEquals(34.690083, kobe.latitude)
+        assertEquals(135.195511, kobe.longitude)
+    }
+
+    private val kobe = WeatherPoint.KOBE_CENTER
     private val t0 = Instant.parse("2026-11-11T04:45:00Z")
 
     private fun reading(
