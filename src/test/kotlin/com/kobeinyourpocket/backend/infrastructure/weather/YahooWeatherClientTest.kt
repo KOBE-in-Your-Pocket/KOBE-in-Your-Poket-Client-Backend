@@ -173,6 +173,23 @@ class YahooWeatherClientTest {
     }
 
     @Test
+    fun `観測値が無い応答（空の Weather 配列・予測値のみ）は INVALID_RESPONSE を返す`() {
+        listOf(
+            // Weather が空配列（観測値も予測値も無い）
+            "",
+            // 予測値のみで観測値が無い
+            """{"Type":"forecast","Date":"202611101355","Rainfall":0.5}""",
+        ).forEach { weatherList ->
+            setUp()
+            server.expect(method(HttpMethod.GET)).andRespond(withSuccess(featureJson(weatherList), MediaType.APPLICATION_JSON))
+
+            val failure = assertIs<WeatherFetchResult.Failure>(client.fetch(listOf(sannomiya)), weatherList)
+
+            assertEquals(WeatherFetchFailureReason.INVALID_RESPONSE, failure.reason, weatherList)
+        }
+    }
+
+    @Test
     fun `知らない Type や不正な Date は INVALID_RESPONSE を返す`() {
         listOf(
             """{"Type":"unknown","Date":"202611101345","Rainfall":0.0}""",

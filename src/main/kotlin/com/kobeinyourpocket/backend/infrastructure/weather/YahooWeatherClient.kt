@@ -140,7 +140,13 @@ class YahooWeatherClient internal constructor(
             val weathers =
                 property?.weatherList?.weathers
                     ?: throw InvalidYahooWeatherResponse("Feature has no WeatherList")
-            return weathers.map { it.toReading() }.sortedBy { it.at }
+            val readings = weathers.map { it.toReading() }.sortedBy { it.at }
+            // 観測値が 1 件も無い応答（空の Weather 配列・予測値のみ）は、取得バッチ（#232）が
+            // 前回の正しいデータを空で上書きしないよう INVALID_RESPONSE 扱いにする。
+            if (readings.none { it.type == RainfallReadingType.OBSERVATION }) {
+                throw InvalidYahooWeatherResponse("no observation reading")
+            }
+            return readings
         }
     }
 
