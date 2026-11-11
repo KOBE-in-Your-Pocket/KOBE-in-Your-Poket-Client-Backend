@@ -241,6 +241,104 @@ class YahooWeatherClientTest {
     }
 
     @Test
+    fun `結果が渡した順に返らなくても、座標で正しい地点に対応づける`() {
+        // ハーバーランド → 三宮 の順で返す（渡したのは 三宮 → ハーバーランド）
+        server.expect(method(HttpMethod.GET)).andRespond(
+            withSuccess(
+                featureJsonWithCoordinates(
+                    listOf(
+                        "135.180000,34.680000" to """{"Type":"observation","Date":"202611101345","Rainfall":5.0}""",
+                        "135.195500,34.691300" to """{"Type":"observation","Date":"202611101345","Rainfall":1.0}""",
+                    ),
+                ),
+                MediaType.APPLICATION_JSON,
+            ),
+        )
+
+        val success = assertIs<WeatherFetchResult.Success>(client.fetch(listOf(sannomiya, harborland)))
+
+        // 結果は渡した地点の順。三宮には三宮の値、ハーバーランドにはハーバーランドの値が入る
+        assertEquals(listOf(sannomiya, harborland), success.weathers.map { it.point })
+        assertEquals(1.0, success.weathers[0].readings[0].mmPerHour)
+        assertEquals(5.0, success.weathers[1].readings[0].mmPerHour)
+    }
+
+    @Test
+    fun `座標の桁数が送ったときと違っても、数値が同じなら対応づける`() {
+        server.expect(method(HttpMethod.GET)).andRespond(
+            withSuccess(featureJsonWithCoordinates(listOf("135.1955,34.6913" to OBSERVATION_ZERO)), MediaType.APPLICATION_JSON),
+        )
+
+        assertIs<WeatherFetchResult.Success>(client.fetch(listOf(sannomiya)))
+    }
+
+    @Test
+    fun `どの地点にも一致しない座標の結果は INVALID_RESPONSE を返す`() {
+        server.expect(method(HttpMethod.GET)).andRespond(
+            withSuccess(
+                featureJsonWithCoordinates(
+                    listOf(
+                        "135.195500,34.691300" to OBSERVATION_ZERO,
+                        // ハーバーランドではなく別の地点
+                        "135.000000,34.000000" to OBSERVATION_ZERO,
+                    ),
+                ),
+                MediaType.APPLICATION_JSON,
+            ),
+        )
+
+        val failure = assertIs<WeatherFetchResult.Failure>(client.fetch(listOf(sannomiya, harborland)))
+
+        assertEquals(WeatherFetchFailureReason.INVALID_RESPONSE, failure.reason)
+    }
+
+    @Test
+    fun `同じ地点の結果が 2 つあり、ほかの地点の結果が無ければ INVALID_RESPONSE を返す`() {
+        server.expect(method(HttpMethod.GET)).andRespond(
+            withSuccess(
+                featureJsonWithCoordinates(
+                    listOf("135.195500,34.691300" to OBSERVATION_ZERO, "135.195500,34.691300" to OBSERVATION_ZERO),
+                ),
+                MediaType.APPLICATION_JSON,
+            ),
+        )
+
+        val failure = assertIs<WeatherFetchResult.Failure>(client.fetch(listOf(sannomiya, harborland)))
+
+        assertEquals(WeatherFetchFailureReason.INVALID_RESPONSE, failure.reason)
+    }
+
+    @Test
+    fun `同じ地点を 2 回渡したときは、それぞれに結果を対応づける`() {
+        server.expect(method(HttpMethod.GET)).andRespond(
+            withSuccess(
+                featureJsonWithCoordinates(
+                    listOf("135.195500,34.691300" to OBSERVATION_ZERO, "135.195500,34.691300" to OBSERVATION_ZERO),
+                ),
+                MediaType.APPLICATION_JSON,
+            ),
+        )
+
+        val success = assertIs<WeatherFetchResult.Success>(client.fetch(listOf(sannomiya, sannomiya)))
+
+        assertEquals(2, success.weathers.size)
+    }
+
+    @Test
+    fun `座標が無い・読めない結果は INVALID_RESPONSE を返す`() {
+        listOf<String?>(null, "abc", "135.195500", "135.195500,34.691300,0").forEach { coordinates ->
+            setUp()
+            server.expect(method(HttpMethod.GET)).andRespond(
+                withSuccess(featureJsonWithCoordinates(listOf(coordinates to OBSERVATION_ZERO)), MediaType.APPLICATION_JSON),
+            )
+
+            val failure = assertIs<WeatherFetchResult.Failure>(client.fetch(listOf(sannomiya)), "$coordinates")
+
+            assertEquals(WeatherFetchFailureReason.INVALID_RESPONSE, failure.reason, "$coordinates")
+        }
+    }
+
+    @Test
     fun `JSON として読めない応答は INVALID_RESPONSE を返す`() {
         server.expect(method(HttpMethod.GET)).andRespond(withSuccess("not json", MediaType.APPLICATION_JSON))
 
@@ -259,11 +357,21 @@ class YahooWeatherClientTest {
     private companion object {
         const val OBSERVATION_ZERO = """{"Type":"observation","Date":"202611101345","Rainfall":0.0}"""
 
+        /** 三宮・ハーバーランドの順で返す応答（`Geometry.Coordinates` は Yahoo! と同じ「経度,緯度」）。 */
+        val FEATURE_COORDINATES = listOf("135.195500,34.691300", "135.180000,34.680000")
+
         fun featureJson(vararg weatherLists: String): String =
-            """
-            {"ResultInfo":{"Count":${weatherLists.size},"Status":200},
-             "Feature":[${weatherLists.joinToString(",") { """{"Property":{"WeatherList":{"Weather":[$it]}}}""" }}]}
-            """.trimIndent()
+            featureJsonWithCoordinates(weatherLists.mapIndexed { i, weathers -> FEATURE_COORDINATES[i] to weathers })
+
+        /** Feature ごとに `Geometry.Coordinates`（null なら Geometry なし）と Weather を指定する。 */
+        fun featureJsonWithCoordinates(features: List<Pair<String?, String>>): String {
+            val featureJsons =
+                features.joinToString(",") { (coordinates, weathers) ->
+                    val geometry = coordinates?.let { """"Geometry":{"Type":"point","Coordinates":"$it"},""" }.orEmpty()
+                    """{$geometry"Property":{"WeatherList":{"Weather":[$weathers]}}}"""
+                }
+            return """{"ResultInfo":{"Count":${features.size},"Status":200},"Feature":[$featureJsons]}"""
+        }
 
         /** 実際の応答（2026-11-10 に取得）と同じ形。 */
         val TWO_POINTS_JSON =

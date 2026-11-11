@@ -16,7 +16,11 @@ interface WeatherGateway {
     /**
      * 指定した地点の、今の降水強度（観測値）と 60 分先までの予測値を取得する。
      *
+     * API 側の失敗は例外にせず [WeatherFetchResult.Failure] で返す。
+     * 引数の誤り（呼び出し側のプログラムの誤り）だけは例外にする。
+     *
      * @param points 1〜[MAX_POINTS] 地点
+     * @throws IllegalArgumentException [points] が 0 件、または [MAX_POINTS] 件を超えるとき
      */
     fun fetch(points: List<WeatherPoint>): WeatherFetchResult
 
