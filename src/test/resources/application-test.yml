@@ -19,3 +19,8 @@ supabase:
   anon-key: test-anon-key
   jwt:
     secret: test-supabase-jwt-secret-for-hs256-only
+
+# 天気の取得バッチ（#232）はテストでは動かさない（Yahoo! を呼ばない・テストの DB に書かない）。
+weather:
+  refresh:
+    enabled: false
