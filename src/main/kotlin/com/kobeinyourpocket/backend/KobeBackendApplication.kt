@@ -4,6 +4,7 @@ import com.kobeinyourpocket.backend.infrastructure.apple.AppleSignInProperties
 import com.kobeinyourpocket.backend.infrastructure.security.SupabaseJwtProperties
 import com.kobeinyourpocket.backend.infrastructure.storage.MediaStorageProperties
 import com.kobeinyourpocket.backend.infrastructure.supabase.SupabaseAuthProperties
+import com.kobeinyourpocket.backend.infrastructure.weather.YahooWeatherProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
@@ -14,6 +15,7 @@ import org.springframework.boot.runApplication
     SupabaseJwtProperties::class,
     MediaStorageProperties::class,
     AppleSignInProperties::class,
+    YahooWeatherProperties::class,
 )
 class KobeBackendApplication
 

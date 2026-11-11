@@ -36,6 +36,8 @@ services:
       APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
       APPLE_KEY_ID: ${APPLE_KEY_ID:-}
       APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
+      # Yahoo! 気象情報API（#229）。未設定なら天気の取得を行わない
+      YAHOO_CLIENT_ID: ${YAHOO_CLIENT_ID:-}
       # 画像アップロード（#86 / #184）。ローカルから実 S3 を叩いて確かめるとき用。
       # 認証情報は SDK 既定のチェーンが拾う。一時認証は次で取り出せる:
       #   eval "$(aws configure export-credentials --format env)"
@@ -75,6 +77,8 @@ services:
       APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
       APPLE_KEY_ID: ${APPLE_KEY_ID:-}
       APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
+      # Yahoo! 気象情報API（#229）。未設定なら天気の取得を行わない
+      YAHOO_CLIENT_ID: ${YAHOO_CLIENT_ID:-}
       # 画像アップロード（#86 / #184）。ローカルから実 S3 を叩いて確かめるとき用。
       # 認証情報は SDK 既定のチェーンが拾う。一時認証は次で取り出せる:
       #   eval "$(aws configure export-credentials --format env)"
