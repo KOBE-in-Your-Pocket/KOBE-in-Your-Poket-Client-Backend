@@ -73,6 +73,19 @@ yahoo:
   weather:
     client-id: ${YAHOO_CLIENT_ID:}
 
+# ログイン・サインアップのレート制限（#244）。カウンタはインメモリ（再起動で消える）。
+# login-failure: 利用者 IP × email ごとの連続ログイン失敗。上限に達したら window の間 429。
+# ip: 利用者 IP ごとの POST /api/v1/auth/login|signup の全リクエスト。CGNAT の巻き込みを避けるため緩め。
+# 詳細: docs/supabase-auth-proxy.md
+auth:
+  rate-limit:
+    login-failure:
+      max-attempts: ${AUTH_LOGIN_FAILURE_MAX_ATTEMPTS:5}
+      window: ${AUTH_LOGIN_FAILURE_WINDOW:15m}
+    ip:
+      max-attempts: ${AUTH_IP_MAX_ATTEMPTS:30}
+      window: ${AUTH_IP_WINDOW:15m}
+
 # 画像アップロード（S3 代理保存 / #86）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）。
 # bucket / region 未設定時は起動は妨げず、初回アップロードで例外にする。
 # public-base-url を設定すると返却 URL のベースにする（CloudFront 等）。空なら S3 仮想ホスト URL。

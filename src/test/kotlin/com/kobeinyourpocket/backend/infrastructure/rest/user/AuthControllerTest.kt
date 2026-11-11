@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.user
 
 import com.kobeinyourpocket.backend.application.user.auth.AuthGatewayException
 import com.kobeinyourpocket.backend.application.user.auth.AuthSession
+import com.kobeinyourpocket.backend.application.user.auth.TooManyAuthAttemptsException
 import com.kobeinyourpocket.backend.application.user.command.AuthCommandResult
 import com.kobeinyourpocket.backend.application.user.command.DeleteUserService
 import com.kobeinyourpocket.backend.application.user.command.RefreshSessionService
@@ -27,8 +28,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.Duration
 import java.util.UUID
 import kotlin.test.Test
 
@@ -117,7 +120,7 @@ class AuthControllerTest {
 
     @Test
     fun `POST login で AuthGateway の 400 は統一エラーになる`() {
-        given(signInService.execute("a@example.com", "bad")).willThrow(
+        given(signInService.execute("a@example.com", "bad", "127.0.0.1")).willThrow(
             AuthGatewayException(status = 400, message = "Invalid login credentials"),
         )
 
@@ -128,6 +131,39 @@ class AuthControllerTest {
                     .content("""{"email":"a@example.com","password":"bad"}"""),
             ).andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("Invalid login credentials"))
+    }
+
+    @Test
+    fun `POST login は利用者 IP をサービスへ渡す`() {
+        given(signInService.execute("a@example.com", "password1", "203.0.113.1")).willReturn(
+            AuthCommandResult(session = session(), user = PublicUser(id = userId, name = "Alice")),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/login")
+                    .with { it.apply { remoteAddr = "203.0.113.1" } }
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"a@example.com","password":"password1"}"""),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.accessToken").value("access"))
+    }
+
+    @Test
+    fun `POST login で試行回数の上限を超えたら 429 と Retry-After を返す`() {
+        given(signInService.execute("a@example.com", "bad", "127.0.0.1")).willThrow(
+            TooManyAuthAttemptsException(Duration.ofSeconds(899, 1)),
+        )
+
+        mockMvc
+            .perform(
+                post("/api/v1/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"email":"a@example.com","password":"bad"}"""),
+            ).andExpect(status().isTooManyRequests)
+            .andExpect(header().string("Retry-After", "900"))
+            .andExpect(jsonPath("$.status").value(429))
+            .andExpect(jsonPath("$.message").value(TooManyAuthAttemptsException.MESSAGE))
     }
 
     // --- google (id_token) ---
