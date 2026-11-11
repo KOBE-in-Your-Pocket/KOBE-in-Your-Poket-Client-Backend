@@ -109,6 +109,10 @@ class YahooWeatherClient internal constructor(
                 points.zip(features) { point, feature -> PointWeather(point, feature.toReadings()) }
             } catch (ex: InvalidYahooWeatherResponse) {
                 return failure(WeatherFetchFailureReason.INVALID_RESPONSE, ex.message.orEmpty())
+            } catch (ex: IllegalArgumentException) {
+                // ドメインの不変条件（観測値がちょうど 1 件・時刻の重複なし など）を満たさない応答。
+                // 例外ではなく Failure で返し、#232 のバッチが前回のデータを空で上書きしないようにする。
+                return failure(WeatherFetchFailureReason.INVALID_RESPONSE, ex.message.orEmpty())
             }
         return WeatherFetchResult.Success(weathers)
     }

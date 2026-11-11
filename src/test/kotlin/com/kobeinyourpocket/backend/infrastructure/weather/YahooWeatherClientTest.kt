@@ -194,6 +194,53 @@ class YahooWeatherClientTest {
     }
 
     @Test
+    fun `観測値が無い応答（空・予測値だけ）は INVALID_RESPONSE を返す`() {
+        listOf(
+            "",
+            """{"Type":"forecast","Date":"202611101355","Rainfall":0.0},
+               {"Type":"forecast","Date":"202611101405","Rainfall":0.0}""",
+        ).forEach { weathers ->
+            setUp()
+            server.expect(method(HttpMethod.GET)).andRespond(withSuccess(featureJson(weathers), MediaType.APPLICATION_JSON))
+
+            val failure = assertIs<WeatherFetchResult.Failure>(client.fetch(listOf(sannomiya)), weathers)
+
+            assertEquals(WeatherFetchFailureReason.INVALID_RESPONSE, failure.reason, weathers)
+        }
+    }
+
+    @Test
+    fun `観測値が 2 件ある応答や、同じ時刻の値がある応答は INVALID_RESPONSE を返す`() {
+        listOf(
+            """{"Type":"observation","Date":"202611101345","Rainfall":0.0},
+               {"Type":"observation","Date":"202611101355","Rainfall":0.0}""",
+            """{"Type":"observation","Date":"202611101345","Rainfall":0.0},
+               {"Type":"forecast","Date":"202611101345","Rainfall":0.0}""",
+        ).forEach { weathers ->
+            setUp()
+            server.expect(method(HttpMethod.GET)).andRespond(withSuccess(featureJson(weathers), MediaType.APPLICATION_JSON))
+
+            val failure = assertIs<WeatherFetchResult.Failure>(client.fetch(listOf(sannomiya)), weathers)
+
+            assertEquals(WeatherFetchFailureReason.INVALID_RESPONSE, failure.reason, weathers)
+        }
+    }
+
+    @Test
+    fun `複数地点のうち 1 地点でも観測値が無ければ、全体を INVALID_RESPONSE にする`() {
+        server.expect(method(HttpMethod.GET)).andRespond(
+            withSuccess(
+                featureJson(OBSERVATION_ZERO, """{"Type":"forecast","Date":"202611101355","Rainfall":0.0}"""),
+                MediaType.APPLICATION_JSON,
+            ),
+        )
+
+        val failure = assertIs<WeatherFetchResult.Failure>(client.fetch(listOf(sannomiya, harborland)))
+
+        assertEquals(WeatherFetchFailureReason.INVALID_RESPONSE, failure.reason)
+    }
+
+    @Test
     fun `JSON として読めない応答は INVALID_RESPONSE を返す`() {
         server.expect(method(HttpMethod.GET)).andRespond(withSuccess("not json", MediaType.APPLICATION_JSON))
 
