@@ -42,6 +42,7 @@ GoTrue の IP 単位の制限は全ユーザー共通の 1 枠になってしま
 - email 単体では数えない（第三者が被害者のアカウントをわざとロックできてしまうため）。email は小文字化・前後空白除去してから数える
 - 利用者 IP は `request.remoteAddr`。本番は Caddy が付ける `X-Forwarded-For` を Tomcat（`server.forward-headers-strategy: native`）が解釈した実 IP になる
 - カウンタはインメモリ（EC2 1 台構成のため）。再起動で消える
+- IP は `remoteAddr` の文字列をそのままキーにする。現状 EC2 は IPv6 で到達できない（AAAA なし・Docker の IPv6 無効）ため。IPv6 を有効にするときは、利用者が `/64` 単位でアドレスを変えられるので `/64` に丸めて数える必要がある
 - SSO（`/google` など）と `/refresh` は対象外
 - GoTrue が 5xx を返した試行も 1 回として数える（試行は GoTrue 呼び出し前に数えるため）
 
