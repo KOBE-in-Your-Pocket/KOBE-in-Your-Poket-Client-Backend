@@ -175,7 +175,8 @@ class YahooWeatherClient internal constructor(
                     throw InvalidYahooWeatherResponse("invalid Date: $rawDate")
                 }
             val mmPerHour = rainfall ?: throw InvalidYahooWeatherResponse("missing Rainfall")
-            if (mmPerHour < 0.0) throw InvalidYahooWeatherResponse("negative Rainfall: $mmPerHour")
+            // RainfallReading の不変条件（有限・0 以上）を先に確かめ、例外ではなく Failure にする。
+            if (!mmPerHour.isFinite() || mmPerHour < 0.0) throw InvalidYahooWeatherResponse("invalid Rainfall: $mmPerHour")
             return RainfallReading(readingType, at, mmPerHour)
         }
     }

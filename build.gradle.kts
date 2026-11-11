@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.spring") version "2.3.21"
     kotlin("plugin.jpa") version "2.3.21"
-    id("org.springframework.boot") version "4.1.0"
+    id("org.springframework.boot") version "4.1.2"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
 }
@@ -34,8 +34,8 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
     // 画像アップロード（S3）。認証情報は SDK 既定の認証チェーン（IAM ロール / env）に委ねる。
-    // sync HTTP クライアント（apache-client）は s3 が transitive で持つため明示追加しない。
-    implementation(platform("software.amazon.awssdk:bom:2.28.0"))
+    // sync HTTP クライアント（apache5-client）は s3 が transitive で持つため明示追加しない。
+    implementation(platform("software.amazon.awssdk:bom:2.57.12"))
     implementation("software.amazon.awssdk:s3")
 
     // ユーザーアイコンの縮小・再エンコード（#184）。JDK の ImageIO だけでは EXIF の

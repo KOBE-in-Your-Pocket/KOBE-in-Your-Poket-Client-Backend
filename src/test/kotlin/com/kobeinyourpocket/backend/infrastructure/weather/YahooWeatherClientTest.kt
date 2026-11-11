@@ -180,6 +180,9 @@ class YahooWeatherClientTest {
             """{"Type":"observation","Rainfall":0.0}""",
             """{"Type":"observation","Date":"202611101345"}""",
             """{"Type":"observation","Date":"202611101345","Rainfall":-1.0}""",
+            """{"Type":"observation","Date":"202611101345","Rainfall":"NaN"}""",
+            // double の範囲を超える値は Infinity として読まれる
+            """{"Type":"observation","Date":"202611101345","Rainfall":1e400}""",
         ).forEach { weather ->
             setUp()
             server.expect(method(HttpMethod.GET)).andRespond(withSuccess(featureJson(weather), MediaType.APPLICATION_JSON))
