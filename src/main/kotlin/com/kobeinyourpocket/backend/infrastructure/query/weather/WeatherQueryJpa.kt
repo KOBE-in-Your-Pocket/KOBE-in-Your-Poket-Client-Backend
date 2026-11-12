@@ -40,8 +40,6 @@ class WeatherQueryJpa(
             return null
         }
         return LatestWeatherView(
-            latitude = point.latitude,
-            longitude = point.longitude,
             fetchedAt = readings.maxOf { it.fetchedAt },
             observation = observation.toView(),
             forecasts = readings.filter { it.type == FORECAST }.map { it.toView() },

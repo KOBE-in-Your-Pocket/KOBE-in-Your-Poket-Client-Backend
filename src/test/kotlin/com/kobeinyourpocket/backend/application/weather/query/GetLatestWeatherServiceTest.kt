@@ -16,8 +16,6 @@ class GetLatestWeatherServiceTest {
     fun `神戸の中心の最新の天気を返す`() {
         val view =
             LatestWeatherView(
-                latitude = WeatherPoint.KOBE_CENTER.latitude,
-                longitude = WeatherPoint.KOBE_CENTER.longitude,
                 fetchedAt = Instant.parse("2026-11-11T05:39:55Z"),
                 observation = RainfallView(Instant.parse("2026-11-11T05:35:00Z"), 0.0),
                 forecasts = emptyList(),

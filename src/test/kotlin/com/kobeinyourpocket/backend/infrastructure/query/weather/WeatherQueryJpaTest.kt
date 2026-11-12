@@ -55,8 +55,6 @@ class WeatherQueryJpaTest {
 
         val latest = query.findLatest(kobe)!!
 
-        assertEquals(kobe.latitude, latest.latitude)
-        assertEquals(kobe.longitude, latest.longitude)
         assertEquals(fetchedAt, latest.fetchedAt)
         assertEquals(RainfallView(observedAt, 1.5), latest.observation)
         assertEquals(

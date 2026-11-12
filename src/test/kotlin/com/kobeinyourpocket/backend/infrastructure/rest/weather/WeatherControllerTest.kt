@@ -32,8 +32,6 @@ class WeatherControllerTest {
     fun `最新の天気を観測値と予測値に分けて返す`() {
         given(getLatestWeatherService.getLatest()).willReturn(
             LatestWeatherView(
-                latitude = 34.690083,
-                longitude = 135.195511,
                 fetchedAt = Instant.parse("2026-11-11T05:39:55Z"),
                 observation = RainfallView(Instant.parse("2026-11-11T05:35:00Z"), 1.65),
                 forecasts =
@@ -47,8 +45,9 @@ class WeatherControllerTest {
         mockMvc
             .perform(get("/api/v1/weather"))
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.latitude").value(34.690083))
-            .andExpect(jsonPath("$.longitude").value(135.195511))
+            // 地点は返さない（今は神戸の中心 1 地点だけで、Client は使わない）
+            .andExpect(jsonPath("$.latitude").doesNotExist())
+            .andExpect(jsonPath("$.longitude").doesNotExist())
             .andExpect(jsonPath("$.fetchedAt").value("2026-11-11T05:39:55Z"))
             .andExpect(jsonPath("$.observation.at").value("2026-11-11T05:35:00Z"))
             .andExpect(jsonPath("$.observation.mmPerHour").value(1.65))

@@ -79,8 +79,6 @@ docker logs kobe-backend 2>&1 | grep 天気
 
 ```json
 {
-  "latitude": 34.690083,
-  "longitude": 135.195511,
   "fetchedAt": "2026-11-12T05:39:55Z",
   "observation": { "at": "2026-11-12T05:35:00Z", "mmPerHour": 1.65 },
   "forecasts": [
@@ -94,6 +92,7 @@ docker logs kobe-backend 2>&1 | grep 天気
 - 降水強度は mm/h。気象レーダーの値を時間雨量に換算したもので、実際の雨量とは異なる
 - `fetchedAt` は backend が Yahoo! から取得した時刻。取得の失敗が続くと古いままになるため、Client は古さの判断に使える
 - 天気マーク（雨なし・まもなく雨・弱い雨・雨・強い雨）の判定は Client で行う
+- 対象は神戸の中心 1 地点。地点（緯度・経度）は Client が使わないため返さない（DB の `weather_readings` には地点の列を残している。エリアを増やすときに使う）
 
 ## クレジット表示・利用条件
 
