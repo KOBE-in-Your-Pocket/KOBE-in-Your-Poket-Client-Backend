@@ -73,6 +73,14 @@ yahoo:
   weather:
     client-id: ${YAHOO_CLIENT_ID:}
 
+# 天気の取得バッチ（#232）。起動 initial-delay 後に 1 回目を実行し、以降 interval ごとに取得して保存する。
+# 期間は ISO-8601（PT15M = 15 分）。enabled=false で止める。
+weather:
+  refresh:
+    enabled: ${WEATHER_REFRESH_ENABLED:true}
+    initial-delay: ${WEATHER_REFRESH_INITIAL_DELAY:PT30S}
+    interval: ${WEATHER_REFRESH_INTERVAL:PT15M}
+
 # ログイン・サインアップのレート制限（#244）。カウンタはインメモリ（再起動で消える）。
 # login-failure: 利用者 IP × email ごとの連続ログイン失敗。上限に達したら window の間 429。
 # ip: 利用者 IP ごとの POST /api/v1/auth/login|signup の全リクエスト。CGNAT の巻き込みを避けるため緩め。
