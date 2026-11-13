@@ -16,7 +16,12 @@ class FavoriteRepositoryImpl(
     /**
      * 通常の重複は事前の存在確認で弾き、同時送信ですり抜けた分は主キー違反で弾く。
      *
-     * このメソッド自体はトランザクションを張らない。張ると主キー違反の時点で
+     * 一意制約違反には、主キー違反（同時に同じ組を登録した）のほかに、スポットへの外部キー違反
+     * （スポットが存在しない・登録の直前に削除された）もある。後者まで成功扱いにすると、
+     * 保存されていないのに成功を返してしまう。そのため違反のあとに行があるかを確かめ直し、
+     * 行があるときだけ成功とし、無ければ例外をそのまま投げる。
+     *
+     * このメソッド自体はトランザクションを張らない。張ると制約違反の時点で
      * トランザクションが rollback-only になり、捕まえてもコミット時に例外になるため
      * （[com.kobeinyourpocket.backend.infrastructure.persistence.user.UserBlockRepositoryImpl] と同じ）。
      */
@@ -26,7 +31,9 @@ class FavoriteRepositoryImpl(
         try {
             favoriteJpa.saveAndFlush(entity)
         } catch (e: DataIntegrityViolationException) {
-            // 同時に同じスポットを登録した。結果は同じなので成功として扱う。
+            // 同時に同じスポットを登録した場合は行がある。結果は同じなので成功として扱う。
+            if (favoriteJpa.existsById(entity.id)) return
+            throw e
         }
     }
 
