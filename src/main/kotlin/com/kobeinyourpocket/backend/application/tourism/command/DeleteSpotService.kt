@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 /**
  * スポット削除ユースケース（admin ロール専用。REST 側は `@PreAuthorize` で担保）。
  *
- * spot_localization・review は `ON DELETE CASCADE`（V1 / V2）で DB 側が連動削除する。
+ * spot_localization・review・favorites は `ON DELETE CASCADE`（V1 / V2 / V25）で DB 側が連動削除する。
  * manner_item_spot は Spot への ID 参照のみで FK を張らない設計（M-2）のため、
  * 削除後も関連づけの行自体は残り得るが実在検証はしない（既存方針を踏襲）。
  */
