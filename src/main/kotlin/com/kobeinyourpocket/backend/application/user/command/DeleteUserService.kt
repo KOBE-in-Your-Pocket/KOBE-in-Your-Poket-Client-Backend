@@ -3,6 +3,8 @@ package com.kobeinyourpocket.backend.application.user.command
 import com.kobeinyourpocket.backend.application.user.auth.AuthGateway
 import com.kobeinyourpocket.backend.domain.report.repository.ReportRepository
 import com.kobeinyourpocket.backend.domain.report.vo.ReporterId
+import com.kobeinyourpocket.backend.domain.tourism.favorite.repository.FavoriteRepository
+import com.kobeinyourpocket.backend.domain.tourism.favorite.vo.FavoriteOwnerId
 import com.kobeinyourpocket.backend.domain.tourism.review.repository.ReviewRepository
 import com.kobeinyourpocket.backend.domain.tourism.review.vo.ReviewAuthorId
 import com.kobeinyourpocket.backend.domain.user.model.User
@@ -30,16 +32,17 @@ import org.springframework.stereotype.Service
  * 4. 本人が投稿したレビューを削除（#528。DB 書き込み）
  * 5. 本人が送った通報を削除（#147。通報者の個人データを残さない。DB 書き込み）
  * 6. 本人がした・本人がされたブロックを削除（#215。DB 書き込み）
- * 7. プロフィール行を削除（短い DB 書き込み。リポジトリ側のトランザクション）
+ * 7. 本人のお気に入りを削除（#238。`users` への外部キーが無く自動では消えないため。DB 書き込み）
+ * 8. プロフィール行を削除（短い DB 書き込み。リポジトリ側のトランザクション）
  *
  * Auth 成功後に DB 側だけ失敗した場合は再試行する。再試行時は Auth 側 404 を成功扱いし、
- * 残ったレビュー・通報・ブロック・プロフィール行の削除を完了できる。レビュー・通報・ブロックの削除は該当 0 件でも成功するため、
+ * 残ったレビュー・通報・ブロック・お気に入り・プロフィール行の削除を完了できる。レビュー・通報・ブロック・お気に入りの削除は該当 0 件でも成功するため、
  * 途中まで進んだ状態からの再実行でも同じ結果になる。
  *
  * Apple のトークン失効も Auth 削除より後に行う。Auth 削除が失敗して退会が成立しないまま、
  * Apple との連携だけ解除されるのを避けるため。
  *
- * レビュー・通報・ブロックを Auth 削除より後に消すのは、Auth 削除が失敗したとき（＝退会が成立していないとき）に
+ * レビュー・通報・ブロック・お気に入りを Auth 削除より後に消すのは、Auth 削除が失敗したとき（＝退会が成立していないとき）に
  * それらだけ消えるのを避けるためである。
  *
  * 他人が本人のレビューに対して送った通報は消さない（運営の対応履歴として残す）。
@@ -52,6 +55,7 @@ class DeleteUserService(
     private val reviewRepository: ReviewRepository,
     private val reportRepository: ReportRepository,
     private val userBlockRepository: UserBlockRepository,
+    private val favoriteRepository: FavoriteRepository,
 ) {
     fun execute(userId: User.Id) {
         userRepository.findById(userId) ?: throw UserNotFoundException(userId)
@@ -60,6 +64,7 @@ class DeleteUserService(
         reviewRepository.deleteByAuthorId(ReviewAuthorId.of(userId.value))
         reportRepository.deleteByReporterId(ReporterId.of(userId.value))
         userBlockRepository.deleteByUserId(userId)
+        favoriteRepository.deleteByOwnerId(FavoriteOwnerId.of(userId.value))
         userRepository.deleteById(userId)
     }
 }
