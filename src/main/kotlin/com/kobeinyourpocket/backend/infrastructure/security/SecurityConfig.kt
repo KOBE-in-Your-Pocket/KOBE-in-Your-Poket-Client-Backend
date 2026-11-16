@@ -109,6 +109,12 @@ class SecurityConfig(
                     .authenticated()
                     .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/blocks/*")
                     .authenticated()
+                    // 本人によるお気に入りの追加・解除（#236）。対象は JWT の subject から決まり
+                    // 他人のお気に入りを操作する余地が無いため、一般ロールで許可する。
+                    .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/favorites/*")
+                    .authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/favorites/*")
+                    .authenticated()
                     // 上記以外（GET 以外の未分類リクエスト全て）は運営ロール必須。
                     // ADMIN 専用の DELETE /api/v1/auth/users/{id} もここを通過し、
                     // メソッドセキュリティ（@PreAuthorize）で ADMIN に絞る。
