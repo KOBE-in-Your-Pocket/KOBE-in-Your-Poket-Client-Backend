@@ -62,6 +62,10 @@ class SecurityConfig(
                     // （拒否すると 500 系が 401/403 に化ける）
                     .dispatcherTypeMatchers(DispatcherType.ERROR)
                     .permitAll()
+                    // 自分のお気に入り一覧（#237）。下の「GET は公開」より先に置き、認証必須にする。
+                    // 他人の一覧を指定する余地は無い（対象は JWT の subject から決まる）。
+                    .requestMatchers(HttpMethod.GET, "/api/v1/users/me/favorites")
+                    .authenticated()
                     // GET 系（閲覧）は公開のまま（#90 表）
                     .requestMatchers(HttpMethod.GET, "/**")
                     .permitAll()
