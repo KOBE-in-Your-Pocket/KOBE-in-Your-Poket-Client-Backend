@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.jayway.jsonpath.JsonPath
 import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.FavoriteEntity
 import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.FavoriteJpaRepository
 import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.FavoriteKey
 import com.kobeinyourpocket.backend.infrastructure.security.withRole
@@ -13,16 +14,19 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * お気に入りの追加・解除 API の統合テスト（#236）。
+ * お気に入りの追加・解除・一覧 API の統合テスト（#236・#237）。
  * controller → application → JPA → DB を実 Bean で通す。
  *
  * テスト環境は H2（application-test.yml、Hibernate create-drop / Flyway 無効）。
@@ -143,14 +147,88 @@ class FavoriteApiIntegrationTest {
         remove("no-such-spot").andExpect(status().isNoContent)
     }
 
+    // ---- 一覧 ----
+
+    private fun list(subject: String? = VIEWER): ResultActions {
+        val request = get("/api/v1/users/me/favorites")
+        if (subject != null) request.with(withRole(Role.GENERAL, subject))
+        return mockMvc.perform(request)
+    }
+
+    /** 並び順を確かめるため、登録日時を指定して直接保存する（API 経由だと同時刻になりうる）。 */
+    private fun saveFavorite(
+        subject: String,
+        spotId: String,
+        createdAt: String,
+    ) {
+        favoriteJpa.save(
+            FavoriteEntity(
+                id = FavoriteKey(userId = UUID.fromString(subject), spotId = spotId),
+                createdAt = Instant.parse(createdAt),
+            ),
+        )
+    }
+
+    @Test
+    fun `一覧は本人の分だけを登録日時の新しい順に返す`() {
+        val older = registerSpot()
+        val newer = registerSpot()
+        val friends = registerSpot()
+        saveFavorite(VIEWER, older, "2026-11-01T10:00:00Z")
+        saveFavorite(VIEWER, newer, "2026-11-02T10:00:00Z")
+        saveFavorite(FRIEND, friends, "2026-11-03T10:00:00Z")
+
+        list()
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].spotId").value(newer))
+            .andExpect(jsonPath("$[0].createdAt").value("2026-11-02T10:00:00Z"))
+            .andExpect(jsonPath("$[1].spotId").value(older))
+            .andExpect(jsonPath("$[1].createdAt").value("2026-11-01T10:00:00Z"))
+    }
+
+    @Test
+    fun `追加したお気に入りが一覧に出て、解除すると消える`() {
+        val spotId = registerSpot()
+
+        add(spotId).andExpect(status().isNoContent)
+        list().andExpect(jsonPath("$[0].spotId").value(spotId))
+
+        remove(spotId).andExpect(status().isNoContent)
+        list().andExpect(status().isOk).andExpect(jsonPath("$.length()").value(0))
+    }
+
+    @Test
+    fun `削除されたスポットは一覧に出ない`() {
+        val kept = registerSpot()
+        val deleted = registerSpot()
+        add(kept).andExpect(status().isNoContent)
+        add(deleted).andExpect(status().isNoContent)
+
+        mockMvc
+            .perform(delete("/api/v1/tourism/spots/$deleted").with(withRole(Role.ADMIN)))
+            .andExpect(status().isNoContent)
+
+        list()
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].spotId").value(kept))
+    }
+
+    @Test
+    fun `お気に入りが無ければ空の配列`() {
+        list().andExpect(status().isOk).andExpect(jsonPath("$.length()").value(0))
+    }
+
     // ---- 認証 ----
 
     @Test
-    fun `未ログインは追加も解除も 401`() {
+    fun `未ログインは追加も解除も一覧も 401`() {
         val spotId = registerSpot()
 
         add(spotId, subject = null).andExpect(status().isUnauthorized)
         remove(spotId, subject = null).andExpect(status().isUnauthorized)
+        list(subject = null).andExpect(status().isUnauthorized)
 
         assertEquals(0, favoriteJpa.count())
     }
