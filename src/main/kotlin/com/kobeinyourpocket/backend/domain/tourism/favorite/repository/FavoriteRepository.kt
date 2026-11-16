@@ -23,4 +23,12 @@ interface FavoriteRepository {
         ownerId: FavoriteOwnerId,
         spotId: SpotId,
     )
+
+    /**
+     * 指定した利用者のお気に入りを全件削除する。退会処理から呼ぶ（#238）。
+     * 該当 0 件でも例外にしない。
+     *
+     * @return 削除した件数
+     */
+    fun deleteByOwnerId(ownerId: FavoriteOwnerId): Int
 }

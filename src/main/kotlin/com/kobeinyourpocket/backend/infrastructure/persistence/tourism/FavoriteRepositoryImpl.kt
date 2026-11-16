@@ -44,4 +44,7 @@ class FavoriteRepositoryImpl(
     ) {
         favoriteJpa.deleteById(FavoriteKey(userId = ownerId.value, spotId = spotId.value))
     }
+
+    @Transactional
+    override fun deleteByOwnerId(ownerId: FavoriteOwnerId): Int = favoriteJpa.deleteByUserId(ownerId.value)
 }
