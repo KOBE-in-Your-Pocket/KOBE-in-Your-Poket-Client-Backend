@@ -95,4 +95,24 @@ class FavoriteRepositoryImplTest {
 
         assertEquals(listOf(favorite(ownerId = alice, spotId = harborland)), stored())
     }
+
+    @Test
+    fun `deleteByOwnerId はその人のお気に入りだけを全件消して件数を返す`() {
+        repository.saveIfAbsent(favorite(ownerId = alice, spotId = harborland))
+        repository.saveIfAbsent(favorite(ownerId = alice, spotId = kitano))
+        repository.saveIfAbsent(favorite(ownerId = bob, spotId = harborland))
+
+        val deleted = repository.deleteByOwnerId(alice)
+
+        assertEquals(2, deleted)
+        assertEquals(listOf(favorite(ownerId = bob, spotId = harborland)), stored())
+    }
+
+    @Test
+    fun `deleteByOwnerId は該当が無ければ 0 を返す`() {
+        repository.saveIfAbsent(favorite(ownerId = bob, spotId = harborland))
+
+        assertEquals(0, repository.deleteByOwnerId(alice))
+        assertEquals(listOf(favorite(ownerId = bob, spotId = harborland)), stored())
+    }
 }
