@@ -79,6 +79,10 @@ class SecurityConfig(
                         "/api/v1/auth/facebook",
                         "/api/v1/auth/refresh",
                     ).permitAll()
+                    // 観光スポットの閲覧を数える（#240）。未ログインの観光客の閲覧も数えるため公開する。
+                    // 誰が閲覧したかは記録しない。
+                    .requestMatchers(HttpMethod.POST, "/api/v1/tourism/spots/*/views")
+                    .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout")
                     .authenticated()
                     // レビュー投稿・更新は認証済みユーザー（一般ロール可）
