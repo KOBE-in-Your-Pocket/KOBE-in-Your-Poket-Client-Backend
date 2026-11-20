@@ -14,6 +14,7 @@
 | `POST /api/v1/tourism/spots/{spotId}/reviews/{reviewId}/reports` | 認証済みユーザー（一般ロール可）。自分のレビューは 400、重複は 409（#147 / [`report.md`](./report.md)） |
 | `GET /api/v1/users/me/blocks`・`PUT /api/v1/users/me/blocks/{userId}`・`DELETE /api/v1/users/me/blocks/{userId}` | 認証済みユーザー（一般ロール可）。ブロックする側は JWT の `sub` から決まる（#215 / [`block.md`](./block.md)） |
 | `GET /api/v1/users/me/favorites`・`PUT /api/v1/users/me/favorites/{spotId}`・`DELETE /api/v1/users/me/favorites/{spotId}` | 認証済みユーザー（一般ロール可）。本人は JWT の `sub` から決まる（#236・#237 / [`favorite.md`](./favorite.md)） |
+| `POST /api/v1/tourism/spots/{spotId}/views` | 公開（未ログインの閲覧も数える。#240 / [`spot-view.md`](./spot-view.md)） |
 | `GET /api/v1/reports/reviews`・`PATCH /api/v1/reports/reviews/{reviewId}` | OPERATOR 以上（`@PreAuthorize`）。GET も通報者情報を含むため公開しない（#145 / [`report.md`](./report.md)） |
 | `DELETE /api/v1/auth/users/{userId}` | ADMIN のみ（`@PreAuthorize` / #137） |
 | `DELETE /api/v1/tourism/spots/{spotId}` | ADMIN のみ（`@PreAuthorize`） |
