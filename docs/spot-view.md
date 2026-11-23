@@ -21,6 +21,29 @@ Client は観光スポットのカードから詳細画面に遷移したとき�
 - 同時に呼ばれても数はずれない（記録は行の追加だけ。下記）
 - 閲覧数はおまけの情報なので、Client は結果を待たず、失敗しても画面の操作を止めない
 
+### スポット別の閲覧数 `GET /api/v1/stats/spot-views`（#241）
+
+運営向け（管理画面 KOBE-in-Your-Pocket-ADMIN で使う）。`OPERATOR` 以上のみ（ロール階層で `ADMIN` も可）。
+ダッシュボードの `GET /api/v1/stats` にそろえて `/api/v1/stats` の下に置く。
+
+| status | 条件 |
+| --- | --- |
+| 200 | 一覧を返した（閲覧が 1 件も無ければ `[]`） |
+| 401 | 未認証 |
+| 403 | `OPERATOR` 未満（一般ユーザー） |
+
+```json
+[
+  { "spotId": "arima-onsen", "name": "有馬温泉", "viewCount": 12 },
+  { "spotId": "kobe-port-tower", "name": "神戸ポートタワー", "viewCount": 3 }
+]
+```
+
+- 閲覧数の多い順。同数は `spotId` 順（毎回同じ並びになる）
+- 閲覧が 1 件も無いスポットは含めない
+- 件数は全期間の合計。上限・ページングは無し（スポットは数十件の想定）
+- `name` は `?lang=` → `Accept-Language` → 既定（en）の順で決めた言語で返す。その言語の名前が無ければ en、それも無ければ `spotId`
+
 ## データ（V26 / #239）
 
 閲覧 1 回 = `spot_views` の 1 行（`id` / `spot_id` / `viewed_at`）。

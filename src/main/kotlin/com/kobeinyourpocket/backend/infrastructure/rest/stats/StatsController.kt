@@ -1,6 +1,7 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.stats
 
 import com.kobeinyourpocket.backend.application.stats.query.GetDashboardStatsService
+import com.kobeinyourpocket.backend.application.tourism.query.ListSpotViewCountsService
 import com.kobeinyourpocket.backend.infrastructure.rest.common.LanguageResolver
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/stats")
 class StatsController(
     private val getDashboardStatsService: GetDashboardStatsService,
+    private val listSpotViewCountsService: ListSpotViewCountsService,
 ) {
     /** `?lang=` は**スポット名の解決にのみ**効く。投稿者名は投稿時の言語のまま返る。 */
     @GetMapping
@@ -33,5 +35,19 @@ class StatsController(
     ): DashboardStatsResponse {
         val language = LanguageResolver.resolve(lang, acceptLanguage)
         return DashboardStatsResponse.from(getDashboardStatsService.getStats(language))
+    }
+
+    /**
+     * スポット別の閲覧数を多い順に返す（#241 / docs/spot-view.md）。
+     * 閲覧が 1 件も無いスポットは含めない。`?lang=` はスポット名の解決にのみ効く。
+     */
+    @GetMapping("/spot-views")
+    @PreAuthorize("hasRole('OPERATOR')")
+    fun listSpotViews(
+        @RequestParam(name = "lang", required = false) lang: String?,
+        @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
+    ): List<SpotViewCountResponse> {
+        val language = LanguageResolver.resolve(lang, acceptLanguage)
+        return listSpotViewCountsService.list(language).map(SpotViewCountResponse::from)
     }
 }

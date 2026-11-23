@@ -16,6 +16,7 @@
 | `GET /api/v1/users/me/favorites`・`PUT /api/v1/users/me/favorites/{spotId}`・`DELETE /api/v1/users/me/favorites/{spotId}` | 認証済みユーザー（一般ロール可）。本人は JWT の `sub` から決まる（#236・#237 / [`favorite.md`](./favorite.md)） |
 | `POST /api/v1/tourism/spots/{spotId}/views` | 公開（未ログインの閲覧も数える。#240 / [`spot-view.md`](./spot-view.md)） |
 | `GET /api/v1/reports/reviews`・`PATCH /api/v1/reports/reviews/{reviewId}` | OPERATOR 以上（`@PreAuthorize`）。GET も通報者情報を含むため公開しない（#145 / [`report.md`](./report.md)） |
+| `GET /api/v1/stats`・`GET /api/v1/stats/spot-views` | OPERATOR 以上（`@PreAuthorize`）。管理画面専用の集計のため公開しない（#169・#241 / [`spot-view.md`](./spot-view.md)） |
 | `DELETE /api/v1/auth/users/{userId}` | ADMIN のみ（`@PreAuthorize` / #137） |
 | `DELETE /api/v1/tourism/spots/{spotId}` | ADMIN のみ（`@PreAuthorize`） |
 | 上記以外の書き込み全て（`POST /api/v1/tourism/spots` 等、今後追加分も含む） | **運営（OPERATOR）ロール必須** |
