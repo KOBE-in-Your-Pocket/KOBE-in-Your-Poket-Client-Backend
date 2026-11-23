@@ -6,6 +6,7 @@ import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.SpotJpaRe
 import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.SpotLocalizationEntity
 import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.SpotLocalizationId
 import com.kobeinyourpocket.backend.infrastructure.persistence.tourism.SpotLocalizationJpaRepository
+import com.kobeinyourpocket.backend.infrastructure.ratelimit.ClientIps.fromUniqueIp
 import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -61,7 +62,7 @@ class SpotViewStatsApiIntegrationTest {
         times: Int,
     ) {
         repeat(times) {
-            mockMvc.perform(post("/api/v1/tourism/spots/$spotId/views")).andExpect(status().isNoContent)
+            mockMvc.perform(post("/api/v1/tourism/spots/$spotId/views").with(fromUniqueIp())).andExpect(status().isNoContent)
         }
     }
 
