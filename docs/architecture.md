@@ -273,7 +273,7 @@ GET /api/v1/tourism/spots?lang=ja
 
 # 詳細（モックの fetchSpotById(id, language) に対応 / #83）
 GET /api/v1/tourism/spots/{id}?lang=ja
-200 → 一覧と同じ Spot 形（単体）
+200 → 一覧と同じ Spot 形（単体）＋ viewCount（閲覧数。閲覧が無ければ 0 / #256）
 404 → 該当 id が無い場合（GlobalExceptionHandler 系の統一エラー JSON）
 
 # ピン登録（feature ①。モックには無い backend 初の書き込み）

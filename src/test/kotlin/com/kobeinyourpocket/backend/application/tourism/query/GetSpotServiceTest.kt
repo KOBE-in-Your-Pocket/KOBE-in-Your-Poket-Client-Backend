@@ -26,24 +26,28 @@ class GetSpotServiceTest {
             address = "神戸市中央区波止場町5-5",
         )
 
+    private val spotQuery = mockk<SpotQuery>()
+    private val spotViewCountQuery = mockk<SpotViewCountQuery>()
+    private val service = GetSpotService(spotQuery, spotViewCountQuery)
+
     @Test
-    fun `該当 id があれば SpotQuery port が解決した SpotView を返す`() {
-        val spotQuery = mockk<SpotQuery>()
+    fun `該当 id があれば SpotQuery port が解決した SpotView と閲覧数を返す`() {
         every { spotQuery.findByIdResolved(SpotId.of("kobe-port-tower"), Language.JA) } returns jaView
+        every { spotViewCountQuery.countBySpotId(SpotId.of("kobe-port-tower")) } returns 7
 
-        val result = GetSpotService(spotQuery).getSpot(SpotId.of("kobe-port-tower"), Language.JA)
+        val result = service.getSpot(SpotId.of("kobe-port-tower"), Language.JA)
 
-        assertEquals("神戸ポートタワー", result.name)
+        assertEquals(SpotDetailView(spot = jaView, viewCount = 7), result)
         verify(exactly = 1) { spotQuery.findByIdResolved(SpotId.of("kobe-port-tower"), Language.JA) }
     }
 
     @Test
-    fun `該当 id が無ければ SpotNotFoundException を投げる`() {
-        val spotQuery = mockk<SpotQuery>()
+    fun `該当 id が無ければ SpotNotFoundException を投げ、閲覧数は数えない`() {
         every { spotQuery.findByIdResolved(SpotId.of("unknown"), Language.JA) } returns null
 
         assertFailsWith<SpotNotFoundException> {
-            GetSpotService(spotQuery).getSpot(SpotId.of("unknown"), Language.JA)
+            service.getSpot(SpotId.of("unknown"), Language.JA)
         }
+        verify(exactly = 0) { spotViewCountQuery.countBySpotId(any()) }
     }
 }

@@ -54,7 +54,7 @@ class SpotController(
         @RequestHeader(name = "Accept-Language", required = false) acceptLanguage: String?,
     ): SpotResponse {
         val language = LanguageResolver.resolve(lang, acceptLanguage)
-        return SpotResponse.from(getSpotService.getSpot(SpotId.of(id), language))
+        return SpotResponse.fromDetail(getSpotService.getSpot(SpotId.of(id), language))
     }
 
     @PostMapping

@@ -6,6 +6,7 @@ import com.kobeinyourpocket.backend.application.tourism.command.RegisterSpotServ
 import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
+import com.kobeinyourpocket.backend.application.tourism.query.SpotDetailView
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.Spot
@@ -195,6 +196,8 @@ class SpotControllerTest {
             .andExpect(jsonPath("$[0].address").value("神戸市中央区波止場町5-5"))
             .andExpect(jsonPath("$[0].rating.value").value(4.5))
             .andExpect(jsonPath("$[1].rating").doesNotExist())
+            // 閲覧数は詳細だけで返す（#256）
+            .andExpect(jsonPath("$[0].viewCount").doesNotExist())
     }
 
     @Test
@@ -228,7 +231,8 @@ class SpotControllerTest {
 
     @Test
     fun `GET id で該当スポットを取得できる`() {
-        given(getSpotService.getSpot(SpotId.of("kobe-port-tower"), Language.JA)).willReturn(portTower)
+        given(getSpotService.getSpot(SpotId.of("kobe-port-tower"), Language.JA))
+            .willReturn(SpotDetailView(spot = portTower, viewCount = 12))
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/kobe-port-tower?lang=ja"))
@@ -238,6 +242,7 @@ class SpotControllerTest {
             .andExpect(jsonPath("$.name").value("神戸ポートタワー"))
             .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
             .andExpect(jsonPath("$.rating.value").value(4.5))
+            .andExpect(jsonPath("$.viewCount").value(12))
     }
 
     @Test
