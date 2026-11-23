@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend
 
 import com.kobeinyourpocket.backend.infrastructure.apple.AppleSignInProperties
 import com.kobeinyourpocket.backend.infrastructure.ratelimit.AuthRateLimitProperties
+import com.kobeinyourpocket.backend.infrastructure.ratelimit.SpotViewRateLimitProperties
 import com.kobeinyourpocket.backend.infrastructure.security.SupabaseJwtProperties
 import com.kobeinyourpocket.backend.infrastructure.storage.MediaStorageProperties
 import com.kobeinyourpocket.backend.infrastructure.supabase.SupabaseAuthProperties
@@ -18,6 +19,7 @@ import org.springframework.boot.runApplication
     AppleSignInProperties::class,
     YahooWeatherProperties::class,
     AuthRateLimitProperties::class,
+    SpotViewRateLimitProperties::class,
 )
 class KobeBackendApplication
 

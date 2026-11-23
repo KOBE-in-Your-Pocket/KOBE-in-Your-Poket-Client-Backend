@@ -1,15 +1,10 @@
 package com.kobeinyourpocket.backend.infrastructure.ratelimit
 
 import com.kobeinyourpocket.backend.application.user.auth.TooManyAuthAttemptsException
-import com.kobeinyourpocket.backend.infrastructure.rest.common.ApiErrorResponse
-import com.kobeinyourpocket.backend.infrastructure.rest.common.retryAfterSeconds
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.web.filter.OncePerRequestFilter
 import tools.jackson.databind.ObjectMapper
 
@@ -40,19 +35,7 @@ class AuthIpRateLimitFilter(
             filterChain.doFilter(request, response)
             return
         }
-        val status = HttpStatus.TOO_MANY_REQUESTS
-        response.status = status.value()
-        response.setHeader(HttpHeaders.RETRY_AFTER, retryAfterSeconds(retryAfter).toString())
-        response.contentType = MediaType.APPLICATION_JSON_VALUE
-        response.characterEncoding = Charsets.UTF_8.name()
-        objectMapper.writeValue(
-            response.writer,
-            ApiErrorResponse(
-                status = status.value(),
-                error = status.reasonPhrase,
-                message = TooManyAuthAttemptsException.MESSAGE,
-            ),
-        )
+        writeTooManyRequests(response, objectMapper, retryAfter, TooManyAuthAttemptsException.MESSAGE)
     }
 
     companion object {

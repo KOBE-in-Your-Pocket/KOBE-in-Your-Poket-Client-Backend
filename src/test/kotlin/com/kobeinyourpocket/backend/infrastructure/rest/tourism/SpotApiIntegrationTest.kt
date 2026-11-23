@@ -2,6 +2,7 @@ package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.jayway.jsonpath.JsonPath
 import com.kobeinyourpocket.backend.domain.user.vo.Role
+import com.kobeinyourpocket.backend.infrastructure.ratelimit.ClientIps.fromUniqueIp
 import com.kobeinyourpocket.backend.infrastructure.security.withRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -249,7 +250,7 @@ class SpotApiIntegrationTest {
     fun `閲覧を記録すると次の GET id で閲覧数が増えている`() {
         val spotId = registerPortTowerAndGetId()
         repeat(2) {
-            mockMvc.perform(post("/api/v1/tourism/spots/$spotId/views")).andExpect(status().isNoContent)
+            mockMvc.perform(post("/api/v1/tourism/spots/$spotId/views").with(fromUniqueIp())).andExpect(status().isNoContent)
         }
 
         mockMvc
