@@ -144,6 +144,8 @@ class SpotApiIntegrationTest {
             .andExpect(jsonPath("$.media.imageUrl").value("https://example.com/kobe-port-tower.webp"))
             // feature ① では rating は常に null（NON_NULL でキー自体が出ない）
             .andExpect(jsonPath("$.rating").doesNotExist())
+            // 閲覧数は詳細だけで返す（#256）
+            .andExpect(jsonPath("$.viewCount").doesNotExist())
     }
 
     @Test
@@ -160,6 +162,7 @@ class SpotApiIntegrationTest {
             .andExpect(jsonPath("$[0].coordinates.latitude").value(34.6826))
             .andExpect(jsonPath("$[0].media.imageUrl").value("https://example.com/kobe-port-tower.webp"))
             .andExpect(jsonPath("$[0].rating").doesNotExist())
+            .andExpect(jsonPath("$[0].viewCount").doesNotExist())
     }
 
     @Test
@@ -230,6 +233,29 @@ class SpotApiIntegrationTest {
             .andExpect(jsonPath("$.name").value("神戸ポートタワー"))
             .andExpect(jsonPath("$.address").value("神戸市中央区波止場町5-5"))
             .andExpect(jsonPath("$.rating").doesNotExist())
+    }
+
+    @Test
+    fun `GET id は未認証でも閲覧数を返し、閲覧がまだ無ければ 0`() {
+        val spotId = registerPortTowerAndGetId()
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.viewCount").value(0))
+    }
+
+    @Test
+    fun `閲覧を記録すると次の GET id で閲覧数が増えている`() {
+        val spotId = registerPortTowerAndGetId()
+        repeat(2) {
+            mockMvc.perform(post("/api/v1/tourism/spots/$spotId/views")).andExpect(status().isNoContent)
+        }
+
+        mockMvc
+            .perform(get("/api/v1/tourism/spots/$spotId?lang=ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.viewCount").value(2))
     }
 
     @Test

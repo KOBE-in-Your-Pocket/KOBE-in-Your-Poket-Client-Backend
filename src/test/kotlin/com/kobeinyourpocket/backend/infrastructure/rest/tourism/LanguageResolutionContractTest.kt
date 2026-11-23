@@ -9,6 +9,7 @@ import com.kobeinyourpocket.backend.application.tourism.command.UpdateSpotServic
 import com.kobeinyourpocket.backend.application.tourism.query.GetSpotService
 import com.kobeinyourpocket.backend.application.tourism.query.ListReviewsService
 import com.kobeinyourpocket.backend.application.tourism.query.ListSpotsService
+import com.kobeinyourpocket.backend.application.tourism.query.SpotDetailView
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
@@ -120,7 +121,7 @@ class LanguageResolutionContractTest {
 
     @Test
     fun `GET spot取得 lang を優先して解決する`() {
-        given(getSpotService.getSpot(spotId, Language.EN)).willReturn(spotViewOf(Language.EN))
+        given(getSpotService.getSpot(spotId, Language.EN)).willReturn(SpotDetailView(spot = spotViewOf(Language.EN), viewCount = 0))
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/$spotId?lang=en").header("Accept-Language", "ja"))
@@ -131,7 +132,7 @@ class LanguageResolutionContractTest {
 
     @Test
     fun `GET spot取得 lang が無ければ Accept-Language を解決する`() {
-        given(getSpotService.getSpot(spotId, Language.KO)).willReturn(spotViewOf(Language.KO))
+        given(getSpotService.getSpot(spotId, Language.KO)).willReturn(SpotDetailView(spot = spotViewOf(Language.KO), viewCount = 0))
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/$spotId").header("Accept-Language", "ko-KR,ko;q=0.9,en;q=0.8"))
@@ -142,7 +143,7 @@ class LanguageResolutionContractTest {
 
     @Test
     fun `GET spot取得 非対応 lang は Accept-Language へフォールバックする`() {
-        given(getSpotService.getSpot(spotId, Language.ZH)).willReturn(spotViewOf(Language.ZH))
+        given(getSpotService.getSpot(spotId, Language.ZH)).willReturn(SpotDetailView(spot = spotViewOf(Language.ZH), viewCount = 0))
 
         mockMvc
             .perform(get("/api/v1/tourism/spots/$spotId?lang=fr").header("Accept-Language", "zh-CN"))
@@ -153,7 +154,7 @@ class LanguageResolutionContractTest {
 
     @Test
     fun `GET spot取得 lang も Accept-Language も無ければ en へフォールバックする`() {
-        given(getSpotService.getSpot(spotId, Language.EN)).willReturn(spotViewOf(Language.EN))
+        given(getSpotService.getSpot(spotId, Language.EN)).willReturn(SpotDetailView(spot = spotViewOf(Language.EN), viewCount = 0))
 
         mockMvc.perform(get("/api/v1/tourism/spots/$spotId")).andExpect(status().isOk)
 

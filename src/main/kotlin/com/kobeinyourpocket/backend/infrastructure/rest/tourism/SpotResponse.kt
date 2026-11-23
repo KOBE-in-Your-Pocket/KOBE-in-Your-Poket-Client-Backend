@@ -1,12 +1,16 @@
 package com.kobeinyourpocket.backend.infrastructure.rest.tourism
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.kobeinyourpocket.backend.application.tourism.query.SpotDetailView
 import com.kobeinyourpocket.backend.application.tourism.query.SpotView
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.model.SpotWithLocalizations
 
 /**
  * `GET /api/v1/tourism/spots` および `POST /api/v1/tourism/spots` のレスポンス（モックの `Spot` 形 / §8）。
+ *
+ * [viewCount] は詳細（`GET /api/v1/tourism/spots/{id}`）だけで返す（#256）。一覧・登録・更新では null で、
+ * [JsonInclude.Include.NON_NULL] によりキーごと出ない。
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class SpotResponse(
@@ -20,6 +24,7 @@ data class SpotResponse(
     val category: CategoryResponse,
     val media: MediaResponse,
     val rating: RatingResponse?,
+    val viewCount: Long? = null,
 ) {
     data class CoordinatesResponse(
         val latitude: Double,
@@ -52,6 +57,9 @@ data class SpotResponse(
                 media = MediaResponse(imageUrl = view.imageUrl),
                 rating = view.rating?.let { RatingResponse(value = it) },
             )
+
+        /** 詳細用。[from] に閲覧数を添える（#256）。 */
+        fun fromDetail(detail: SpotDetailView): SpotResponse = from(detail.spot).copy(viewCount = detail.viewCount)
 
         /** POST 201 用。要求言語未指定時は en（[Language.DEFAULT]）で解決した Spot 形を返す。 */
         fun fromRegistered(
