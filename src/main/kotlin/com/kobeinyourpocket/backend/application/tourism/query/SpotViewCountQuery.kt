@@ -1,5 +1,6 @@
 package com.kobeinyourpocket.backend.application.tourism.query
 
+import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.domain.tourism.spot.vo.SpotId
 
 /**
@@ -13,7 +14,8 @@ interface SpotViewCountQuery {
 
     /**
      * スポット別の閲覧数を、多い順に返す（同数は spot_id 順）。運営向けの閲覧数一覧（#241）で使う。
+     * スポット名は [language] → 既定言語 → spot_id の順で解決する。
      * 閲覧が 1 件も無いスポットと、削除済みのスポットは含めない。
      */
-    fun countAllBySpot(): List<SpotViewCount>
+    fun countAllBySpot(language: Language): List<SpotViewCount>
 }

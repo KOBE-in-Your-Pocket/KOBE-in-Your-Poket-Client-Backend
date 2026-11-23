@@ -5,6 +5,8 @@ import com.kobeinyourpocket.backend.application.stats.query.EntityCountsView
 import com.kobeinyourpocket.backend.application.stats.query.GetDashboardStatsService
 import com.kobeinyourpocket.backend.application.stats.query.PopularSpotView
 import com.kobeinyourpocket.backend.application.stats.query.RecentReviewView
+import com.kobeinyourpocket.backend.application.tourism.query.ListSpotViewCountsService
+import com.kobeinyourpocket.backend.application.tourism.query.SpotViewCount
 import com.kobeinyourpocket.backend.domain.common.localization.Language
 import com.kobeinyourpocket.backend.infrastructure.rest.common.GlobalExceptionHandler
 import org.mockito.BDDMockito.given
@@ -30,6 +32,9 @@ class StatsControllerTest {
 
     @MockitoBean
     private lateinit var getDashboardStatsService: GetDashboardStatsService
+
+    @MockitoBean
+    private lateinit var listSpotViewCountsService: ListSpotViewCountsService
 
     private val stats =
         DashboardStatsView(
@@ -107,5 +112,36 @@ class StatsControllerTest {
             .andExpect(status().isOk)
 
         verify(getDashboardStatsService).getStats(Language.DEFAULT)
+    }
+
+    @Test
+    fun `スポット別の閲覧数をサービスの順のまま返す`() {
+        given(listSpotViewCountsService.list(Language.JA)).willReturn(
+            listOf(
+                SpotViewCount(spotId = "arima-onsen", name = "有馬温泉", viewCount = 12),
+                SpotViewCount(spotId = "kobe-port-tower", name = "神戸ポートタワー", viewCount = 3),
+            ),
+        )
+
+        mockMvc
+            .perform(get("/api/v1/stats/spot-views").param("lang", "ja"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].spotId").value("arima-onsen"))
+            .andExpect(jsonPath("$[0].name").value("有馬温泉"))
+            .andExpect(jsonPath("$[0].viewCount").value(12))
+            .andExpect(jsonPath("$[1].spotId").value("kobe-port-tower"))
+    }
+
+    @Test
+    fun `スポット別の閲覧数も lang 未指定なら Accept-Language で名前を解決する`() {
+        given(listSpotViewCountsService.list(Language.EN)).willReturn(emptyList())
+
+        mockMvc
+            .perform(get("/api/v1/stats/spot-views").header("Accept-Language", "en"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.length()").value(0))
+
+        verify(listSpotViewCountsService).list(Language.EN)
     }
 }
